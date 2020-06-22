@@ -1,0 +1,35 @@
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"kubernetes-client.io/v1","kind":"ExternalSecret","metadata":{"annotations":{},"labels":{"gitops.jenkins-x.io/pipeline":"environment"},"name":"lighthouse-oauth-token","namespace":"jx"},"spec":{"backendType":"vault","data":[{"key":"secret/data/jx/pipelineUser","name":"oauth","property":"token"}],"template":{"metadata":{"labels":{"app":"lighthouse-lighthouse","chart":"lighthouse-0.0.633","heritage":"Helm","release":"lighthouse"}},"type":"Opaque"},"vaultMountPoint":"kubernetes","vaultRole":"vault-infra"}}
+  creationTimestamp: "2020-06-17T11:19:27Z"
+  generation: 1
+  labels:
+    gitops.jenkins-x.io/pipeline: environment
+  name: lighthouse-oauth-token
+  namespace: jx
+  resourceVersion: "2928764"
+  selfLink: /apis/kubernetes-client.io/v1/namespaces/jx/externalsecrets/lighthouse-oauth-token
+  uid: 683d308e-b08c-11ea-9239-42010a84020b
+spec:
+  backendType: vault
+  data:
+  - key: secret/data/jx/pipelineUser
+    name: oauth
+    property: token
+  template:
+    metadata:
+      labels:
+        app: lighthouse-lighthouse
+        chart: lighthouse-0.0.633
+        heritage: Helm
+        release: lighthouse
+    type: Opaque
+  vaultMountPoint: kubernetes
+  vaultRole: vault-infra
+status:
+  lastSync: "2020-06-22T15:26:30.902Z"
+  observedGeneration: 1
+  status: SUCCESS
