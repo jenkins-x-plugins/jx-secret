@@ -3,6 +3,7 @@ module github.com/jenkins-x/jx-extsecret
 require (
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/google/go-cmp v0.3.1
 	github.com/jenkins-x/jx-kube-client v0.0.3
 	github.com/jenkins-x/jx-logging v0.0.8
 	github.com/jenkins-x/jx-promote v0.0.32
@@ -15,6 +16,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.0
+	gopkg.in/AlecAivazis/survey.v1 v1.8.3
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible

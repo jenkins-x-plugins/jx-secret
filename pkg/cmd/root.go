@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/jenkins-x/jx-extsecret/pkg/cmd/edit"
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/verify"
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/version"
 	"github.com/jenkins-x/jx-promote/pkg/common"
@@ -20,6 +21,7 @@ func Main() *cobra.Command {
 			}
 		},
 	}
+	cmd.AddCommand(common.SplitCommand(edit.NewCmdEdit()))
 	cmd.AddCommand(common.SplitCommand(verify.NewCmdVerify()))
 	cmd.AddCommand(common.SplitCommand(version.NewCmdVersion()))
 	return cmd
