@@ -2,23 +2,41 @@ package vault
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
+	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 type client struct {
-	CommandRunner cmdrunner.CommandRunner
+	commandRunner cmdrunner.CommandRunner
+	kubeClient    kubernetes.Interface
+	env           map[string]string
+	vaultBin      string
 }
 
-func NewEditor(commandRunner cmdrunner.CommandRunner) (editor.Interface, error) {
+func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Interface) (editor.Interface, error) {
 	if commandRunner == nil {
 		commandRunner = cmdrunner.DefaultCommandRunner
 	}
-	return &client{CommandRunner: commandRunner}, nil
+	c := &client{
+		commandRunner: commandRunner,
+		kubeClient:    kubeClient,
+	}
+	err := c.initialise()
+	if err != nil {
+		return c, errors.Wrapf(err, "failed to setup vault secret editor")
+	}
+	return c, nil
 }
 
 func (c *client) Write(properties editor.KeyProperties) error {
@@ -30,12 +48,107 @@ func (c *client) Write(properties editor.KeyProperties) error {
 		args = append(args, fmt.Sprintf("%s=%s", pv.Property, pv.Value))
 	}
 	cmd := &util.Command{
-		Name: "vault",
+		Name: c.vaultBin,
 		Args: args,
+		Env:  c.env,
 	}
-	_, err := c.CommandRunner(cmd)
+	_, err := c.commandRunner(cmd)
 	if err != nil {
 		return errors.Wrapf(err, "failed to invoke command")
 	}
 	return nil
+}
+
+func (c *client) initialise() error {
+	c.vaultBin = os.Getenv("VAULT_BIN")
+	if c.vaultBin == "" {
+		c.vaultBin = "vault"
+	}
+
+	log.Logger().Infof("verifying we have vault installed")
+
+	// lets verify we can find the binary
+	cmd := &util.Command{
+		Name: c.vaultBin,
+		Args: []string{"version"},
+		Env:  c.env,
+	}
+	_, err := c.commandRunner(cmd)
+	if err != nil {
+		return errors.Wrapf(err, "failed to invoke the binary %s. Please make sure you installed 'vault' and put it on your $PATH", c.vaultBin)
+	}
+
+	addr := os.Getenv("VAULT_ADDR")
+	if addr == "" {
+		addr = "https://127.0.0.1:8200"
+	}
+	ns := os.Getenv("VAULT_NAMESPACE")
+	if ns == "" {
+		ns = "vault-infra"
+	}
+	token := os.Getenv("VAULT_TOKEN")
+	if token == "" {
+		token, err = getSecretKey(c.kubeClient, ns, "vault-unseal-keys", "vault-root")
+		if err != nil {
+			return err
+		}
+	}
+
+	caCertFile := os.Getenv("VAULT_CACERT")
+	if caCertFile == "" {
+		tmpDir, err := ioutil.TempDir("", "jx-extsecret-vault-")
+		if err != nil {
+			return errors.Wrapf(err, "failed to create temp dir")
+		}
+
+		caCert, err := getSecretKey(c.kubeClient, ns, "vault-tls", "ca.crt")
+		if err != nil {
+			return err
+		}
+		caCertFile = filepath.Join(tmpDir, "vault-ca.crt")
+		err = ioutil.WriteFile(caCertFile, []byte(caCert), util.DefaultFileWritePermissions)
+		if err != nil {
+			return errors.Wrapf(err, "failed to save CA Cert file %s", caCertFile)
+		}
+	}
+	c.env = map[string]string{
+		"VAULT_ADDR":   addr,
+		"VAULT_TOKEN":  token,
+		"VAULT_CACERT": caCertFile,
+	}
+
+	log.Logger().Infof("verifying we can connect to vault...")
+
+	// lets verify we can list the secrets
+	cmd = &util.Command{
+		Name: c.vaultBin,
+		Args: []string{"kv", "list", "secret"},
+		Env:  c.env,
+	}
+	_, err = c.commandRunner(cmd)
+	if err != nil {
+		return errors.Wrapf(err, "failed to access vault. are you sure you are running the vault port forward command? command failed: %s", cmdrunner.CLI(cmd))
+	}
+
+	log.Logger().Infof("vault is setup correctly!\n\n")
+
+	return nil
+}
+
+func getSecretKey(kubeClient kubernetes.Interface, ns string, secretName string, key string) (string, error) {
+	secret, err := kubeClient.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
+	if err != nil && apierrors.IsNotFound(err) {
+		err = nil
+	}
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to find secret %s in namespace %s", secretName, ns)
+	}
+	if secret == nil || secret.Data == nil {
+		return "", errors.Errorf("no data forsecret %s in namespace %s", secretName, ns)
+	}
+	value := secret.Data[key]
+	if len(value) == 0 {
+		return "", errors.Errorf("no '%s' entry for secret %s in namespace %s", key, secretName, ns)
+	}
+	return string(value), nil
 }

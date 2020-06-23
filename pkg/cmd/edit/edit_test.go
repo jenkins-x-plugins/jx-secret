@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/edit"
+	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner/fakerunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/testsecrets"
 	fakeinput "github.com/jenkins-x/jx-extsecret/pkg/input/fake"
-	"github.com/jenkins-x/jx-extsecret/pkg/testhelpers"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,14 +34,15 @@ func TestEdit(t *testing.T) {
 			},
 		},
 	}
-	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
+
+	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
 
 	dynObjects := testsecrets.LoadExtSecretFiles(t, ns, "knative-docker-user-pass.yaml", "lighthouse-oauth-token.yaml")
 	fakeDynClient := dynfake.NewSimpleDynamicClient(scheme, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
 
-	runner := &testhelpers.FakeRunner{}
+	runner := &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run
 
 	input := &fakeinput.FakeInput{
@@ -56,10 +57,16 @@ func TestEdit(t *testing.T) {
 	require.NoError(t, err, "failed to run edit")
 
 	runner.ExpectResults(t,
-		testhelpers.FakeResult{
+		fakerunner.FakeResult{
+			CLI: "vault version",
+		},
+		fakerunner.FakeResult{
+			CLI: "vault kv list secret",
+		},
+		fakerunner.FakeResult{
 			CLI: "vault kv put secret/jx/pipelineUser token=dummyPipelineToken",
 		},
-		testhelpers.FakeResult{
+		fakerunner.FakeResult{
 			CLI: "vault kv put secret/knative/docker/user/pass password=dummyDockerPwd",
 		},
 	)

@@ -6,13 +6,14 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor/vault"
 	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
 )
 
-func NewEditor(secret *v1alpha1.ExternalSecret, commandRunner cmdrunner.CommandRunner) (editor.Interface, error) {
+func NewEditor(secret *v1alpha1.ExternalSecret, commandRunner cmdrunner.CommandRunner, client kubernetes.Interface) (editor.Interface, error) {
 	backendType := secret.Spec.BackendType
 	switch backendType {
 	case "vault":
-		return vault.NewEditor(commandRunner)
+		return vault.NewEditor(commandRunner, client)
 	default:
 		return nil, errors.Errorf("unsupported ExternalSecret back end %s", backendType)
 	}

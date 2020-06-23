@@ -17,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/yaml"
 )
 
@@ -35,6 +36,7 @@ type Options struct {
 	File             string
 	Namespace        string
 	SecretClient     extsecrets.Interface
+	KubeClient       kubernetes.Interface
 	CommandRunner    cmdrunner.CommandRunner
 	FailOnUnknownKey bool
 	ExternalSecrets  []*v1alpha1.ExternalSecret
@@ -90,6 +92,10 @@ func (o *Options) Run() error {
 			return errors.Wrapf(err, "failed to create extsecrets client")
 		}
 	}
+	o.KubeClient, err = extsecrets.LazyCreateKubeClient(o.KubeClient)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create kube Client")
+	}
 
 	resources, err := o.SecretClient.List(o.Namespace, metav1.ListOptions{})
 	if err != nil {
@@ -98,6 +104,8 @@ func (o *Options) Run() error {
 	o.ExternalSecrets = resources
 
 	log.Logger().Debugf("found %d ExternalSecret resources", len(resources))
+
+	editors := map[string]editor.Interface{}
 
 	for _, r := range resources {
 		ns := r.Namespace
@@ -113,10 +121,16 @@ func (o *Options) Run() error {
 		for _, data := range r.Spec.Data {
 			key := extsecrets.SimplifyKey(backendType, data.Key)
 			property := data.Property
-
 			handler := o.Handlers[key]
 			if handler == nil {
-				editor, err := factory.NewEditor(r, o.CommandRunner)
+				editor := editors[backendType]
+				if editor == nil {
+					editor, err = factory.NewEditor(r, o.CommandRunner, o.KubeClient)
+					if err != nil {
+						return errors.Wrapf(err, "failed to create editor for secret %s of type %s", name, backendType)
+					}
+					editors[backendType] = editor
+				}
 				if err != nil {
 					return errors.Wrapf(err, "failed to create editor for secret %s of type %s", name, backendType)
 				}

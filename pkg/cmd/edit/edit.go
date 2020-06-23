@@ -72,11 +72,18 @@ func (o *Options) Run() error {
 		o.Input = survey.NewInput()
 	}
 
+	editors := map[string]editor.Interface{}
+
 	for _, r := range results {
 		name := r.ExternalSecret.Name
-		secEditor, err := factory.NewEditor(&r.ExternalSecret, o.CommandRunner)
-		if err != nil {
-			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
+		backendType := r.ExternalSecret.Spec.BackendType
+		secEditor := editors[backendType]
+		if secEditor == nil {
+			secEditor, err = factory.NewEditor(&r.ExternalSecret, o.CommandRunner, o.KubeClient)
+			if err != nil {
+				return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
+			}
+			editors[backendType] = secEditor
 		}
 
 		for _, e := range r.EntryErrors {

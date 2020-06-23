@@ -1,9 +1,10 @@
-package testhelpers
+package fakerunner
 
 import (
 	"sort"
 	"testing"
 
+	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,14 +33,14 @@ func (f *FakeRunner) Run(c *util.Command) (string, error) {
 func (f *FakeRunner) ExpectResults(t *testing.T, results ...FakeResult) {
 	commands := f.Commands
 	for _, c := range commands {
-		t.Logf("got command %s\n", c.String())
+		t.Logf("got command %s\n", cmdrunner.CLI(c))
 	}
 
 	require.Equal(t, len(results), len(commands), "expected command invocations")
 
 	sort.Slice(commands, func(i, j int) bool {
-		c1 := commands[i].String()
-		c2 := commands[j].String()
+		c1 := cmdrunner.CLI(commands[i])
+		c2 := cmdrunner.CLI(commands[j])
 		return c1 < c2
 	})
 
@@ -51,7 +52,7 @@ func (f *FakeRunner) ExpectResults(t *testing.T, results ...FakeResult) {
 
 	for i, r := range results {
 		c := commands[i]
-		assert.Equal(t, r.CLI, c.String(), "command line for command %d", i+1)
+		assert.Equal(t, r.CLI, cmdrunner.CLI(c), "command line for command %d", i+1)
 		if r.Dir != "" {
 			assert.Equal(t, r.Dir, c.Dir, "directory line for command %d", i+1)
 		}
