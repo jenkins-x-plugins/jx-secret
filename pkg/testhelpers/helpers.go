@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/go-yaml/yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

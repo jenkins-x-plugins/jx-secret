@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/go-yaml/yaml"
 	"github.com/jenkins-x/jx-extsecret/pkg/apis/extsecret/v1alpha1"
 	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
@@ -18,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -67,7 +67,7 @@ func (o *Options) Run() error {
 		return util.MissingOption("file")
 	}
 
-	m := map[interface{}]interface{}{}
+	m := map[string]interface{}{}
 	exists, err := util.FileExists(fileName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check if file exists %s", fileName)
@@ -137,17 +137,16 @@ func (o *Options) Run() error {
 	return nil
 }
 
-func (o *Options) updateProperties(m map[interface{}]interface{}, path string) error {
+func (o *Options) updateProperties(m map[string]interface{}, path string) error {
 	keyProperties := editor.KeyProperties{
 		Key: path,
 	}
 	for k, v := range m {
-		key := fmt.Sprintf("%v", k)
-		childPath := key
+		childPath := k
 		if path != "" {
-			childPath = path + "/" + key
+			childPath = path + "/" + k
 		}
-		childMap, ok := v.(map[interface{}]interface{})
+		childMap, ok := v.(map[string]interface{})
 		if ok {
 			err := o.updateProperties(childMap, childPath)
 			if err != nil {
@@ -160,7 +159,7 @@ func (o *Options) updateProperties(m map[interface{}]interface{}, path string) e
 			return errors.Errorf("could not handle non string value %#v for path %s", v, childPath)
 		}
 		keyProperties.Properties = append(keyProperties.Properties, editor.PropertyValue{
-			Property: key,
+			Property: k,
 			Value:    value,
 		})
 	}

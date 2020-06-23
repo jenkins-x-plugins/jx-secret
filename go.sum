@@ -469,8 +469,6 @@ github.com/jenkins-x/jx-kube-client v0.0.3 h1:S87cyPcoUVtTPNuMrIeFZbYkjDWTkvdIWq
 github.com/jenkins-x/jx-kube-client v0.0.3/go.mod h1:XvNZQAAF95wzQzSfCpehXwb5FI6WCg+5GiwVA2S4SPA=
 github.com/jenkins-x/jx-logging v0.0.8 h1:V6W3il1JFSL1BTuXio3NVefqtJWFIm3Dg/99nxGFMuU=
 github.com/jenkins-x/jx-logging v0.0.8/go.mod h1:mjEejiArk2Mk+J+72/YcSKGo9bZlJ/LwKYjMgAiv+G4=
-github.com/jenkins-x/jx-promote v0.0.32 h1:okqge2LCXICRIrcSDGHsbBZPw2BDbF7ysLOsuJaeZ7o=
-github.com/jenkins-x/jx-promote v0.0.32/go.mod h1:r3cjLmB7u68q1fDpejiuwMe3DxrZ0ctRMS5fWIBtJcg=
 github.com/jenkins-x/jx-promote v0.0.34 h1:HK+rAFpS5X1xTp00KHoko34EG4lN75Uro/tQum3J7is=
 github.com/jenkins-x/jx-promote v0.0.34/go.mod h1:r3cjLmB7u68q1fDpejiuwMe3DxrZ0ctRMS5fWIBtJcg=
 github.com/jenkins-x/jx/v2 v2.1.78 h1:jZstqEfbN1OCPDI6jt9GvQ4jLIKGwsp4ilcYfvobNC4=

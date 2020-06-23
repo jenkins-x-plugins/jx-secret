@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-yaml/yaml"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-logging/pkg/log"
@@ -17,6 +16,7 @@ import (
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/yaml"
 )
 
 var (
