@@ -2,16 +2,18 @@ package verify
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
+	vs "github.com/jenkins-x/jx-extsecret/pkg/extsecrets/verify"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-promote/pkg/common"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
+	"github.com/jenkins-x/jx/v2/pkg/table"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -26,8 +28,7 @@ var (
 
 // Options the options for the command
 type Options struct {
-	Client    extsecrets.Interface
-	Namespace string
+	vs.Options
 }
 
 // NewCmdVerify creates a command object for the command
@@ -50,22 +51,23 @@ func NewCmdVerify() (*cobra.Command, *Options) {
 
 // Run implements the command
 func (o *Options) Run() error {
-	var err error
-	if o.Client == nil {
-		o.Client, err = extsecrets.NewClient(nil)
-		if err != nil {
-			return errors.Wrapf(err, "failed to create an extsecret Client")
+	results, err := o.Verify()
+	if err != nil {
+		return errors.Wrap(err, "failed to verify secrets")
+	}
+
+	if len(results) == 0 {
+		log.Logger().Infof("the %d ExternalSecrets are %s", len(o.ExternalSecrets), util.ColorInfo("valid"))
+		return nil
+	}
+
+	t := table.CreateTable(os.Stdout)
+	t.AddRow("SECRET", "KEY", "PROPERTIES")
+	for _, r := range results {
+		for _, e := range r.EntryErrors {
+			t.AddRow(r.ExternalSecret.Name, e.Key, strings.Join(e.Properties, ", "))
 		}
 	}
-
-	resources, err := o.Client.List(o.Namespace, metav1.ListOptions{})
-	if err != nil {
-		return errors.Wrap(err, "failed to find external secrets")
-	}
-
-	log.Logger().Infof("found %d ExternalSecret resources", len(resources))
-	for _, r := range resources {
-		log.Logger().Infof("found ExternalSecret %s in namespace %s", util.ColorInfo(r.Name), util.ColorInfo(r.Namespace))
-	}
+	t.Render()
 	return nil
 }
