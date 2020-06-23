@@ -2,9 +2,9 @@ package vault
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
@@ -22,13 +22,9 @@ func NewEditor(commandRunner cmdrunner.CommandRunner) (editor.Interface, error) 
 }
 
 func (c *client) Write(properties editor.KeyProperties) error {
-	key := properties.Key
+	key := extsecrets.SimplifyKey("vault", properties.Key)
 
-	// we shouldn't pass in secret/data/foo when using the CLI tool
-	if strings.HasPrefix(key, "secret/data/") {
-		key = "secret/" + strings.TrimPrefix(key, "secret/data/")
-	}
-
+	editor.SortPropertyValues(properties.Properties)
 	args := []string{"kv", "put", key}
 	for _, pv := range properties.Properties {
 		args = append(args, fmt.Sprintf("%s=%s", pv.Property, pv.Value))

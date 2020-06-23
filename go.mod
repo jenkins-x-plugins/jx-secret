@@ -3,6 +3,7 @@ module github.com/jenkins-x/jx-extsecret
 require (
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/google/go-cmp v0.3.1
 	github.com/jenkins-x/jx-kube-client v0.0.3
 	github.com/jenkins-x/jx-logging v0.0.8

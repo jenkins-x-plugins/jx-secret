@@ -1,6 +1,8 @@
 package extsecrets
 
 import (
+	"strings"
+
 	"github.com/jenkins-x/jx-kube-client/pkg/kubeclient"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -55,4 +57,17 @@ func LazyCreateKubeClient(client kubernetes.Interface) (kubernetes.Interface, er
 		return client, errors.Wrap(err, "error building kubernetes clientset")
 	}
 	return client, nil
+}
+
+// SimplifyKey simplify the key to avoid unnecessary paths
+func SimplifyKey(backendType string, key string) string {
+	if backendType != "vault" {
+		return key
+	}
+
+	// we shouldn't pass in secret/data/foo when using the CLI tool
+	if strings.HasPrefix(key, "secret/data/") {
+		key = "secret/" + strings.TrimPrefix(key, "secret/data/")
+	}
+	return key
 }
