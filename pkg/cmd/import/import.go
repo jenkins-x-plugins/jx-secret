@@ -9,8 +9,8 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor/factory"
+	"github.com/jenkins-x/jx-extsecret/pkg/root"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx-promote/pkg/common"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
 	"github.com/jenkins-x/jx/v2/pkg/util"
@@ -26,7 +26,7 @@ var (
 `)
 
 	editExample = templates.Examples(`
-		%s edit
+		%s import -f mysecrets.yaml
 	`)
 )
 
@@ -49,7 +49,7 @@ func NewCmdImport() (*cobra.Command, *Options) {
 		Use:     "import",
 		Short:   "Imports a YAML file of secret values",
 		Long:    editLong,
-		Example: fmt.Sprintf(editExample, common.BinaryName),
+		Example: fmt.Sprintf(editExample, root.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)

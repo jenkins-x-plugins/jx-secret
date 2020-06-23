@@ -6,6 +6,7 @@ import (
 	importcmd "github.com/jenkins-x/jx-extsecret/pkg/cmd/import"
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/verify"
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/version"
+	"github.com/jenkins-x/jx-extsecret/pkg/root"
 	"github.com/jenkins-x/jx-promote/pkg/common"
 	"github.com/jenkins-x/jx/v2/pkg/log"
 	"github.com/spf13/cobra"
@@ -14,7 +15,7 @@ import (
 // Main creates the new command
 func Main() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   common.TopLevelCommand,
+		Use:   root.TopLevelCommand,
 		Short: "External Secrets utility commands",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()
