@@ -48,4 +48,6 @@ replace github.com/banzaicloud/bank-vaults => github.com/banzaicloud/bank-vaults
 
 replace github.com/TV4/logrus-stackdriver-formatter => github.com/jenkins-x/logrus-stackdriver-formatter v0.1.1-0.20200408213659-1dcf20c371bb
 
+replace code.gitea.io/sdk/gitea => code.gitea.io/sdk/gitea v0.12.0
+
 go 1.13
