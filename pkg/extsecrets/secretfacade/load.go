@@ -1,4 +1,4 @@
-package verify
+package secretfacade
 
 import (
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
@@ -8,8 +8,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (o *Options) Verify() ([]*SecretError, error) {
-	var answer []*SecretError
+// Load loads the secret pairs
+func (o *Options) Load() ([]*SecretPair, error) {
+	var answer []*SecretPair
 	var err error
 
 	if o.SecretClient == nil {
@@ -32,6 +33,9 @@ func (o *Options) Verify() ([]*SecretError, error) {
 	log.Logger().Debugf("found %d ExternalSecret resources", len(resources))
 
 	for _, r := range resources {
+		if r == nil {
+			continue
+		}
 		ns := r.Namespace
 		if ns == "" {
 			ns = o.Namespace
@@ -49,14 +53,10 @@ func (o *Options) Verify() ([]*SecretError, error) {
 		if err != nil {
 			return answer, errors.Wrapf(err, "failed to find Secret %s in namespace %s", name, ns)
 		}
-
-		result, err := VerifySecret(r, secret)
-		if err != nil {
-			return answer, errors.Wrapf(err, "failed to verify secret %s in namespace %s", name, ns)
-		}
-		if result != nil {
-			answer = append(answer, result)
-		}
+		answer = append(answer, &SecretPair{
+			ExternalSecret: *r,
+			Secret:         secret,
+		})
 	}
 	return answer, nil
 }

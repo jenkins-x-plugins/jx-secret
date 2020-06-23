@@ -1,0 +1,9 @@
+secret:
+  knative:
+    docker:
+      user:
+        pass:
+          password: dummyDockerPassword
+          username: dummyDockerUsername
+  pipelineUser:
+    token: dummyPipelineUserToken

@@ -1,8 +1,9 @@
-package verify
+package secretfacade
 
 import (
 	"github.com/jenkins-x/jx-extsecret/pkg/apis/extsecret/v1alpha1"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -32,4 +33,13 @@ type EntryError struct {
 
 	// Properties property names for the key
 	Properties []string
+}
+
+// SecretPair the external secret and the associated Secret an error for a secret
+type SecretPair struct {
+	// ExternalSecret the external secret which is not valid
+	ExternalSecret v1alpha1.ExternalSecret
+
+	// Secret the secret if there is one
+	Secret *corev1.Secret
 }

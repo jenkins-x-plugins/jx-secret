@@ -1,4 +1,4 @@
-package verify
+package secretfacade
 
 import (
 	"github.com/jenkins-x/jx-extsecret/pkg/apis/extsecret/v1alpha1"

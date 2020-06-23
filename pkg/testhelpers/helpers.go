@@ -6,15 +6,31 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-yaml/yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/yaml"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// AssertYamlFilesEqual validates YAML file names without worrying about ordering of keys
+func AssertYamlFilesEqual(t *testing.T, expectedFile string, actualFile string, message string, args ...interface{}) {
+	suffix := fmt.Sprintf(message, args...)
+
+	require.FileExists(t, expectedFile, "expected file for %s", suffix)
+	require.FileExists(t, actualFile, "actual file for %s", suffix)
+
+	expectedData, err := ioutil.ReadFile(expectedFile)
+	require.NoError(t, err, "failed to load expected file %s for %s", expectedFile, suffix)
+
+	actualData, err := ioutil.ReadFile(actualFile)
+	require.NoError(t, err, "failed to load expected file %s for %s", actualFile, suffix)
+
+	AssertYamlEqual(t, string(expectedData), string(actualData), message, args...)
+}
 
 // AssertYamlEqual validates YAML without worrying about ordering of keys
 func AssertYamlEqual(t *testing.T, expected string, actual string, message string, args ...interface{}) {

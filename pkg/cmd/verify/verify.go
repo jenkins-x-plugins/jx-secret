@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	vs "github.com/jenkins-x/jx-extsecret/pkg/extsecrets/verify"
+	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-promote/pkg/common"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
@@ -17,20 +17,20 @@ import (
 )
 
 var (
-	extsecretLong = templates.LongDesc(`
+	verifyLong = templates.LongDesc(`
 		Verifies that the ExternalSecret resources have the required properties populated in the underlying secret storage
 `)
 
-	extsecretExample = templates.Examples(`
+	verifyExample = templates.Examples(`
 		%s verify
 	`)
 )
 
 // Options the options for the command
 type Options struct {
-	vs.Options
+	secretfacade.Options
 
-	Results []*vs.SecretError
+	Results []*secretfacade.SecretError
 }
 
 // NewCmdVerify creates a command object for the command
@@ -40,8 +40,8 @@ func NewCmdVerify() (*cobra.Command, *Options) {
 	cmd := &cobra.Command{
 		Use:     "verify",
 		Short:   "Verifies that the ExternalSecret resources have the required properties populated in the underlying secret storage",
-		Long:    extsecretLong,
-		Example: fmt.Sprintf(extsecretExample, common.BinaryName),
+		Long:    verifyLong,
+		Example: fmt.Sprintf(verifyExample, common.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)

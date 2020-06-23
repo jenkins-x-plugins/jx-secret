@@ -6,7 +6,7 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor/factory"
-	vs "github.com/jenkins-x/jx-extsecret/pkg/extsecrets/verify"
+	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-extsecret/pkg/input"
 	"github.com/jenkins-x/jx-extsecret/pkg/input/survey"
 	"github.com/jenkins-x/jx-logging/pkg/log"
@@ -30,10 +30,10 @@ var (
 
 // Options the options for the command
 type Options struct {
-	vs.Options
+	secretfacade.Options
 
 	Input         input.Interface
-	Results       []*vs.SecretError
+	Results       []*secretfacade.SecretError
 	CommandRunner cmdrunner.CommandRunner
 }
 
@@ -105,6 +105,6 @@ func (o *Options) Run() error {
 	return nil
 }
 
-func (o *Options) propertyMessage(r *vs.SecretError, e *vs.EntryError, property string) (string, string) {
+func (o *Options) propertyMessage(r *secretfacade.SecretError, e *secretfacade.EntryError, property string) (string, string) {
 	return e.Key + "." + property, ""
 }

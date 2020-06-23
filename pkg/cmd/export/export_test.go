@@ -1,13 +1,15 @@
-package edit_test
+package export_test
 
 import (
+	"io/ioutil"
+	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/cmd/edit"
+	"github.com/jenkins-x/jx-extsecret/pkg/cmd/export"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/testsecrets"
-	fakeinput "github.com/jenkins-x/jx-extsecret/pkg/input/fake"
 	"github.com/jenkins-x/jx-extsecret/pkg/testhelpers"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,9 +18,11 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func TestEdit(t *testing.T) {
-	var err error
-	_, o := edit.NewCmdEdit()
+func TestExport(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "")
+	require.NoError(t, err, "failed to create temp dir")
+
+	_, o := export.NewCmdExport()
 	scheme := runtime.NewScheme()
 
 	ns := "jx"
@@ -30,37 +34,36 @@ func TestEdit(t *testing.T) {
 				Namespace: ns,
 			},
 			Data: map[string][]byte{
-				"username": []byte("dummyValue"),
+				"username": []byte("dummyDockerUsername"),
+				"password": []byte("dummyDockerPassword"),
+			},
+		},
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "lighthouse-oauth-token",
+				Namespace: ns,
+			},
+			Data: map[string][]byte{
+				"oauth": []byte("dummyPipelineUserToken"),
 			},
 		},
 	}
 	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
 
 	dynObjects := testsecrets.LoadExtSecretFiles(t, ns, "knative-docker-user-pass.yaml", "lighthouse-oauth-token.yaml")
+
 	fakeDynClient := dynfake.NewSimpleDynamicClient(scheme, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
 
-	runner := &testhelpers.FakeRunner{}
-	o.CommandRunner = runner.Run
-
-	input := &fakeinput.FakeInput{
-		Values: map[string]string{
-			"secret/data/knative/docker/user/pass.password": "dummyDockerPwd",
-			"secret/data/jx/pipelineUser.token":             "dummyPipelineToken",
-		},
-	}
-	o.Input = input
+	fileName := filepath.Join(tmpDir, "secrets.yaml")
+	o.OutFile = fileName
 
 	err = o.Run()
-	require.NoError(t, err, "failed to run edit")
+	require.NoError(t, err, "failed to run export")
 
-	runner.ExpectResults(t,
-		testhelpers.FakeResult{
-			CLI: "vault kv put secret/jx/pipelineUser token=dummyPipelineToken",
-		},
-		testhelpers.FakeResult{
-			CLI: "vault kv put secret/knative/docker/user/pass password=dummyDockerPwd",
-		},
-	)
+	assert.FileExists(t, fileName, "no file name generated")
+
+	testhelpers.AssertYamlFilesEqual(t, filepath.Join("test_data", "expected.yaml"), fileName, "generated YAML")
+
 }
