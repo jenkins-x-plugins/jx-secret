@@ -6,7 +6,7 @@ require (
 	github.com/google/go-cmp v0.3.1
 	github.com/jenkins-x/jx-kube-client v0.0.3
 	github.com/jenkins-x/jx-logging v0.0.8
-	github.com/jenkins-x/jx-promote v0.0.32
+	github.com/jenkins-x/jx-promote v0.0.34
 	github.com/jenkins-x/jx/v2 v2.1.78
 	github.com/onsi/ginkgo v1.10.1 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
@@ -47,7 +47,5 @@ replace github.com/Azure/go-autorest => github.com/Azure/go-autorest v10.15.5+in
 replace github.com/banzaicloud/bank-vaults => github.com/banzaicloud/bank-vaults v0.0.0-20190508130850-5673d28c46bd
 
 replace github.com/TV4/logrus-stackdriver-formatter => github.com/jenkins-x/logrus-stackdriver-formatter v0.1.1-0.20200408213659-1dcf20c371bb
-
-replace code.gitea.io/sdk/gitea => code.gitea.io/sdk/gitea v0.12.0
 
 go 1.13
