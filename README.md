@@ -6,9 +6,14 @@
 [![LICENSE](https://img.shields.io/github/license/jenkins-x/jx-extsecret.svg)](https://github.com/jenkins-x/jx-extsecret/blob/master/LICENSE)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.k8s.io/)
 
-jx-extsecret is a small command line tool working with [Kubernetes External Secrets](https://github.com/godaddy/kubernetes-external-secrets).
+`jx-alpha-extsecret` is a small command line tool working with [Kubernetes External Secrets](https://github.com/godaddy/kubernetes-external-secrets).
 
+## Getting Started
+
+Download the [jx-alpha-extsecret binary](https://github.com/jenkins-x/jx-extsecret/releases) for your operating system and add it to your `$PATH`.
+
+There will be an `app` you can install soon too...
 
 ## Commands
 
-See the [jx-extsecret command reference](https://github.com/jenkins-x/jx-extsecret/blob/master/docs/cmd/jx-extsecret.md#see-also)
+See the [jx-alpha-extsecret command reference](https://github.com/jenkins-x/jx-extsecret/blob/master/docs/cmd/jx-alpha-extsecret.md)
