@@ -3,7 +3,6 @@ module github.com/jenkins-x/jxl-promote
 require (
 	github.com/apache/thrift v0.12.0 // indirect
 	github.com/gophercloud/gophercloud v0.1.0 // indirect
-	github.com/jenkins-x/jx v0.0.0-20200501072805-de27d267fa83
 	github.com/jenkins-x/jx/v2 v2.1.78 // indirect
 	github.com/openzipkin/zipkin-go v0.1.6 // indirect
 	github.com/pkg/errors v0.8.1
@@ -38,4 +37,4 @@ replace github.com/Azure/go-autorest => github.com/Azure/go-autorest v10.15.5+in
 
 replace github.com/banzaicloud/bank-vaults => github.com/banzaicloud/bank-vaults v0.0.0-20190508130850-5673d28c46bd
 
-go 1.12
+go 1.13
