@@ -1,6 +1,7 @@
 module github.com/jenkins-x/jx-extsecret
 
 require (
+	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/google/go-cmp v0.3.1

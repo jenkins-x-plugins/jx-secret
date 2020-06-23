@@ -12,20 +12,23 @@ import (
 
 // FakeRunner for testing command runners
 type FakeRunner struct {
-	Commands     []*util.Command
-	ResultOutput string
-	ResultError  error
+	Commands        []*util.Command
+	OrderedCommands []*util.Command
+	ResultOutput    string
+	ResultError     error
 }
 
 // FakeResult the expected results
 type FakeResult struct {
 	CLI string
 	Dir string
+	Env map[string]string
 }
 
 // Run the default implementation
 func (f *FakeRunner) Run(c *util.Command) (string, error) {
 	f.Commands = append(f.Commands, c)
+	f.OrderedCommands = append(f.OrderedCommands, c)
 	return f.ResultOutput, f.ResultError
 }
 
@@ -55,6 +58,15 @@ func (f *FakeRunner) ExpectResults(t *testing.T, results ...FakeResult) {
 		assert.Equal(t, r.CLI, cmdrunner.CLI(c), "command line for command %d", i+1)
 		if r.Dir != "" {
 			assert.Equal(t, r.Dir, c.Dir, "directory line for command %d", i+1)
+		}
+		if r.Env != nil {
+			for k, v := range r.Env {
+				actual := ""
+				if c.Env != nil {
+					actual = c.Env[k]
+				}
+				assert.Equal(t, v, actual, "$%s for command %d", k, i+1)
+			}
 		}
 	}
 }

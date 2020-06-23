@@ -4,7 +4,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/alecthomas/assert"
 	importcmd "github.com/jenkins-x/jx-extsecret/pkg/cmd/import"
+	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner/fakerunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/testsecrets"
@@ -45,6 +47,16 @@ func TestImport(t *testing.T) {
 		},
 		fakerunner.FakeResult{
 			CLI: "vault kv put secret/pipelineUser email=jenkins-x@googlegroups.com token=dummyPipelineUser username=jenkins-x-labs-bot",
+			Env: map[string]string{
+				"VAULT_ADDR":  "https://127.0.0.1:8200",
+				"VAULT_TOKEN": "dummyVaultToken",
+			},
 		},
 	)
+
+	// lets assert the vault env vars are setup correctly
+	lastCommand := runner.OrderedCommands[len(runner.OrderedCommands)-1]
+	vaultCaCert := lastCommand.Env["VAULT_CACERT"]
+	assert.NotEmpty(t, vaultCaCert, "should have $VAULT_CACERT for command %s", cmdrunner.CLI(lastCommand))
+	t.Logf("has $VAULT_CACERT %s\n", vaultCaCert)
 }
