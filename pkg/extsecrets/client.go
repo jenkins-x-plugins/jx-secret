@@ -34,7 +34,7 @@ func (c *client) List(ns string, listOptions metav1.ListOptions) ([]*v1alpha1.Ex
 	if resources != nil {
 		for _, u := range resources.Items {
 			extSecret := &v1alpha1.ExternalSecret{}
-			err = ToStructured(&u, extSecret)
+			err = FromUnstructured(&u, extSecret)
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to convert to ExternalSecret %s", u.GetName())
 			}
@@ -44,10 +44,19 @@ func (c *client) List(ns string, listOptions metav1.ListOptions) ([]*v1alpha1.Ex
 	return answer, nil
 }
 
-// ToStructured converts an unstructured object to a pointer to a structured type
-func ToStructured(u *unstructured.Unstructured, structured interface{}) error {
+// FromUnstructured converts from an unstructured object to a pointer to a structured type
+func FromUnstructured(u *unstructured.Unstructured, structured interface{}) error {
 	if err := duck.FromUnstructured(u, structured); err != nil {
 		return errors.Wrapf(err, "failed to convert unstructured object to %#v", structured)
 	}
 	return nil
+}
+
+// ToStructured converts a resource to an unstructured type
+func ToStructured(resource duck.OneOfOurs) (*unstructured.Unstructured, error) {
+	u, err := duck.ToUnstructured(resource)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to convert resource %#v to Unstructured", resource)
+	}
+	return u, nil
 }

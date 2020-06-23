@@ -29,6 +29,8 @@ var (
 // Options the options for the command
 type Options struct {
 	vs.Options
+
+	Results []*vs.SecretError
 }
 
 // NewCmdVerify creates a command object for the command
@@ -55,6 +57,7 @@ func (o *Options) Run() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to verify secrets")
 	}
+	o.Results = results
 
 	if len(results) == 0 {
 		log.Logger().Infof("the %d ExternalSecrets are %s", len(o.ExternalSecrets), util.ColorInfo("valid"))
@@ -62,7 +65,7 @@ func (o *Options) Run() error {
 	}
 
 	t := table.CreateTable(os.Stdout)
-	t.AddRow("SECRET", "KEY", "PROPERTIES")
+	t.AddRow("SECRET", "KEY", "MISSING PROPERTIES")
 	for _, r := range results {
 		for _, e := range r.EntryErrors {
 			t.AddRow(r.ExternalSecret.Name, e.Key, strings.Join(e.Properties, ", "))
