@@ -25,6 +25,17 @@ type ExternalSecret struct {
 	Status *ExternalSecretStatus `json:"status,omitempty"`
 }
 
+// Keys returns the keys for the secret
+func (s *ExternalSecret) Keys() []string {
+	var keys []string
+	if s.Spec.Data != nil {
+		for _, d := range s.Spec.Data {
+			keys = append(keys, d.Key)
+		}
+	}
+	return keys
+}
+
 // ExternalSecretSpec defines the desired state of ExternalSecret.
 type ExternalSecretSpec struct {
 	BackendType     string `json:"backendType,omitempty"`

@@ -7,7 +7,6 @@ import (
 
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-extsecret/pkg/root"
-	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
 	"github.com/jenkins-x/jx/v2/pkg/table"
@@ -53,22 +52,28 @@ func NewCmdVerify() (*cobra.Command, *Options) {
 
 // Run implements the command
 func (o *Options) Run() error {
-	results, err := o.Verify()
+	pairs, err := o.Load()
 	if err != nil {
 		return errors.Wrap(err, "failed to verify secrets")
 	}
-	o.Results = results
-
-	if len(results) == 0 {
-		log.Logger().Infof("the %d ExternalSecrets are %s", len(o.ExternalSecrets), util.ColorInfo("valid"))
-		return nil
-	}
+	o.Results = nil
 
 	t := table.CreateTable(os.Stdout)
-	t.AddRow("SECRET", "KEY", "MISSING PROPERTIES")
-	for _, r := range results {
-		for _, e := range r.EntryErrors {
-			t.AddRow(r.ExternalSecret.Name, e.Key, strings.Join(e.Properties, ", "))
+	t.AddRow("SECRET", "STATUS")
+	for _, r := range pairs {
+		name := r.ExternalSecret.Name
+
+		state, err := secretfacade.VerifySecret(&r.ExternalSecret, r.Secret)
+		if err != nil {
+			return errors.Wrapf(err, "failed to verify secret")
+		}
+		if state == nil {
+			t.AddRow(name, util.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.Keys(), ", "))))
+		} else {
+			o.Results = append(o.Results, state)
+			for _, e := range state.EntryErrors {
+				t.AddRow(name, util.ColorWarning(fmt.Sprintf("key %s missing properties: %s", e.Key, strings.Join(e.Properties, ", "))))
+			}
 		}
 	}
 	t.Render()
