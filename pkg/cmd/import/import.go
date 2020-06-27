@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 
 	"github.com/jenkins-x/jx-extsecret/pkg/apis/extsecret/v1alpha1"
-	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-extsecret/pkg/root"
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"

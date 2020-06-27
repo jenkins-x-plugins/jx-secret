@@ -2,9 +2,9 @@ package factory
 
 import (
 	"github.com/jenkins-x/jx-extsecret/pkg/apis/extsecret/v1alpha1"
-	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor/vault"
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 )

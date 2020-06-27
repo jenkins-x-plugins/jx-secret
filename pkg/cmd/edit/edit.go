@@ -3,13 +3,13 @@ package edit
 import (
 	"fmt"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x/jx-extsecret/pkg/input"
-	"github.com/jenkins-x/jx-extsecret/pkg/input/survey"
 	"github.com/jenkins-x/jx-extsecret/pkg/root"
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/pkg/input"
+	"github.com/jenkins-x/jx-helpers/pkg/input/survey"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
 	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"

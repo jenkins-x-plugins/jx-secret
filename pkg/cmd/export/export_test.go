@@ -8,7 +8,7 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/export"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/testsecrets"
-	"github.com/jenkins-x/jx-extsecret/pkg/testhelpers"
+	"github.com/jenkins-x/jx-helpers/pkg/testhelpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"

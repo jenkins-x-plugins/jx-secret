@@ -6,10 +6,10 @@ import (
 
 	"github.com/alecthomas/assert"
 	importcmd "github.com/jenkins-x/jx-extsecret/pkg/cmd/import"
-	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
-	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner/fakerunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/testsecrets"
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner/fakerunner"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime"
 	dynfake "k8s.io/client-go/dynamic/fake"

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/jenkins-x/jx-extsecret/pkg/apis/extsecret/v1alpha1"
-	"github.com/jenkins-x/jx-extsecret/pkg/yamls"
+	"github.com/jenkins-x/jx-helpers/pkg/yamls"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,7 +14,7 @@ func TestUnmarshalSuccess(t *testing.T) {
 	fileName := filepath.Join("test_data", "lighthouse-oauth-token.yaml")
 	assert.FileExists(t, fileName)
 	es := &v1alpha1.ExternalSecret{}
-	err := yamls.LoadYAML(fileName, es)
+	err := yamls.LoadFile(fileName, es)
 	require.NoError(t, err, "failed to load file %s", fileName)
 
 	t.Logf("loaded %#v", es)
@@ -45,7 +45,7 @@ func TestUnmarshalFailure(t *testing.T) {
 	fileName := filepath.Join("test_data", "knative-docker-user-pass.yaml")
 	assert.FileExists(t, fileName)
 	es := &v1alpha1.ExternalSecret{}
-	err := yamls.LoadYAML(fileName, es)
+	err := yamls.LoadFile(fileName, es)
 	require.NoError(t, err, "failed to load file %s", fileName)
 
 	t.Logf("loaded %#v", es)

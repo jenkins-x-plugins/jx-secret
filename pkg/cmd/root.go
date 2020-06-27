@@ -7,7 +7,7 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/verify"
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/version"
 	"github.com/jenkins-x/jx-extsecret/pkg/root"
-	"github.com/jenkins-x/jx-promote/pkg/common"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras"
 	"github.com/jenkins-x/jx/v2/pkg/log"
 	"github.com/spf13/cobra"
 )
@@ -24,10 +24,10 @@ func Main() *cobra.Command {
 			}
 		},
 	}
-	cmd.AddCommand(common.SplitCommand(edit.NewCmdEdit()))
-	cmd.AddCommand(common.SplitCommand(export.NewCmdExport()))
-	cmd.AddCommand(common.SplitCommand(importcmd.NewCmdImport()))
-	cmd.AddCommand(common.SplitCommand(verify.NewCmdVerify()))
-	cmd.AddCommand(common.SplitCommand(version.NewCmdVersion()))
+	cmd.AddCommand(cobras.SplitCommand(edit.NewCmdEdit()))
+	cmd.AddCommand(cobras.SplitCommand(export.NewCmdExport()))
+	cmd.AddCommand(cobras.SplitCommand(importcmd.NewCmdImport()))
+	cmd.AddCommand(cobras.SplitCommand(verify.NewCmdVerify()))
+	cmd.AddCommand(cobras.SplitCommand(version.NewCmdVersion()))
 	return cmd
 }

@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
@@ -47,7 +47,7 @@ func (c *client) Write(properties editor.KeyProperties) error {
 	for _, pv := range properties.Properties {
 		args = append(args, fmt.Sprintf("%s=%s", pv.Property, pv.Value))
 	}
-	cmd := &util.Command{
+	cmd := &cmdrunner.Command{
 		Name: c.vaultBin,
 		Args: args,
 		Env:  c.env,
@@ -68,7 +68,7 @@ func (c *client) initialise() error {
 	log.Logger().Infof("verifying we have vault installed")
 
 	// lets verify we can find the binary
-	cmd := &util.Command{
+	cmd := &cmdrunner.Command{
 		Name: c.vaultBin,
 		Args: []string{"version"},
 		Env:  c.env,
@@ -120,7 +120,7 @@ func (c *client) initialise() error {
 	log.Logger().Infof("verifying we can connect to vault...")
 
 	// lets verify we can list the secrets
-	cmd = &util.Command{
+	cmd = &cmdrunner.Command{
 		Name: c.vaultBin,
 		Args: []string{"kv", "list", "secret"},
 		Env:  c.env,

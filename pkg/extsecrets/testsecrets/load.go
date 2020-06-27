@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/yamls"
+	"github.com/jenkins-x/jx-helpers/pkg/yamls"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -18,7 +18,7 @@ func LoadExtSecretFiles(t *testing.T, ns string, fileNames ...string) []runtime.
 		require.FileExists(t, path)
 
 		u := &unstructured.Unstructured{}
-		err := yamls.LoadYAML(path, u)
+		err := yamls.LoadFile(path, u)
 		require.NoError(t, err, "failed to load file %s", path)
 		u.SetNamespace(ns)
 		dynObjects = append(dynObjects, u)
