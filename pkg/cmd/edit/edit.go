@@ -10,10 +10,10 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/input"
 	"github.com/jenkins-x/jx-helpers/pkg/input/survey"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -64,7 +64,7 @@ func (o *Options) Run() error {
 	o.Results = results
 
 	if len(results) == 0 {
-		log.Logger().Infof("the %d ExternalSecrets are %s", len(o.ExternalSecrets), util.ColorInfo("valid"))
+		log.Logger().Infof("the %d ExternalSecrets are %s", len(o.ExternalSecrets), termcolor.ColorInfo("valid"))
 		return nil
 	}
 

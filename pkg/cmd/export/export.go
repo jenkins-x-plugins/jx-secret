@@ -10,10 +10,13 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-extsecret/pkg/root"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/maps"
+	"github.com/jenkins-x/jx-helpers/pkg/options"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -83,7 +86,7 @@ func (o *Options) Run() error {
 			property := data.Property
 
 			jsonPath := strings.ReplaceAll(key+"/"+property, "/", ".")
-			util.SetMapValueViaPath(m, jsonPath, string(value))
+			maps.SetMapValueViaPath(m, jsonPath, string(value))
 		}
 	}
 
@@ -94,26 +97,26 @@ func (o *Options) Run() error {
 	secretsYAML := string(data)
 
 	if o.Console {
-		log.Logger().Infof("%s", util.ColorStatus(secretsYAML))
+		log.Logger().Infof("%s", termcolor.ColorStatus(secretsYAML))
 		return nil
 	}
 	fileName := o.OutFile
 	if fileName == "" && !o.Console {
-		return util.MissingOption("file")
+		return options.MissingOption("file")
 	}
 	if !o.Console {
 		dir := filepath.Dir(fileName)
-		err := os.MkdirAll(dir, util.DefaultWritePermissions)
+		err := os.MkdirAll(dir, files.DefaultDirWritePermissions)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create parent directory %s", dir)
 		}
 		log.Logger().Debugf("created directory %s", dir)
 	}
 
-	err = ioutil.WriteFile(fileName, []byte(secretsYAML), util.DefaultFileWritePermissions)
+	err = ioutil.WriteFile(fileName, []byte(secretsYAML), files.DefaultFileWritePermissions)
 	if err != nil {
 		return errors.Wrapf(err, "failed to save secrets file %s", fileName)
 	}
-	log.Logger().Infof("exported Secrets to file: %s", util.ColorInfo(fileName))
+	log.Logger().Infof("exported Secrets to file: %s", termcolor.ColorInfo(fileName))
 	return nil
 }

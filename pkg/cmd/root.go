@@ -8,7 +8,7 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/version"
 	"github.com/jenkins-x/jx-extsecret/pkg/root"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras"
-	"github.com/jenkins-x/jx/v2/pkg/log"
+	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/spf13/cobra"
 )
 

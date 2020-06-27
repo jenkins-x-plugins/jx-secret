@@ -9,8 +9,8 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/util"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -106,7 +106,7 @@ func (c *client) initialise() error {
 			return err
 		}
 		caCertFile = filepath.Join(tmpDir, "vault-ca.crt")
-		err = ioutil.WriteFile(caCertFile, []byte(caCert), util.DefaultFileWritePermissions)
+		err = ioutil.WriteFile(caCertFile, []byte(caCert), files.DefaultFileWritePermissions)
 		if err != nil {
 			return errors.Wrapf(err, "failed to save CA Cert file %s", caCertFile)
 		}

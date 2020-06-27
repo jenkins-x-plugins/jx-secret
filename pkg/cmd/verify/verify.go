@@ -7,10 +7,10 @@ import (
 
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-extsecret/pkg/root"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
-	"github.com/jenkins-x/jx/v2/pkg/table"
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-helpers/pkg/table"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -68,11 +68,11 @@ func (o *Options) Run() error {
 			return errors.Wrapf(err, "failed to verify secret")
 		}
 		if state == nil {
-			t.AddRow(name, util.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.Keys(), ", "))))
+			t.AddRow(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.Keys(), ", "))))
 		} else {
 			o.Results = append(o.Results, state)
 			for _, e := range state.EntryErrors {
-				t.AddRow(name, util.ColorWarning(fmt.Sprintf("key %s missing properties: %s", e.Key, strings.Join(e.Properties, ", "))))
+				t.AddRow(name, termcolor.ColorWarning(fmt.Sprintf("key %s missing properties: %s", e.Key, strings.Join(e.Properties, ", "))))
 			}
 		}
 	}

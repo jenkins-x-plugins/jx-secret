@@ -10,10 +10,11 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-extsecret/pkg/root"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/options"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/helper"
-	"github.com/jenkins-x/jx/v2/pkg/cmd/templates"
-	"github.com/jenkins-x/jx/v2/pkg/util"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -66,11 +67,11 @@ func NewCmdImport() (*cobra.Command, *Options) {
 func (o *Options) Run() error {
 	fileName := o.File
 	if fileName == "" {
-		return util.MissingOption("file")
+		return options.MissingOption("file")
 	}
 
 	m := map[string]interface{}{}
-	exists, err := util.FileExists(fileName)
+	exists, err := files.FileExists(fileName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to check if file exists %s", fileName)
 	}
