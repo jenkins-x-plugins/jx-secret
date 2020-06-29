@@ -560,6 +560,10 @@ github.com/jenkins-x/go-scm v1.5.65/go.mod h1:MgGRkJScE/rJ30J/bXYqduN5sDPZqZFITJ
 github.com/jenkins-x/go-scm v1.5.79/go.mod h1:PCT338UhP/pQ0IeEeMEf/hoLTYKcH7qjGEKd7jPkeYg=
 github.com/jenkins-x/jx-helpers v1.0.7 h1:9qAh5LACjrtx5t61+ohUCvLrsR8fCzOKU6++Irffqx0=
 github.com/jenkins-x/jx-helpers v1.0.7/go.mod h1:JldgSKYWU4cwWGynlLHtR4BhhEjjppoKG8TKaaiiumY=
+github.com/jenkins-x/jx-helpers v1.0.8 h1:9yk7dD1S4spj71TdTMvFUCuMPFWRy3Uheg2LlZMiy9I=
+github.com/jenkins-x/jx-helpers v1.0.8/go.mod h1:JldgSKYWU4cwWGynlLHtR4BhhEjjppoKG8TKaaiiumY=
+github.com/jenkins-x/jx-helpers v1.0.9 h1:kQUx4IOxT70EW/w1gP00ZZbQ/9wRPJYkH0u8BYI+Fes=
+github.com/jenkins-x/jx-helpers v1.0.9/go.mod h1:JldgSKYWU4cwWGynlLHtR4BhhEjjppoKG8TKaaiiumY=
 github.com/jenkins-x/jx-kube-client v0.0.8 h1:XK/TP2qnhHPb/vhaGHmvVilWGDtARIZ1DOEHp/6/h0Y=
 github.com/jenkins-x/jx-kube-client v0.0.8/go.mod h1:XvNZQAAF95wzQzSfCpehXwb5FI6WCg+5GiwVA2S4SPA=
 github.com/jenkins-x/jx-logging v0.0.8 h1:V6W3il1JFSL1BTuXio3NVefqtJWFIm3Dg/99nxGFMuU=
@@ -806,6 +810,7 @@ github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/satori/go.uuid v0.0.0-20160713180306-0aa62d5ddceb/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
+github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5 h1:Jw7W4WMfQDxsXvfeFSaS2cHlY7bAF4MGrgnbd0+Uo78=
 github.com/satori/go.uuid v1.2.1-0.20180103174451-36e9d2ebbde5/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
 github.com/sclevine/spec v1.2.0/go.mod h1:W4J29eT/Kzv7/b9IWLB055Z+qvVC9vt0Arko24q7p+U=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=

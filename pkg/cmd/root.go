@@ -4,6 +4,7 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/edit"
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/export"
 	importcmd "github.com/jenkins-x/jx-extsecret/pkg/cmd/import"
+	"github.com/jenkins-x/jx-extsecret/pkg/cmd/vault"
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/verify"
 	"github.com/jenkins-x/jx-extsecret/pkg/cmd/version"
 	"github.com/jenkins-x/jx-extsecret/pkg/root"
@@ -29,5 +30,6 @@ func Main() *cobra.Command {
 	cmd.AddCommand(cobras.SplitCommand(importcmd.NewCmdImport()))
 	cmd.AddCommand(cobras.SplitCommand(verify.NewCmdVerify()))
 	cmd.AddCommand(cobras.SplitCommand(version.NewCmdVersion()))
+	cmd.AddCommand(vault.NewCmdVault())
 	return cmd
 }

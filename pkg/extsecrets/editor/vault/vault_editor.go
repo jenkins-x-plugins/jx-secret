@@ -127,7 +127,7 @@ func (c *client) initialise() error {
 	}
 	_, err = c.commandRunner(cmd)
 	if err != nil {
-		return errors.Wrapf(err, "failed to access vault. are you sure you are running the vault port forward command? command failed: %s", cmdrunner.CLI(cmd))
+		return errors.Wrapf(err, "failed to access vault. are you sure you are running the 'jx-extsecret vault portforward' command? command failed: %s", cmdrunner.CLI(cmd))
 	}
 
 	log.Logger().Infof("vault is setup correctly!\n\n")
