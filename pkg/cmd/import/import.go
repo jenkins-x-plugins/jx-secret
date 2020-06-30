@@ -10,11 +10,11 @@ import (
 	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-extsecret/pkg/root"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-helpers/pkg/options"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
-	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -58,6 +58,7 @@ func NewCmdImport() (*cobra.Command, *Options) {
 			helper.CheckErr(err)
 		},
 	}
+	cmd.Flags().StringVarP(&o.File, "file", "f", "", "the name of the file to import")
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().BoolVarP(&o.FailOnUnknownKey, "fail-on-unknown-key", "", false, "should the command fail if a key from the YAML file is unknown")
 	return cmd, o
