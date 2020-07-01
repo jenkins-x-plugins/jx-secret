@@ -6,11 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
-	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -96,7 +96,7 @@ func (c *client) initialise() error {
 
 	caCertFile := os.Getenv("VAULT_CACERT")
 	if caCertFile == "" {
-		tmpDir, err := ioutil.TempDir("", "jx-extsecret-vault-")
+		tmpDir, err := ioutil.TempDir("", "jx-secret-vault-")
 		if err != nil {
 			return errors.Wrapf(err, "failed to create temp dir")
 		}
@@ -127,7 +127,7 @@ func (c *client) initialise() error {
 	}
 	_, err = c.commandRunner(cmd)
 	if err != nil {
-		return errors.Wrapf(err, "failed to access vault. are you sure you are running the 'jx-extsecret vault portforward' command? command failed: %s", cmdrunner.CLI(cmd))
+		return errors.Wrapf(err, "failed to access vault. are you sure you are running the 'jx-secret vault portforward' command? command failed: %s", cmdrunner.CLI(cmd))
 	}
 
 	log.Logger().Infof("vault is setup correctly!\n\n")

@@ -1,4 +1,4 @@
-module github.com/jenkins-x/jx-extsecret
+module github.com/jenkins-x/jx-secret
 
 go 1.13
 

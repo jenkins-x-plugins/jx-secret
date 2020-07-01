@@ -19,11 +19,11 @@ func main() {
 			RegexFiles{
 				Regex: `version: (.*)`,
 				Files: []string{
-					"docker/gcr.io/jenkinsxio-labs-private/jx-extsecret.yml",
+					"docker/gcr.io/jenkinsxio-labs-private/jx-secret.yml",
 				},
 			},
 			RegexFiles{
-				Regex: `\s+image: gcr.io/jenkinsxio-labs-private/jx-extsecret:(.*)`,
+				Regex: `\s+image: gcr.io/jenkinsxio-labs-private/jx-secret:(.*)`,
 				Files: []string{"jenkins-x*.yml"},
 			},
 		)

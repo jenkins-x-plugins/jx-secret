@@ -2,8 +2,8 @@ package root
 
 const (
 	// TopLevelCommand top level command
-	TopLevelCommand = "jx-alpha-extsecret"
+	TopLevelCommand = "jx-secret"
 
 	// BinaryName the name of the command binary in help
-	BinaryName = "jx-alpha-extsecret"
+	BinaryName = "jx-secret"
 )

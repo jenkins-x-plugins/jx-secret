@@ -5,12 +5,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x/jx-extsecret/pkg/root"
-	"github.com/jenkins-x/jx-helpers/pkg/table"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
+	"github.com/jenkins-x/jx-helpers/pkg/table"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
+	"github.com/jenkins-x/jx-secret/pkg/root"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

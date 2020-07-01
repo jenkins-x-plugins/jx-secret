@@ -1,7 +1,7 @@
 package extsecrets
 
 import (
-	"github.com/jenkins-x/jx-extsecret/pkg/apis/extsecret/v1alpha1"
+	"github.com/jenkins-x/jx-secret/pkg/apis/extsecret/v1alpha1"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

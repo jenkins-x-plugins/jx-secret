@@ -2,8 +2,8 @@
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
 SHELL := /bin/bash
-NAME := jx-extsecret
-BINARY_NAME := jx-alpha-extsecret
+NAME := jx-secret
+BINARY_NAME := jx-secret
 BUILD_TARGET = build
 MAIN_SRC_FILE=cmd/main.go
 GO := GO111MODULE=on go

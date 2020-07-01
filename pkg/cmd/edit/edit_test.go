@@ -3,12 +3,12 @@ package edit_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/cmd/edit"
-	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
-	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/testsecrets"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner/fakerunner"
 	fakeinput "github.com/jenkins-x/jx-helpers/pkg/input/fake"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/edit"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"

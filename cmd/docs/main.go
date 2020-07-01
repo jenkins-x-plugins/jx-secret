@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/cmd"
+	"github.com/jenkins-x/jx-secret/pkg/cmd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

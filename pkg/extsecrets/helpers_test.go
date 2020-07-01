@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/apis/extsecret/v1alpha1"
 	"github.com/jenkins-x/jx-helpers/pkg/yamls"
+	"github.com/jenkins-x/jx-secret/pkg/apis/extsecret/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

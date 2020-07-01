@@ -9,7 +9,7 @@ echo "apiVersion: jenkins.io/v1
 kind: Plugin
 metadata:
   labels:
-    jenkins.io/pluginCommand: jx-extsecret
+    jenkins.io/pluginCommand: jx-secret
   name: remote
 spec:
   description: CloudBees plugin for remote environments
@@ -26,7 +26,7 @@ ls -al *.gz
 echo "uploading the plugin distro to github"
 github-release upload \
     --user jenkins-x \
-    --repo jx-extsecret \
+    --repo jx-secret \
     --tag v${VERSION} \
     --name "plugin.gz" \
     --file plugin.gz

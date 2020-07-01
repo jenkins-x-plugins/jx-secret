@@ -6,7 +6,7 @@ before:
     - go mod download
 
 builds:
-  - id: jx-alpha-extsecret-linux
+  - id: jx-secret-linux
     # Path to main.go file or main package.
     # Default is `.`.
     main: ./cmd/main.go
@@ -14,12 +14,12 @@ builds:
     # Binary name.
     # Can be a path (e.g. `bin/app`) to wrap the binary in a directory.
     # Default is the name of the project directory.
-    binary: jx-alpha-extsecret
+    binary: jx-secret
 
     # Custom ldflags templates.
     # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
     ldflags:
-      - -X "github.com/jenkins-x/jx-extsecret/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Revision={{.Env.REV}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Branch={{.Env.BRANCH}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.BuildDate={{.Env.BUILDDATE}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.GoVersion={{.Env.GOVERSION}}"
+      - -X "github.com/jenkins-x/jx-secret/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Revision={{.Env.REV}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Branch={{.Env.BRANCH}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.BuildDate={{.Env.BUILDDATE}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.GoVersion={{.Env.GOVERSION}}"
 
     # GOOS list to build for.
     # For more info refer to: https://golang.org/doc/install/source#environment
@@ -33,7 +33,7 @@ builds:
     goarch:
       - amd64
 
-  - id: jx-alpha-extsecret-amd64
+  - id: jx-secret-amd64
     # Path to main.go file or main package.
     # Default is `.`.
     main: ./cmd/main.go
@@ -41,12 +41,12 @@ builds:
     # Binary name.
     # Can be a path (e.g. `bin/app`) to wrap the binary in a directory.
     # Default is the name of the project directory.
-    binary: jx-alpha-extsecret
+    binary: jx-secret
 
     # Custom ldflags templates.
     # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
     ldflags:
-     - -X "github.com/jenkins-x/jx-extsecret/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Revision={{.Env.REV}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Branch={{.Env.BRANCH}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.BuildDate={{.Env.BUILDDATE}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.GoVersion={{.Env.GOVERSION}}"
+     - -X "github.com/jenkins-x/jx-secret/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Revision={{.Env.REV}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Branch={{.Env.BRANCH}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.BuildDate={{.Env.BUILDDATE}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.GoVersion={{.Env.GOVERSION}}"
 
     # GOOS list to build for.
     # For more info refer to: https://golang.org/doc/install/source#environment
@@ -60,7 +60,7 @@ builds:
     goarch:
       - amd64
 
-  - id: jx-alpha-extsecret-windows-amd64
+  - id: jx-secret-windows-amd64
     # Path to main.go file or main package.
     # Default is `.`.
     main: ./cmd/main.go
@@ -68,12 +68,12 @@ builds:
     # Binary name.
     # Can be a path (e.g. `bin/app`) to wrap the binary in a directory.
     # Default is the name of the project directory.
-    binary: jx-alpha-extsecret
+    binary: jx-secret
 
     # Custom ldflags templates.
     # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
     ldflags:
-     - -X "github.com/jenkins-x/jx-extsecret/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Revision={{.Env.REV}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Branch={{.Env.BRANCH}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.BuildDate={{.Env.BUILDDATE}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.GoVersion={{.Env.GOVERSION}}"
+     - -X "github.com/jenkins-x/jx-secret/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Version={{.Env.VERSION}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Revision={{.Env.REV}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.Branch={{.Env.BRANCH}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.BuildDate={{.Env.BUILDDATE}}" -X "{{.Env.ROOTPACKAGE}}/pkg/version.GoVersion={{.Env.GOVERSION}}"
 
     # GOOS list to build for.
     # For more info refer to: https://golang.org/doc/install/source#environment
@@ -88,15 +88,15 @@ builds:
       - amd64
 
 archives:
-  - name_template: "jx-alpha-extsecret-{{ .Os }}-{{ .Arch }}"
+  - name_template: "jx-secret-{{ .Os }}-{{ .Arch }}"
     format_overrides:
       - goos: windows
         format: zip
 
 checksum:
   # You can change the name of the checksums file.
-  # Default is `jx-alpha-extsecret_{{ .Version }}_checksums.txt`.
-  name_template: "jx-alpha-extsecret-checksums.txt"
+  # Default is `jx-secret_{{ .Version }}_checksums.txt`.
+  name_template: "jx-secret-checksums.txt"
 
   # Algorithm to be used.
   # Accepted options are sha256, sha512, sha1, crc32, md5, sha224 and sha384.

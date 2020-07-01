@@ -1,15 +1,15 @@
 package cmd
 
 import (
-	"github.com/jenkins-x/jx-extsecret/pkg/cmd/edit"
-	"github.com/jenkins-x/jx-extsecret/pkg/cmd/export"
-	importcmd "github.com/jenkins-x/jx-extsecret/pkg/cmd/import"
-	"github.com/jenkins-x/jx-extsecret/pkg/cmd/vault"
-	"github.com/jenkins-x/jx-extsecret/pkg/cmd/verify"
-	"github.com/jenkins-x/jx-extsecret/pkg/cmd/version"
-	"github.com/jenkins-x/jx-extsecret/pkg/root"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras"
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/edit"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/export"
+	importcmd "github.com/jenkins-x/jx-secret/pkg/cmd/import"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/vault"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/verify"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/version"
+	"github.com/jenkins-x/jx-secret/pkg/root"
 	"github.com/spf13/cobra"
 )
 

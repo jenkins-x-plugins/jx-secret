@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-extsecret/pkg/cmd/export"
-	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets"
-	"github.com/jenkins-x/jx-extsecret/pkg/extsecrets/testsecrets"
 	"github.com/jenkins-x/jx-helpers/pkg/testhelpers"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/export"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
