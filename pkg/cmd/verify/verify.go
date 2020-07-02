@@ -38,6 +38,7 @@ func NewCmdVerify() (*cobra.Command, *Options) {
 
 	cmd := &cobra.Command{
 		Use:     "verify",
+		Aliases: []string{"get"},
 		Short:   "Verifies that the ExternalSecret resources have the required properties populated in the underlying secret storage",
 		Long:    verifyLong,
 		Example: fmt.Sprintf(verifyExample, root.BinaryName),
