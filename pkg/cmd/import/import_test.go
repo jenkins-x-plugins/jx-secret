@@ -10,6 +10,7 @@ import (
 	importcmd "github.com/jenkins-x/jx-secret/pkg/cmd/import"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
+	"github.com/jenkins-x/jx-secret/pkg/plugins"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime"
 	dynfake "k8s.io/client-go/dynamic/fake"
@@ -17,7 +18,9 @@ import (
 )
 
 func TestImport(t *testing.T) {
-	var err error
+	vaultBin, err := plugins.GetVaultBinary(plugins.VaultVersion)
+	require.NoError(t, err, "failed to find vault binary plugin")
+
 	_, o := importcmd.NewCmdImport()
 	scheme := runtime.NewScheme()
 
@@ -40,13 +43,13 @@ func TestImport(t *testing.T) {
 
 	runner.ExpectResults(t,
 		fakerunner.FakeResult{
-			CLI: "vault version",
+			CLI: vaultBin + " version",
 		},
 		fakerunner.FakeResult{
-			CLI: "vault kv list secret",
+			CLI: vaultBin + " kv list secret",
 		},
 		fakerunner.FakeResult{
-			CLI: "vault kv put secret/pipelineUser email=jenkins-x@googlegroups.com token=dummyPipelineUser username=jenkins-x-labs-bot",
+			CLI: vaultBin + " kv put secret/pipelineUser email=jenkins-x@googlegroups.com token=dummyPipelineUser username=jenkins-x-labs-bot",
 			Env: map[string]string{
 				"VAULT_ADDR":  "https://127.0.0.1:8200",
 				"VAULT_TOKEN": "dummyVaultToken",

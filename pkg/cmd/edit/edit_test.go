@@ -9,6 +9,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/cmd/edit"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
+	"github.com/jenkins-x/jx-secret/pkg/plugins"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -19,7 +20,9 @@ import (
 )
 
 func TestEdit(t *testing.T) {
-	var err error
+	vaultBin, err := plugins.GetVaultBinary(plugins.VaultVersion)
+	require.NoError(t, err, "failed to find vault binary plugin")
+
 	_, o := edit.NewCmdEdit()
 	scheme := runtime.NewScheme()
 
@@ -60,16 +63,16 @@ func TestEdit(t *testing.T) {
 
 	runner.ExpectResults(t,
 		fakerunner.FakeResult{
-			CLI: "vault version",
+			CLI: vaultBin + " version",
 		},
 		fakerunner.FakeResult{
-			CLI: "vault kv list secret",
+			CLI: vaultBin + " kv list secret",
 		},
 		fakerunner.FakeResult{
-			CLI: "vault kv put secret/jx/pipelineUser token=dummyPipelineToken",
+			CLI: vaultBin + " kv put secret/jx/pipelineUser token=dummyPipelineToken",
 		},
 		fakerunner.FakeResult{
-			CLI: "vault kv put secret/knative/docker/user/pass password=dummyDockerPwd",
+			CLI: vaultBin + " kv put secret/knative/docker/user/pass password=dummyDockerPwd",
 			Env: map[string]string{
 				"VAULT_ADDR":  "https://127.0.0.1:8200",
 				"VAULT_TOKEN": "dummyVaultToken",

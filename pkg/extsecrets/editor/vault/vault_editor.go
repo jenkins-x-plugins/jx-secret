@@ -11,6 +11,7 @@ import (
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
+	"github.com/jenkins-x/jx-secret/pkg/plugins"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,7 +63,11 @@ func (c *client) Write(properties editor.KeyProperties) error {
 func (c *client) initialise() error {
 	c.vaultBin = os.Getenv("VAULT_BIN")
 	if c.vaultBin == "" {
-		c.vaultBin = "vault"
+		var err error
+		c.vaultBin, err = plugins.GetVaultBinary(plugins.VaultVersion)
+		if err != nil {
+			return errors.Wrapf(err, "failed to find version %s of the vault plugin binary", plugins.VaultVersion)
+		}
 	}
 
 	log.Logger().Infof("verifying we have vault installed")

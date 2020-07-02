@@ -7,7 +7,8 @@ require (
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/repr v0.0.0-20200325044227-4184120f674c // indirect
 	github.com/cpuguy83/go-md2man v1.0.10
-	github.com/jenkins-x/jx-helpers v1.0.21
+	github.com/jenkins-x/jx-api v0.0.11
+	github.com/jenkins-x/jx-helpers v1.0.22
 	github.com/jenkins-x/jx-kube-client v0.0.8
 	github.com/jenkins-x/jx-logging v0.0.8
 	github.com/pkg/errors v0.9.1
