@@ -1,20 +1,15 @@
-package vault
+package portforward
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
-	"github.com/jenkins-x/jx-helpers/pkg/kube/pods"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x/jx-secret/pkg/root"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/kubernetes"
 )
 
 var (
@@ -29,11 +24,7 @@ var (
 
 // Options the options for the command
 type Options struct {
-	PodName       string
-	Namespace     string
-	Console       bool
-	PollDuration  time.Duration
-	KubeClient    kubernetes.Interface
+	wait.Options
 	CommandRunner cmdrunner.CommandRunner
 }
 
@@ -52,27 +43,19 @@ func NewCmdPortForward() (*cobra.Command, *Options) {
 			helper.CheckErr(err)
 		},
 	}
-	cmd.Flags().StringVarP(&o.PodName, "pod", "p", "vault-0", "the name of the vault pod which needs to be running before the port forward can take place")
-	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "vault-infra", "the namespace where vault is running")
-	cmd.Flags().DurationVarP(&o.PollDuration, "duration", "d", 5*time.Second, "the time period between polls for the vault pod being ready")
+	o.Options.AddFlags(cmd)
 	return cmd, o
 }
 
 // Run implements the command
 func (o *Options) Run() error {
-	var err error
-	o.KubeClient, err = extsecrets.LazyCreateKubeClient(o.KubeClient)
+	err := o.Options.Run()
 	if err != nil {
-		return errors.Wrap(err, "failed to create kube client")
+		return errors.Wrapf(err, "failed to wait for vault")
 	}
 	if o.CommandRunner == nil {
 		o.CommandRunner = cmdrunner.DefaultCommandRunner
 	}
-	err = o.waitForPod()
-	if err != nil {
-		return errors.Wrapf(err, "failed to wait for vault pod")
-	}
-
 	cmd := &cmdrunner.Command{
 		Name: "kubectl",
 		Args: []string{"port-forward", "--namespace", o.Namespace, "service/vault", "8200"},
@@ -81,14 +64,5 @@ func (o *Options) Run() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to run command: %s", cmd.CLI())
 	}
-	return nil
-}
-
-func (o *Options) waitForPod() error {
-	err := pods.WaitForPodNameToBeReady(o.KubeClient, o.Namespace, o.PodName, o.PollDuration)
-	if err != nil {
-		return errors.Wrapf(err, "failed to wait for pod %s to be ready in namespace %s", o.PodName, o.Namespace)
-	}
-	log.Logger().Infof("pod %s in namespace %s is ready", termcolor.ColorInfo(o.PodName), termcolor.ColorInfo(o.Namespace))
 	return nil
 }

@@ -1,10 +1,10 @@
-package vault_test
+package wait_test
 
 import (
 	"testing"
+	"time"
 
-	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner/fakerunner"
-	"github.com/jenkins-x/jx-secret/pkg/cmd/vault"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,10 +12,11 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func TestVaultPortForward(t *testing.T) {
+func TestVaultWait(t *testing.T) {
 	var err error
-	_, o := vault.NewCmdPortForward()
+	_, o := wait.NewCmdWait()
 
+	o.PollDuration = 2 * time.Second
 	ns := o.Namespace
 
 	kubeObjects := []runtime.Object{
@@ -42,16 +43,20 @@ func TestVaultPortForward(t *testing.T) {
 
 	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
 
-	runner := &fakerunner.FakeRunner{}
-	o.CommandRunner = runner.Run
+	err = o.Run()
+	require.NoError(t, err, "failed to run")
+}
+
+func TestVaultWaitFails(t *testing.T) {
+	var err error
+	_, o := wait.NewCmdWait()
+
+	o.PollDuration = 1 * time.Second
+
+	o.KubeClient = fake.NewSimpleClientset()
 
 	err = o.Run()
-	require.NoError(t, err, "failed to run edit")
+	require.Error(t, err, "expected failure")
 
-	runner.ExpectResults(t,
-		fakerunner.FakeResult{
-			CLI: "kubectl port-forward --namespace vault-infra service/vault 8200",
-		},
-	)
-
+	t.Logf("got expected failure waiting for vault: %s", err.Error())
 }
