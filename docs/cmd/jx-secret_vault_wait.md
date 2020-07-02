@@ -1,28 +1,26 @@
-## jx-secret vault portforward
+## jx-secret vault wait
 
-Runs a port forward process so you can access the vault in a kubernetes cluster
-
-***Aliases**: portfwd,port-forward*
+Waits for vault to be ready for use
 
 ### Usage
 
 ```
-jx-secret vault portforward
+jx-secret vault wait
 ```
 
 ### Synopsis
 
-Runs a port forward process so you can access the vault in a kubernetes cluster
+Waits for vault to be ready for use
 
 ### Examples
 
-  jx-secret vault portforward
+  jx-secret vault wait
 
 ### Options
 
 ```
   -d, --duration duration   the maximum time period to wait for the vault pod to be ready (default 5m0s)
-  -h, --help                help for portforward
+  -h, --help                help for wait
   -n, --ns string           the namespace where vault is running (default "vault-infra")
   -p, --pod string          the name of the vault pod which needs to be running before the port forward can take place (default "vault-0")
 ```
