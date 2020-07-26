@@ -22,13 +22,13 @@ var (
 )
 
 // UpgradeOptions the options for upgrading a cluster
-type UpgradeOptions struct {
+type Options struct {
 	CommandRunner cmdrunner.CommandRunner
 }
 
 // NewCmdUpgrade creates a command object for the command
-func NewCmdUpgrade() (*cobra.Command, *UpgradeOptions) {
-	o := &UpgradeOptions{}
+func NewCmdUpgrade() (*cobra.Command, *Options) {
+	o := &Options{}
 
 	cmd := &cobra.Command{
 		Use:     "upgrade",
@@ -44,7 +44,7 @@ func NewCmdUpgrade() (*cobra.Command, *UpgradeOptions) {
 }
 
 // Run implements the command
-func (o *UpgradeOptions) Run() error {
+func (o *Options) Run() error {
 	log.Logger().Infof("checking we have the correct vault CLI version")
 	_, err := plugins.GetVaultBinary("")
 	if err != nil {

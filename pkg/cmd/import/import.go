@@ -110,10 +110,6 @@ func (o *Options) Run() error {
 	editors := map[string]editor.Interface{}
 
 	for _, r := range resources {
-		ns := r.Namespace
-		if ns == "" {
-			ns = o.Namespace
-		}
 		name := r.Name
 		backendType := r.Spec.BackendType
 

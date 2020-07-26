@@ -106,7 +106,7 @@ func (o *Options) Run() error {
 	}
 	if !o.Console {
 		dir := filepath.Dir(fileName)
-		err := os.MkdirAll(dir, files.DefaultDirWritePermissions)
+		err = os.MkdirAll(dir, files.DefaultDirWritePermissions)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create parent directory %s", dir)
 		}

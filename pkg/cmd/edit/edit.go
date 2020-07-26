@@ -91,8 +91,8 @@ func (o *Options) Run() error {
 				Key: e.Key,
 			}
 			for _, property := range e.Properties {
-				message, help := o.propertyMessage(r, e, property)
-				value, err := o.Input.PickPassword(message, help)
+				message, help := o.propertyMessage(e, property)
+				value, err := o.Input.PickPassword(message, help) //nolint:govet
 				if err != nil {
 					return errors.Wrapf(err, "failed to enter property %s for key %s on ExternalSecret %s", property, e.Key, name)
 				}
@@ -112,6 +112,6 @@ func (o *Options) Run() error {
 	return nil
 }
 
-func (o *Options) propertyMessage(r *secretfacade.SecretError, e *secretfacade.EntryError, property string) (string, string) {
+func (o *Options) propertyMessage(e *secretfacade.EntryError, property string) (string, string) {
 	return e.Key + "." + property, ""
 }
