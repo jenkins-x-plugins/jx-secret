@@ -60,7 +60,7 @@ func LazyCreateKubeClient(client kubernetes.Interface) (kubernetes.Interface, er
 }
 
 // SimplifyKey simplify the key to avoid unnecessary paths
-func SimplifyKey(backendType string, key string) string {
+func SimplifyKey(backendType, key string) string {
 	if backendType != "vault" {
 		return key
 	}

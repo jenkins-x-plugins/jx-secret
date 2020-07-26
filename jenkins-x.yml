@@ -6,6 +6,15 @@ pipelineConfig:
     - name: helm-template
       step:
         sh: echo disabled
+    pullRequest:
+      pipeline:
+        stages:
+          - agent:
+              image: golang:1.13
+            name: cli
+            steps:
+            - name: lint
+              command: make lint
     release:
       pipeline:
         stages:

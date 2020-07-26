@@ -1,9 +1,9 @@
 package version
 
 import (
+	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/spf13/cobra"
 )
 

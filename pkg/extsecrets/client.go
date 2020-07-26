@@ -15,6 +15,7 @@ type client struct {
 	dynamicClient dynamic.Interface
 }
 
+//nolint:gocritic
 func (c *client) List(ns string, listOptions metav1.ListOptions) ([]*v1alpha1.ExternalSecret, error) {
 	var client dynamic.ResourceInterface
 	if ns != "" {
@@ -32,7 +33,8 @@ func (c *client) List(ns string, listOptions metav1.ListOptions) ([]*v1alpha1.Ex
 
 	var answer []*v1alpha1.ExternalSecret
 	if resources != nil {
-		for _, u := range resources.Items {
+		for k := range resources.Items {
+			u := resources.Items[k]
 			extSecret := &v1alpha1.ExternalSecret{}
 			err = FromUnstructured(&u, extSecret)
 			if err != nil {

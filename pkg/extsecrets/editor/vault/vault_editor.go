@@ -101,7 +101,7 @@ func (c *client) initialise() error {
 
 	caCertFile := os.Getenv("VAULT_CACERT")
 	if caCertFile == "" {
-		tmpDir, err := ioutil.TempDir("", "jx-secret-vault-")
+		tmpDir, err := ioutil.TempDir("", "jx-secret-vault-") //nolint:govet
 		if err != nil {
 			return errors.Wrapf(err, "failed to create temp dir")
 		}
@@ -140,7 +140,7 @@ func (c *client) initialise() error {
 	return nil
 }
 
-func getSecretKey(kubeClient kubernetes.Interface, ns string, secretName string, key string) (string, error) {
+func getSecretKey(kubeClient kubernetes.Interface, ns, secretName, key string) (string, error) {
 	secret, err := kubeClient.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		err = nil
