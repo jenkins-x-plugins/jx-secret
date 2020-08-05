@@ -51,6 +51,8 @@ func (c *client) Write(properties editor.KeyProperties) error {
 	}
 
 	log.Logger().Infof("would be running this command: %s", cmd.String())
+
+	//todo JR shall we use the go package rather than CLI? https://cloud.google.com/secret-manager/docs/creating-and-accessing-secrets#secretmanager-add-secret-version-go
 	//_, err := c.commandRunner(cmd)
 	//if err != nil {
 	//	return errors.Wrapf(err, "failed to invoke command")
