@@ -163,11 +163,8 @@ func (o *Options) askForSecretValue(e *secretfacade.EntryError, property, name s
 	case "confirm":
 		log.Logger().Warn("implement confirm")
 	default:
-		value, err = o.Input.PickPassword(survey.Question, survey.Help) //nolint:govet
-
-
+		return o.Input.PickPassword(survey.Question, survey.Help) //nolint:govet
 	}
-	if survey.
 	return value, nil
 }
 
