@@ -103,8 +103,8 @@ func (o *Options) Run() error {
 				Key: e.Key,
 			}
 			for _, property := range e.Properties {
-
-				value, err := o.askForSecretValue(e, property, name)
+				var value string
+				value, err = o.askForSecretValue(e, property, name)
 				if err != nil {
 					return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, e.Key, name)
 				}
@@ -173,7 +173,8 @@ func (o *Options) findSurveyForSecret(e *secretfacade.EntryError, property strin
 	if o.Survey != nil {
 		return survey, errors.New("no surveys found")
 	}
-	for _, survey := range o.Survey.Spec.Survey {
+	for i := range o.Survey.Spec.Survey {
+		survey := &o.Survey.Spec.Survey[i]
 
 		// match using labels, first on the secretKey and next on the secretProperty if one exists
 		if survey.Labels[schema.LabelSecretKey] == e.Key {
