@@ -3,6 +3,8 @@ package edit
 import (
 	"fmt"
 
+	"github.com/jenkins-x/jx-secret/pkg/schema"
+
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
@@ -33,6 +35,7 @@ type Options struct {
 	secretfacade.Options
 
 	Input         input.Interface
+	Survey        *schema.SurveySchema
 	Results       []*secretfacade.SecretError
 	CommandRunner cmdrunner.CommandRunner
 }
@@ -57,6 +60,7 @@ func NewCmdEdit() (*cobra.Command, *Options) {
 
 // Run implements the command
 func (o *Options) Run() error {
+	// get a list of external secrets which do not have corresponding k8s secret data populated
 	results, err := o.Verify()
 	if err != nil {
 		return errors.Wrap(err, "failed to verify secrets")
@@ -64,7 +68,7 @@ func (o *Options) Run() error {
 	o.Results = results
 
 	if len(results) == 0 {
-		log.Logger().Infof("the %d ExternalSecrets are %s", len(o.ExternalSecrets), termcolor.ColorInfo("valid"))
+		log.Logger().Infof("the %d ExternalSecrets are %s", len(o.ExternalSecrets), termcolor.ColorInfo("populated"))
 		return nil
 	}
 
@@ -74,6 +78,10 @@ func (o *Options) Run() error {
 
 	editors := map[string]editor.Interface{}
 
+	o.Survey, err = schema.LoadSurveySchema(".jx/survey-schema/jx-install.yaml")
+	if err != nil {
+		return errors.Wrapf(err, "failed to load survey schema used to prompt the user for questions")
+	}
 	for _, r := range results {
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
@@ -87,16 +95,20 @@ func (o *Options) Run() error {
 			editors[backendType] = secEditor
 		}
 
+		// todo do we need to find any surveys that require a confirm?
+		// order them somehow?
+		// maybe skip any?
 		for _, e := range r.EntryErrors {
 			keyProperties := editor.KeyProperties{
 				Key: e.Key,
 			}
 			for _, property := range e.Properties {
-				message, help := o.propertyMessage(e, property)
-				value, err := o.Input.PickPassword(message, help) //nolint:govet
+
+				value, err := o.askForSecretValue(e, property, name)
 				if err != nil {
-					return errors.Wrapf(err, "failed to enter property %s for key %s on ExternalSecret %s", property, e.Key, name)
+					return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, e.Key, name)
 				}
+
 				keyProperties.Properties = append(keyProperties.Properties, editor.PropertyValue{
 					Property: property,
 					Value:    value,
@@ -115,4 +127,65 @@ func (o *Options) Run() error {
 
 func (o *Options) propertyMessage(e *secretfacade.EntryError, property string) (string, string) {
 	return e.Key + "." + property, ""
+}
+
+func (o *Options) askForSecretValue(e *secretfacade.EntryError, property, name string) (string, error) {
+	var value string
+	var err error
+	var survey schema.Survey
+
+	survey, err = o.findSurveyForSecret(e, property)
+	if err != nil {
+		message, help := o.propertyMessage(e, property)
+		value, err = o.Input.PickPassword(message, help) //nolint:govet
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to enter property %s for key %s on ExternalSecret %s", property, e.Key, name)
+		}
+		return value, nil
+	}
+
+	// if mask
+
+	// if format
+
+	// if pattern?
+
+	// min / max
+
+	// if confirm
+
+	// if git get the kind URL / template the help and question?
+
+	// Add TESTS!!!
+
+	kind := survey.Labels[schema.LabelKind]
+	switch kind {
+	case "confirm":
+		log.Logger().Warn("implement confirm")
+	default:
+		value, err = o.Input.PickPassword(survey.Question, survey.Help) //nolint:govet
+
+
+	}
+	if survey.
+	return value, nil
+}
+
+func (o *Options) findSurveyForSecret(e *secretfacade.EntryError, property string) (schema.Survey, error) {
+	survey := schema.Survey{}
+	if o.Survey != nil {
+		return survey, errors.New("no surveys found")
+	}
+	for _, survey := range o.Survey.Spec.Survey {
+
+		// match using labels, first on the secretKey and next on the secretProperty if one exists
+		if survey.Labels[schema.LabelSecretKey] == e.Key {
+			if property == "" {
+				return survey, nil
+			} else if survey.Labels[schema.LabelSecretProperty] == property {
+				return survey, nil
+			}
+		}
+	}
+	return survey, errors.New("no matching surveys found")
 }
