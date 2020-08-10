@@ -1,0 +1,18 @@
+apiVersion: gitops.jenkins-x.io/v1alpha1
+kind: SurveySchema
+spec:
+  survey:
+    - name: jx-admin-user
+      labels:
+        secretKey: jx-admin-user
+        secretProperty: username
+      question: Basic Auth admin username
+      help: Basic Auth admin user is used to access serivces which use basic auth like Nexus, Chartmuseum and Nginx
+      defaultValue: admin
+    - labels:
+        secretKey: jx-admin-user
+        secretProperty: password
+      mask: true
+      question: Basic Auth admin username
+      help: Basic Auth admin user is used to access serivces which use basic auth like Nexus, Chartmuseum and Nginx
+      defaultValue: admin

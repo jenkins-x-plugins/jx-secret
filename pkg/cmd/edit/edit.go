@@ -78,6 +78,7 @@ func (o *Options) Run() error {
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
 		secEditor := editors[backendType]
+		log.Logger().Infof("using %s as the secrets store", backendType)
 		if secEditor == nil {
 			secEditor, err = factory.NewEditor(&r.ExternalSecret, o.CommandRunner, o.KubeClient)
 			if err != nil {
