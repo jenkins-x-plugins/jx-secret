@@ -174,14 +174,14 @@ func (o *Options) findSurveyForSecret(e *secretfacade.EntryError, property strin
 		return survey, errors.New("no surveys found")
 	}
 	for i := range o.Survey.Spec.Survey {
-		survey := &o.Survey.Spec.Survey[i]
+		s := &o.Survey.Spec.Survey[i]
 
 		// match using labels, first on the secretKey and next on the secretProperty if one exists
-		if survey.Labels[schema.LabelSecretKey] == e.Key {
+		if s.Labels[schema.LabelSecretKey] == e.Key {
 			if property == "" {
-				return survey, nil
-			} else if survey.Labels[schema.LabelSecretProperty] == property {
-				return survey, nil
+				return *s, nil
+			} else if s.Labels[schema.LabelSecretProperty] == property {
+				return *s, nil
 			}
 		}
 	}
