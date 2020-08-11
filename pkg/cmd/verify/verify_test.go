@@ -33,7 +33,7 @@ func TestVerify(t *testing.T) {
 			},
 		},
 	}
-	dynObjects := testsecrets.LoadExtSecretFiles(t, ns, "knative-docker-user-pass.yaml", "lighthouse-oauth-token.yaml")
+	dynObjects := testsecrets.LoadExtSecretDir(t, ns, "test_data")
 
 	fakeDynClient := dynfake.NewSimpleDynamicClient(scheme, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)

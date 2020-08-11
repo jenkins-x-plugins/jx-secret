@@ -25,7 +25,7 @@ func TestImport(t *testing.T) {
 	scheme := runtime.NewScheme()
 
 	ns := "jx"
-	dynObjects := testsecrets.LoadExtSecretFiles(t, ns, "knative-docker-user-pass.yaml", "lighthouse-oauth-token.yaml")
+	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "secrets"))
 
 	fakeDynClient := dynfake.NewSimpleDynamicClient(scheme, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)

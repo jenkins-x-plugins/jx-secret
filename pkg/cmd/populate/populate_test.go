@@ -1,16 +1,13 @@
-package edit_test
+package populate_test
 
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner/fakerunner"
-	fakeinput "github.com/jenkins-x/jx-helpers/pkg/input/fake"
-	"github.com/jenkins-x/jx-secret/pkg/cmd/edit"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/plugins"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,11 +16,12 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func TestEdit(t *testing.T) {
+func TestPopulate(t *testing.T) {
 	vaultBin, err := plugins.GetVaultBinary(plugins.VaultVersion)
 	require.NoError(t, err, "failed to find vault binary plugin")
 
-	_, o := edit.NewCmdEdit()
+	_, o := populate.NewCmdPopulate()
+	o.Dir = "test_data"
 	scheme := runtime.NewScheme()
 
 	ns := "jx"
@@ -50,39 +48,13 @@ func TestEdit(t *testing.T) {
 	runner := &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run
 
-	input := &fakeinput.FakeInput{
-		Values: map[string]string{
-			"secret/data/knative/docker/user/pass.password": "dummyDockerPwd",
-			"secret/data/jx/pipelineUser.token":             "dummyPipelineToken",
-		},
-	}
-	o.Input = input
-
 	err = o.Run()
 	require.NoError(t, err, "failed to run edit")
 
-	runner.ExpectResults(t,
-		fakerunner.FakeResult{
-			CLI: vaultBin + " version",
-		},
-		fakerunner.FakeResult{
-			CLI: vaultBin + " kv list secret",
-		},
-		fakerunner.FakeResult{
-			CLI: vaultBin + " kv put secret/jx/pipelineUser token=dummyPipelineToken",
-		},
-		fakerunner.FakeResult{
-			CLI: vaultBin + " kv put secret/knative/docker/user/pass password=dummyDockerPwd",
-			Env: map[string]string{
-				"VAULT_ADDR":  "https://127.0.0.1:8200",
-				"VAULT_TOKEN": "dummyVaultToken",
-			},
-		},
-	)
+	secretMaps := testsecrets.LoadFakeVaultSecrets(t, runner.OrderedCommands, vaultBin)
 
-	// lets assert the vault env vars are setup correctly
-	lastCommand := runner.OrderedCommands[len(runner.OrderedCommands)-1]
-	vaultCaCert := lastCommand.Env["VAULT_CACERT"]
-	assert.NotEmpty(t, vaultCaCert, "should have $VAULT_CACERT for command %s", cmdrunner.CLI(lastCommand))
-	t.Logf("has $VAULT_CACERT %s\n", vaultCaCert)
+	secretMaps.AssertHasValue(t, "secret/lighthouse/hmac", "token")
+	secretMaps.AssertHasValue(t, "secret/jx/adminUser", "password")
+	secretMaps.AssertHasValue(t, "secret/jx/adminUser", "username")
+	secretMaps.AssertHasValue(t, "secret/knative/docker/user/pass", "password")
 }

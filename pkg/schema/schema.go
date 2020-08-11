@@ -5,36 +5,47 @@ import (
 )
 
 const (
-	LabelSecretKey      = "secretKey"
-	LabelSecretProperty = "secretProperty"
-	LabelKind           = "kind"
+	LabelKind = "kind"
 )
 
-type SurveySchema struct {
-	APIVersion string `json:"apiVersion"`
-	Kind       string `json:"kind"`
-	Spec       Spec   `json:"spec"`
+// Schema defines a schema of objects with properties
+type Schema struct {
+	APIVersion string `yaml:"apiVersion"`
+	Kind       string `yaml:"kind"`
+	Spec       Spec   `yaml:"spec"`
 }
 
-type Survey struct {
-	Name         string            `json:"name" validate:"nonzero"`
-	Labels       map[string]string `json:"labels,omitempty"`
-	Question     string            `json:"question" validate:"nonzero"`
-	Help         string            `json:"help"`
-	DefaultValue string            `json:"defaultValue,omitempty"`
-	Mask         bool              `json:"mask,omitempty"`
-	MinLength    int               `json:"minLength,omitempty"`
-	MaxLength    int               `json:"maxLength,omitempty"`
-	Pattern      string            `json:"pattern,omitempty"`
-	Requires     string            `json:"requires,omitempty"`
-	Format       string            `json:"format,omitempty"`
-}
-
+// SchemaSpec defines the objects and their properties
 type Spec struct {
-	Survey []Survey `json:"survey"`
+	Objects []Object `yaml:"objects"`
+}
+
+// Object defines a type of object with some properties
+type Object struct {
+	Name       string     `yaml:"name" validate:"nonzero"`
+	Properties []Property `yaml:"properties"`
+}
+
+// Property defines a property in an object
+type Property struct {
+	Name         string            `yaml:"name" validate:"nonzero"`
+	Labels       map[string]string `yaml:"labels,omitempty"`
+	Question     string            `yaml:"question" validate:"nonzero"`
+	Help         string            `yaml:"help"`
+	DefaultValue string            `yaml:"defaultValue,omitempty"`
+	Mask         bool              `yaml:"mask,omitempty"`
+	MinLength    int               `yaml:"minLength,omitempty"`
+	MaxLength    int               `yaml:"maxLength,omitempty"`
+	Pattern      string            `yaml:"pattern,omitempty"`
+	Requires     string            `yaml:"requires,omitempty"`
+	Format       string            `yaml:"format,omitempty"`
+
+	// Generate if enabled the secret value will be automatically generated based on the format
+	// and other properties
+	Generate bool `yaml:"generate,omitempty"`
 }
 
 // validate the survey schema fields
-func (c *SurveySchema) Validate() error {
+func (c *Schema) Validate() error {
 	return validator.Validate(c)
 }
