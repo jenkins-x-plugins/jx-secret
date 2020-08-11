@@ -2,6 +2,7 @@ package edit
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/jenkins-x/jx-secret/pkg/schema"
 
@@ -78,7 +79,7 @@ func (o *Options) Run() error {
 
 	editors := map[string]editor.Interface{}
 
-	o.Survey, err = schema.LoadSurveySchema(".jx/survey-schema/jx-install.yaml")
+	o.Survey, err = schema.LoadSurveySchema(filepath.Join(".jx", "gitops", "secret-schema.yaml"))
 	if err != nil {
 		return errors.Wrapf(err, "failed to load survey schema used to prompt the user for questions")
 	}
