@@ -1,0 +1,31 @@
+package generators
+
+import (
+	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+)
+
+// GetSecretEntry returns a secret entry for a namespace, secret and secret entry
+func GetSecretEntry(args Arguments, kubeClient kubernetes.Interface, namespace, secretName, entry string) (string, error) {
+	secret, err := kubeClient.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			return "", nil
+		}
+		return "", errors.Wrapf(err, "failed to find Secret %s in namespace %s", secretName, namespace)
+	}
+	data := secret.Data
+	if data != nil {
+		return string(data[entry]), nil
+	}
+	return "", nil
+}
+
+// SecretEntryGenerator creates a generator for a secret
+func SecretEntryGenerator(kubeClient kubernetes.Interface, namespace, secretName, entry string) Generator {
+	return func(args Arguments) (string, error) {
+		return GetSecretEntry(args, kubeClient, namespace, secretName, entry)
+	}
+}

@@ -5,20 +5,18 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
-	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
-	"github.com/jenkins-x/jx-secret/pkg/schema"
-	"github.com/jenkins-x/jx-secret/pkg/schema/secrets"
-
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/generators"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-secret/pkg/root"
+	"github.com/jenkins-x/jx-secret/pkg/schema"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -43,6 +41,7 @@ type Options struct {
 	Results       []*secretfacade.SecretError
 	CommandRunner cmdrunner.CommandRunner
 	NoWait        bool
+	Generators    map[string]generators.Generator
 }
 
 // NewCmdPopulate creates a command object for the command
@@ -78,6 +77,11 @@ func (o *Options) Run() error {
 	if len(results) == 0 {
 		log.Logger().Infof("the %d ExternalSecrets are %s", len(o.ExternalSecrets), termcolor.ColorInfo("populated"))
 		return nil
+	}
+
+	err = o.loadGenerators()
+	if err != nil {
+		return errors.Wrapf(err, "failed to load generators")
 	}
 
 	editors := map[string]editor.Interface{}
@@ -139,7 +143,7 @@ func (o *Options) Run() error {
 }
 
 func (o *Options) generateSecretValue(secretName, property string, e *secretfacade.EntryError) (string, error) {
-	propertySchema, err := schema.FindObjectProperty(o.Schema, secretName, property)
+	object, propertySchema, err := schema.FindObjectProperty(o.Schema, secretName, property)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to find schema for entry %s property %s", e.Key, property)
 	}
@@ -151,30 +155,26 @@ func (o *Options) generateSecretValue(secretName, property string, e *secretfaca
 		return propertySchema.DefaultValue, nil
 	}
 
-	if propertySchema.Format == "hmac" {
-		value, err := stringhelpers.RandStringBytesMaskImprSrc(41)
-		if err != nil {
-			return value, errors.Wrapf(err, "generating hmac")
-		}
-		return value, nil
+	generatorName := propertySchema.Generator
+	if generatorName == "" {
+		return "", nil
 	}
 
-	// if can generate then use generator
-	if propertySchema.Generate {
-		length := propertySchema.MaxLength
-		if length == 0 {
-			length = propertySchema.MinLength
-			if length == 0 {
-				length = 20
-			}
-		}
-		value, err := secrets.DefaultGenerateSecret(length)
-		if err != nil {
-			return value, errors.WithStack(err)
-		}
-		return value, nil
+	generator := o.Generators[generatorName]
+	if generator == nil {
+		return "", errors.Errorf("could not find generator %s for property %s in object %s", generatorName, property, secretName)
 	}
-	return "", nil
+
+	args := generators.Arguments{
+		Schema:   *o.Schema,
+		Object:   *object,
+		Property: *propertySchema,
+	}
+	value, err := generator(args)
+	if err != nil {
+		return value, errors.Wrapf(err, "failed to invoke generator %s for property %s in object %s", generatorName, property, secretName)
+	}
+	return value, nil
 }
 
 func (o *Options) waitForBackend(backendType string) error {
@@ -194,5 +194,16 @@ func (o *Options) waitForBackend(backendType string) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to wait for vault backend")
 	}
+	return nil
+}
+
+func (o *Options) loadGenerators() error {
+	if o.Generators == nil {
+		o.Generators = map[string]generators.Generator{}
+	}
+	o.Generators["hmac"] = generators.GenerateHmac
+	o.Generators["password"] = generators.GeneratePassword
+	o.Generators["gitOperator.username"] = generators.SecretEntryGenerator(o.KubeClient, o.Namespace, "jx-boot", "username")
+	o.Generators["gitOperator.password"] = generators.SecretEntryGenerator(o.KubeClient, o.Namespace, "jx-boot", "password")
 	return nil
 }

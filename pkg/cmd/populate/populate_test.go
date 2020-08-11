@@ -30,11 +30,12 @@ func TestPopulate(t *testing.T) {
 	kubeObjects := []runtime.Object{
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "knative-docker-user-pass",
+				Name:      "jx-boot",
 				Namespace: ns,
 			},
 			Data: map[string][]byte{
-				"username": []byte("dummyValue"),
+				"username": []byte("gitoperatorUsername"),
+				"password": []byte("gitoperatorpassword"),
 			},
 		},
 	}
@@ -54,8 +55,9 @@ func TestPopulate(t *testing.T) {
 
 	secretMaps := testsecrets.LoadFakeVaultSecrets(t, runner.OrderedCommands, vaultBin)
 
-	secretMaps.AssertHasValue(t, "secret/lighthouse/hmac", "token")
-	secretMaps.AssertHasValue(t, "secret/jx/adminUser", "password")
 	secretMaps.AssertHasValue(t, "secret/jx/adminUser", "username")
+	secretMaps.AssertHasValue(t, "secret/jx/adminUser", "password")
+	secretMaps.AssertHasValue(t, "secret/lighthouse/hmac", "token")
+	secretMaps.AssertHasValue(t, "secret/jx/pipelineUser", "token")
 	secretMaps.AssertHasValue(t, "secret/knative/docker/user/pass", "password")
 }

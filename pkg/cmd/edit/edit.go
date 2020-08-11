@@ -137,7 +137,7 @@ func (o *Options) askForSecretValue(e *secretfacade.EntryError, property, name s
 	var err error
 	var propertySpec *schema.Property
 
-	propertySpec, err = schema.FindObjectProperty(o.Schema, name, property)
+	_, propertySpec, err = schema.FindObjectProperty(o.Schema, name, property)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to find schema property for object %s property %s", name, property)
 	}
