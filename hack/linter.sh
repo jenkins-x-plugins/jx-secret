@@ -15,4 +15,5 @@ if ! [ -x "$(command -v golangci-lint)" ]; then
 fi
 
 export GO111MODULE=on
-golangci-lint run --verbose
+golangci-lint run --verbose --deadline 15m0s
+

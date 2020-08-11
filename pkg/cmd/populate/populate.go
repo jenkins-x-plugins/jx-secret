@@ -42,6 +42,7 @@ type Options struct {
 	Schema        *schema.Schema
 	Results       []*secretfacade.SecretError
 	CommandRunner cmdrunner.CommandRunner
+	NoWait        bool
 }
 
 // NewCmdPopulate creates a command object for the command
@@ -60,7 +61,8 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/gitops/secret-schema.yaml file")
-	cmd.Flags().DurationVarP(&o.WaitDuration, "duration", "d", 5*time.Minute, "the maximum time period to wait for the vault pod to be ready")
+	cmd.Flags().BoolVarP(&o.NoWait, "no-wait", "", false, "disables waiting for the secret store (e.g. vault) to be available")
+	cmd.Flags().DurationVarP(&o.WaitDuration, "wait", "w", 5*time.Minute, "the maximum time period to wait for the vault pod to be ready if using the vault backendType")
 	return cmd, o
 }
 
@@ -179,6 +181,11 @@ func (o *Options) waitForBackend(backendType string) error {
 	if backendType != "vault" {
 		return nil
 	}
+	if o.NoWait {
+		log.Logger().Infof("disabling waiting for vault pod to be ready")
+		return nil
+	}
+
 	_, wo := wait.NewCmdWait()
 	wo.WaitDuration = o.WaitDuration
 	wo.KubeClient = o.KubeClient

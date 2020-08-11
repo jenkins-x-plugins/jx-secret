@@ -22,6 +22,7 @@ func TestPopulate(t *testing.T) {
 
 	_, o := populate.NewCmdPopulate()
 	o.Dir = "test_data"
+	o.NoWait = true
 	scheme := runtime.NewScheme()
 
 	ns := "jx"
