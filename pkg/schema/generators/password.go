@@ -5,8 +5,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GeneratePassword generates a password value
-func GeneratePassword(args Arguments) (string, error) {
+// Password generates a password value
+func Password(args *Arguments) (string, error) {
 	length := args.Property.MaxLength
 	if length == 0 {
 		length = args.Property.MinLength

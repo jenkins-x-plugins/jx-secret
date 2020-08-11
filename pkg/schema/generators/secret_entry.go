@@ -8,7 +8,7 @@ import (
 )
 
 // GetSecretEntry returns a secret entry for a namespace, secret and secret entry
-func GetSecretEntry(args Arguments, kubeClient kubernetes.Interface, namespace, secretName, entry string) (string, error) {
+func GetSecretEntry(kubeClient kubernetes.Interface, namespace, secretName, entry string) (string, error) {
 	secret, err := kubeClient.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
@@ -23,9 +23,9 @@ func GetSecretEntry(args Arguments, kubeClient kubernetes.Interface, namespace, 
 	return "", nil
 }
 
-// SecretEntryGenerator creates a generator for a secret
-func SecretEntryGenerator(kubeClient kubernetes.Interface, namespace, secretName, entry string) Generator {
-	return func(args Arguments) (string, error) {
-		return GetSecretEntry(args, kubeClient, namespace, secretName, entry)
+// SecretEntry creates a generator for a secret
+func SecretEntry(kubeClient kubernetes.Interface, namespace, secretName, entry string) Generator {
+	return func(args *Arguments) (string, error) {
+		return GetSecretEntry(kubeClient, namespace, secretName, entry)
 	}
 }

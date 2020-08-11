@@ -10,13 +10,13 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/generators"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-secret/pkg/root"
 	"github.com/jenkins-x/jx-secret/pkg/schema"
+	"github.com/jenkins-x/jx-secret/pkg/schema/generators"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -78,11 +78,7 @@ func (o *Options) Run() error {
 		log.Logger().Infof("the %d ExternalSecrets are %s", len(o.ExternalSecrets), termcolor.ColorInfo("populated"))
 		return nil
 	}
-
-	err = o.loadGenerators()
-	if err != nil {
-		return errors.Wrapf(err, "failed to load generators")
-	}
+	o.loadGenerators()
 
 	editors := map[string]editor.Interface{}
 	waited := map[string]bool{}
@@ -165,10 +161,10 @@ func (o *Options) generateSecretValue(secretName, property string, e *secretfaca
 		return "", errors.Errorf("could not find generator %s for property %s in object %s", generatorName, property, secretName)
 	}
 
-	args := generators.Arguments{
-		Schema:   *o.Schema,
-		Object:   *object,
-		Property: *propertySchema,
+	args := &generators.Arguments{
+		Schema:   o.Schema,
+		Object:   object,
+		Property: propertySchema,
 	}
 	value, err := generator(args)
 	if err != nil {
@@ -197,13 +193,12 @@ func (o *Options) waitForBackend(backendType string) error {
 	return nil
 }
 
-func (o *Options) loadGenerators() error {
+func (o *Options) loadGenerators() {
 	if o.Generators == nil {
 		o.Generators = map[string]generators.Generator{}
 	}
-	o.Generators["hmac"] = generators.GenerateHmac
-	o.Generators["password"] = generators.GeneratePassword
-	o.Generators["gitOperator.username"] = generators.SecretEntryGenerator(o.KubeClient, o.Namespace, "jx-boot", "username")
-	o.Generators["gitOperator.password"] = generators.SecretEntryGenerator(o.KubeClient, o.Namespace, "jx-boot", "password")
-	return nil
+	o.Generators["hmac"] = generators.Hmac
+	o.Generators["password"] = generators.Password
+	o.Generators["gitOperator.username"] = generators.SecretEntry(o.KubeClient, o.Namespace, "jx-boot", "username")
+	o.Generators["gitOperator.password"] = generators.SecretEntry(o.KubeClient, o.Namespace, "jx-boot", "password")
 }
