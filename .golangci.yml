@@ -136,6 +136,7 @@ issues:
   
 run:
   skip-dirs:
+    - cmd/docs
     - test/testdata_etc
     - internal/cache
     - internal/renameio

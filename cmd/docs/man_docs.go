@@ -169,7 +169,7 @@ func manPrintFlags(buf io.StringWriter, flags *pflag.FlagSet) {
 	})
 }
 
-func manPrintOptions(buf *bytes.Buffer, command *cobra.Command) {
+func manPrintOptions(buf io.StringWriter, command *cobra.Command) {
 	flags := command.NonInheritedFlags()
 	if flags.HasAvailableFlags() {
 		buf.WriteString("# OPTIONS\n")
