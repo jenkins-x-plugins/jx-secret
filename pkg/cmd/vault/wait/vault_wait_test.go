@@ -16,7 +16,7 @@ func TestVaultWait(t *testing.T) {
 	var err error
 	_, o := wait.NewCmdWait()
 
-	o.PollDuration = 2 * time.Second
+	o.WaitDuration = 2 * time.Second
 	ns := o.Namespace
 
 	kubeObjects := []runtime.Object{
@@ -51,7 +51,7 @@ func TestVaultWaitFails(t *testing.T) {
 	var err error
 	_, o := wait.NewCmdWait()
 
-	o.PollDuration = 1 * time.Second
+	o.WaitDuration = 1 * time.Second
 
 	o.KubeClient = fake.NewSimpleClientset()
 

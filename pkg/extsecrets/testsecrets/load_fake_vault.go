@@ -43,7 +43,7 @@ func LoadFakeVaultSecrets(t *testing.T, cmds []*cmdrunner.Command, vaultBin stri
 	return s
 }
 
-func (s *FakeVaultSecrets) AssertHasValue(t *testing.T, objectName string, propertyName string) {
+func (s *FakeVaultSecrets) AssertHasValue(t *testing.T, objectName, propertyName string) {
 	object := s.Objects[objectName]
 	if assert.NotNil(t, object, "no object found for %s", objectName) {
 		value := object[propertyName]

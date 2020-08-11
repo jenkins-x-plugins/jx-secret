@@ -3,8 +3,10 @@ package populate
 import (
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x/jx-secret/pkg/schema"
 	"github.com/jenkins-x/jx-secret/pkg/schema/secrets"
 
@@ -36,6 +38,7 @@ type Options struct {
 	secretfacade.Options
 
 	Dir           string
+	WaitDuration  time.Duration
 	Schema        *schema.Schema
 	Results       []*secretfacade.SecretError
 	CommandRunner cmdrunner.CommandRunner
@@ -57,6 +60,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/gitops/secret-schema.yaml file")
+	cmd.Flags().DurationVarP(&o.WaitDuration, "duration", "d", 5*time.Minute, "the maximum time period to wait for the vault pod to be ready")
 	return cmd, o
 }
 
@@ -75,6 +79,7 @@ func (o *Options) Run() error {
 	}
 
 	editors := map[string]editor.Interface{}
+	waited := map[string]bool{}
 
 	o.Schema, err = schema.LoadSchema(filepath.Join(o.Dir, ".jx", "gitops", "secret-schema.yaml"))
 	if err != nil {
@@ -113,6 +118,14 @@ func (o *Options) Run() error {
 			}
 
 			if len(keyProperties.Properties) > 0 {
+				if !waited[backendType] {
+					err = o.waitForBackend(backendType)
+					if err != nil {
+						return errors.Wrapf(err, "failed to wait for backend type %s", backendType)
+					}
+					waited[backendType] = true
+				}
+
 				err = secEditor.Write(keyProperties)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
@@ -160,4 +173,19 @@ func (o *Options) generateSecretValue(secretName, property string, e *secretfaca
 		return value, nil
 	}
 	return "", nil
+}
+
+func (o *Options) waitForBackend(backendType string) error {
+	if backendType != "vault" {
+		return nil
+	}
+	_, wo := wait.NewCmdWait()
+	wo.WaitDuration = o.WaitDuration
+	wo.KubeClient = o.KubeClient
+
+	err := wo.Run()
+	if err != nil {
+		return errors.Wrapf(err, "failed to wait for vault backend")
+	}
+	return nil
 }
