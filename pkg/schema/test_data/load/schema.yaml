@@ -1,81 +1,49 @@
 apiVersion: gitops.jenkins-x.io/v1alpha1
-kind: SurveySchema
+kind: Schema
 spec:
-  survey:
-    - name: jx-admin-user
-      labels:
-        secretKey: jx-admin-user
-        secretProperty: username
+  objects:
+  - name: jx-admin-user
+    properties:
+    - name: username
       question: Basic Auth admin username
       help: Basic Auth admin user is used to access serivces which use basic auth like Nexus, Chartmuseum and Nginx
       defaultValue: admin
-    - name: jx-admin-user
-      labels:
-        secretKey: jx-admin-user
-        secretProperty: password
+    - name: password
       mask: true
       question: Basic Auth admin username
       help: Basic Auth admin user is used to access serivces which use basic auth like Nexus, Chartmuseum and Nginx
-      defaultValue: admin
-    - name: jx-pipeline-user
-      labels:
-        secretKey: jx-pipeline-user
-        secretProperty: username
+  - name: jx-pipeline-user
+    properties:
+    - name: username
       question: Pipeline bot Git username
       help: The Git user that will perform git operations inside a pipeline. It should be a user within the Git organisation/owner where environment repositories will live. This is normally a bot.
-    - name: jx-pipeline-user
-      labels:
-        secretKey: jx-pipeline-user
-        secretProperty: token
-        gitKind: github
+    - name: token
+      gitKind: github
       mask: true
       question: Pipeline bot Git token
       help: A token for the Git user that will perform git operations inside a pipeline. This includes environment repository creation, and so this token should have full repository permissions. To create a token go to {{ .Values.jxRequirements.gitServer }}{{ .Values.jxRequirements.environmentGitOwner }}/settings/tokens/new?scopes=repo,read:user,read:org,user:email,write:repo_hook,delete_repo then enter a name, click Generate token, and copy and paste the token into this prompt.
       minLength: 40
       maxLength: 40
       pattern: "^[0-9a-f]{40}$"
-    - name: jx-pipeline-user
-      labels:
-        secretKey: jx-pipeline-user
-        secretProperty: token
-        gitKind: bitbucketserver
-      mask: true
-      question: Pipeline bot Git token
-      help: A token for the Git user that will perform git operations inside a pipeline. This includes environment repository creation, and so this token should have full repository permissions. To create a token go to {{ .Values.jxRequirements.gitServer }}{{ .Values.jxRequirements.environmentGitOwner }}/plugins/servlet/access-tokens/manage then enter a name, click Generate token, and copy and paste the token into this prompt.
-      minLength: 8
-      maxLength: 50
-    - name: jx-docker
-      labels:
-        secretKey: jx-docker
-        type: confirm
+  - name: jx-docker
+    properties:
+    - name: confirm
       question: Do you want to configure non default Docker Registry?
       help: By default Jenkins X will use the docker registry from the cloud provider. If you want to configure an external docker registry such as Docker Hub or your own existing public docker registry enter Y
-    - name: jx-docker
-      labels:
-        secretKey: jx-docker
-        secretProperty: url
+    - name: url
       requires: jx-docker
       question: Docker Registry Url
       help: The URL of the external docker registry
       format: uri
-    - name: jx-docker
-      labels:
-        secretKey: jx-docker
-        secretProperty: username
+    - name: username
       requires: jx-docker
       question: Docker Registry username
       help: The username used to access the external docker registry
-    - name: jx-docker
-      labels:
-        secretKey: jx-docker
-        secretProperty: password
+    - name: password
       requires: jx-docker
       question: Docker Registry password
       help: The password used to access the external docker registry
-    - name: jx-docker
-      labels:
-        secretKey: jx-docker
-        secretProperty: email
+    - name: email
       requires: jx-docker
       question: Docker Registry email
       help: The email used to configure the external docker registry

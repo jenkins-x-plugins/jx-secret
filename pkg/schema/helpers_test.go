@@ -2,23 +2,35 @@ package schema_test
 
 import (
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/jenkins-x/jx-secret/pkg/schema"
+	"github.com/jenkins-x/jx-secret/pkg/schema/testschemas"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLoadSurveySchema(t *testing.T) {
 	fileName := filepath.Join("test_data", "load", "schema.yaml")
-	surveySchema, err := schema.LoadSurveySchema(fileName)
+	s, err := schema.LoadSchema(fileName)
 	assert.NoError(t, err, "should not have errored when loading survey schema")
-	assert.Equal(t, 10, len(surveySchema.Spec.Survey), "should have matched 10 survey schema")
+	assert.Equal(t, 3, len(s.Spec.Objects), "should have matched 10 survey schema")
+
+	property := testschemas.RequireSchemaProperty(t, s, "jx-admin-user", "username")
+	assert.Equal(t, "admin", property.DefaultValue, "jx-admin-user.username.DefaultValue")
+
+	property = testschemas.RequireSchemaProperty(t, s, "jx-pipeline-user", "token")
+	assert.Equal(t, 40, property.MinLength, "jx-pipeline-user.token.MinLength")
+	assert.Equal(t, 40, property.MaxLength, "jx-pipeline-user.token.MaxLength")
 }
 
 func TestValidateMissingName(t *testing.T) {
 	fileName := filepath.Join("test_data", "validate", "schema.yaml")
-	_, err := schema.LoadSurveySchema(fileName)
-	assert.Error(t, err, "should have errored when validating survey schema")
-	assert.True(t, strings.Contains(err.Error(), "Spec.Survey[1].Name: zero value"), "should have failed validation")
+	s, err := schema.LoadSchema(fileName)
+	require.Error(t, err, "should have errored when validating survey s")
+	t.Logf("got expected error %s", err.Error())
+	assert.Contains(t, err.Error(), "Spec.Objects[0].Properties[1].Name: zero value", "should have failed validation")
+	if s != nil {
+		t.Logf("loaded s %#v", s.Spec)
+	}
 }

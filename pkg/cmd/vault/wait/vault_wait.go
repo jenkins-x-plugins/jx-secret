@@ -30,8 +30,7 @@ var (
 type Options struct {
 	PodName      string
 	Namespace    string
-	Console      bool
-	PollDuration time.Duration
+	WaitDuration time.Duration
 	KubeClient   kubernetes.Interface
 }
 
@@ -57,7 +56,7 @@ func NewCmdWait() (*cobra.Command, *Options) {
 func (o *Options) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.PodName, "pod", "p", "vault-0", "the name of the vault pod which needs to be running before the port forward can take place")
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "vault-infra", "the namespace where vault is running")
-	cmd.Flags().DurationVarP(&o.PollDuration, "duration", "d", 5*time.Minute, "the maximum time period to wait for the vault pod to be ready")
+	cmd.Flags().DurationVarP(&o.WaitDuration, "duration", "d", 5*time.Minute, "the maximum time period to wait for the vault pod to be ready")
 }
 
 // Run implements the command
@@ -75,7 +74,8 @@ func (o *Options) Run() error {
 }
 
 func (o *Options) waitForPod() error {
-	err := pods.WaitForPodNameToBeReady(o.KubeClient, o.Namespace, o.PodName, o.PollDuration)
+	log.Logger().Infof("waiting for vault pod %s in namespace %s to be ready...", termcolor.ColorInfo(o.PodName), termcolor.ColorInfo(o.Namespace))
+	err := pods.WaitForPodNameToBeReady(o.KubeClient, o.Namespace, o.PodName, o.WaitDuration)
 	if err != nil {
 		return errors.Wrapf(err, "failed to wait for pod %s to be ready in namespace %s", o.PodName, o.Namespace)
 	}

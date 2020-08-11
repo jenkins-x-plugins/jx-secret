@@ -69,10 +69,10 @@ linters-settings:
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
-  disable-all: true
+  #disable-all: true
   enable:
-    - asciicheck
-    - bodyclose
+    #- asciicheck
+    #- bodyclose
     - deadcode
     - depguard
 #    - dogsled
@@ -82,7 +82,7 @@ linters:
 #    - goconst
     - gofmt
     - goimports
-    - goprintffuncname
+    #- goprintffuncname
     - gosec
     - gosimple
     - ineffassign
@@ -136,6 +136,7 @@ issues:
   
 run:
   skip-dirs:
+    - cmd/docs
     - test/testdata_etc
     - internal/cache
     - internal/renameio
