@@ -12,7 +12,7 @@ import (
 
 // LoadExtSecretFiles loads the given YAML files as external secrets for a test case
 func LoadExtSecretFiles(t *testing.T, ns string, fileNames ...string) []runtime.Object {
-	dynObjects := []runtime.Object{}
+	var dynObjects []runtime.Object
 	for _, f := range fileNames {
 		path := filepath.Join("test_data", f)
 		require.FileExists(t, path)

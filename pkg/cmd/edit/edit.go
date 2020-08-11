@@ -133,9 +133,9 @@ func (o *Options) propertyMessage(e *secretfacade.EntryError, property string) (
 func (o *Options) askForSecretValue(e *secretfacade.EntryError, property, name string) (string, error) {
 	var value string
 	var err error
-	var survey schema.Survey
+	var surveySchema schema.Survey
 
-	survey, err = o.findSurveyForSecret(e, property)
+	surveySchema, err = o.findSurveyForSecret(e, property)
 	if err != nil {
 		message, help := o.propertyMessage(e, property)
 		value, err = o.Input.PickPassword(message, help) //nolint:govet
@@ -159,20 +159,20 @@ func (o *Options) askForSecretValue(e *secretfacade.EntryError, property, name s
 
 	// Add TESTS!!!
 
-	kind := survey.Labels[schema.LabelKind]
+	kind := surveySchema.Labels[schema.LabelKind]
 	switch kind {
 	case "confirm":
 		log.Logger().Warn("implement confirm")
 	default:
-		return o.Input.PickPassword(survey.Question, survey.Help) //nolint:govet
+		return o.Input.PickPassword(surveySchema.Question, surveySchema.Help) //nolint:govet
 	}
 	return value, nil
 }
 
 func (o *Options) findSurveyForSecret(e *secretfacade.EntryError, property string) (schema.Survey, error) {
-	survey := schema.Survey{}
+	answer := schema.Survey{}
 	if o.Survey != nil {
-		return survey, errors.New("no surveys found")
+		return answer, errors.New("no surveys found")
 	}
 	for i := range o.Survey.Spec.Survey {
 		s := &o.Survey.Spec.Survey[i]
@@ -186,5 +186,5 @@ func (o *Options) findSurveyForSecret(e *secretfacade.EntryError, property strin
 			}
 		}
 	}
-	return survey, errors.New("no matching surveys found")
+	return answer, errors.New("no matching surveys found")
 }

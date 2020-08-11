@@ -121,20 +121,17 @@ func (o *Options) Run() error {
 			property := data.Property
 			handler := o.Handlers[key]
 			if handler == nil {
-				editor := editors[backendType]
-				if editor == nil {
-					editor, err = factory.NewEditor(r, o.CommandRunner, o.KubeClient)
+				e := editors[backendType]
+				if e == nil {
+					e, err = factory.NewEditor(r, o.CommandRunner, o.KubeClient)
 					if err != nil {
-						return errors.Wrapf(err, "failed to create editor for secret %s of type %s", name, backendType)
+						return errors.Wrapf(err, "failed to create e for secret %s of type %s", name, backendType)
 					}
-					editors[backendType] = editor
-				}
-				if err != nil {
-					return errors.Wrapf(err, "failed to create editor for secret %s of type %s", name, backendType)
+					editors[backendType] = e
 				}
 				handler = &backendHandler{
 					Properties: map[string][]string{},
-					Editor:     editor,
+					Editor:     e,
 				}
 				o.Handlers[key] = handler
 			}
