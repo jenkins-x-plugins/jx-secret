@@ -7,6 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	amd64 = "amd64"
+)
+
 func TestVaultPlugin(t *testing.T) {
 	t.Parallel()
 
@@ -19,15 +23,15 @@ func TestVaultPlugin(t *testing.T) {
 	foundLinux := false
 	foundWindows := false
 	for _, b := range plugin.Spec.Binaries {
-		if b.Goos == "Linux" && b.Goarch == "amd64" {
+		if b.Goos == "Linux" && b.Goarch == amd64 {
 			foundLinux = true
 			assert.Equal(t, "https://releases.hashicorp.com/vault/"+v+"/vault_"+v+"_linux_amd64.zip", b.URL, "URL for linux binary")
 			t.Logf("found linux binary URL %s", b.URL)
-		} else if b.Goos == "Windows" && b.Goarch == "amd64" {
+		} else if b.Goos == "Windows" && b.Goarch == amd64 {
 			foundWindows = true
 			assert.Equal(t, "https://releases.hashicorp.com/vault/"+v+"/vault_"+v+"_windows_amd64.zip", b.URL, "URL for windows binary")
 			t.Logf("found windows binary URL %s", b.URL)
-		} else if b.Goos == "Darwin" && b.Goarch == "amd64" {
+		} else if b.Goos == "Darwin" && b.Goarch == amd64 {
 			foundWindows = true
 			assert.Equal(t, "https://releases.hashicorp.com/vault/"+v+"/vault_"+v+"_darwin_amd64.zip", b.URL, "URL for windows binary")
 			t.Logf("found windows binary URL %s", b.URL)

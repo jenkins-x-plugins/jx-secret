@@ -29,16 +29,16 @@ type Object struct {
 // Property defines a property in an object
 type Property struct {
 	Name         string            `yaml:"name" validate:"nonzero"`
-	Labels       map[string]string `yaml:"labels,omitempty"`
 	Question     string            `yaml:"question" validate:"nonzero"`
 	Help         string            `yaml:"help"`
 	DefaultValue string            `yaml:"defaultValue,omitempty"`
-	Mask         bool              `yaml:"mask,omitempty"`
-	MinLength    int               `yaml:"minLength,omitempty"`
-	MaxLength    int               `yaml:"maxLength,omitempty"`
 	Pattern      string            `yaml:"pattern,omitempty"`
 	Requires     string            `yaml:"requires,omitempty"`
 	Format       string            `yaml:"format,omitempty"`
+	Labels       map[string]string `yaml:"labels,omitempty"`
+	MinLength    int               `yaml:"minLength,omitempty"`
+	MaxLength    int               `yaml:"maxLength,omitempty"`
+	Mask         bool              `yaml:"mask,omitempty"`
 
 	// Generate if enabled the secret value will be automatically generated based on the format
 	// and other properties
