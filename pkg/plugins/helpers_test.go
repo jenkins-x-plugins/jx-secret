@@ -7,10 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	amd64 = "amd64"
-)
-
 func TestVaultPlugin(t *testing.T) {
 	t.Parallel()
 
@@ -23,8 +19,7 @@ func TestVaultPlugin(t *testing.T) {
 	foundLinux := false
 	foundWindows := false
 	for _, b := range plugin.Spec.Binaries {
-		switch b.Goarch {
-		case amd64:
+		if b.Goarch == "amd64" {
 			switch b.Goos {
 			case "Linux":
 				foundLinux = true
