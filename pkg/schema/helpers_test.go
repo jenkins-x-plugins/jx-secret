@@ -25,7 +25,7 @@ func TestLoadSurveySchema(t *testing.T) {
 }
 
 func TestValidateMissingName(t *testing.T) {
-	fileName := filepath.Join("test_data", "validate", "s.yaml")
+	fileName := filepath.Join("test_data", "validate", "schema.yaml")
 	s, err := schema.LoadSchema(fileName)
 	require.Error(t, err, "should have errored when validating survey s")
 	t.Logf("got expected error %s", err.Error())
