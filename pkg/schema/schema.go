@@ -28,17 +28,22 @@ type Object struct {
 
 // Property defines a property in an object
 type Property struct {
-	Name         string            `yaml:"name" validate:"nonzero"`
-	Question     string            `yaml:"question" validate:"nonzero"`
-	Help         string            `yaml:"help"`
-	DefaultValue string            `yaml:"defaultValue,omitempty"`
-	Pattern      string            `yaml:"pattern,omitempty"`
-	Requires     string            `yaml:"requires,omitempty"`
-	Format       string            `yaml:"format,omitempty"`
-	Labels       map[string]string `yaml:"labels,omitempty"`
-	MinLength    int               `yaml:"minLength,omitempty"`
-	MaxLength    int               `yaml:"maxLength,omitempty"`
-	Mask         bool              `yaml:"mask,omitempty"`
+	Name         string `yaml:"name" validate:"nonzero"`
+	Question     string `yaml:"question" validate:"nonzero"`
+	Help         string `yaml:"help"`
+	DefaultValue string `yaml:"defaultValue,omitempty"`
+	Pattern      string `yaml:"pattern,omitempty"`
+	Requires     string `yaml:"requires,omitempty"`
+	Format       string `yaml:"format,omitempty"`
+
+	// Generator the name of the generator to use to create values
+	// if this value is non zero we assume Generate is effectively true
+	Generator string `yaml:"generator,omitempty"`
+
+	Labels    map[string]string `yaml:"labels,omitempty"`
+	MinLength int               `yaml:"minLength,omitempty"`
+	MaxLength int               `yaml:"maxLength,omitempty"`
+	Mask      bool              `yaml:"mask,omitempty"`
 
 	// Generate if enabled the secret value will be automatically generated based on the format
 	// and other properties

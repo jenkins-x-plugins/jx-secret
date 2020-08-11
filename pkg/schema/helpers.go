@@ -42,19 +42,20 @@ func LoadSchema(fileName string) (*Schema, error) {
 }
 
 // FindObjectProperty finds the schema property for the given object
-func FindObjectProperty(s *Schema, objectName, property string) (*Property, error) {
+func FindObjectProperty(s *Schema, objectName, property string) (*Object, *Property, error) {
 	if s == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
-	for _, o := range s.Spec.Objects {
+	for i := range s.Spec.Objects {
+		o := &s.Spec.Objects[i]
 		if o.Name == objectName {
 			for i := range o.Properties {
 				p := &o.Properties[i]
 				if p.Name == property {
-					return p, nil
+					return o, p, nil
 				}
 			}
 		}
 	}
-	return nil, nil
+	return nil, nil, nil
 }
