@@ -6,10 +6,10 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
+	"github.com/jenkins-x/jx-helpers/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/pkg/kube/pods"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/root"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -62,7 +62,7 @@ func (o *Options) AddFlags(cmd *cobra.Command) {
 // Run implements the command
 func (o *Options) Run() error {
 	var err error
-	o.KubeClient, err = extsecrets.LazyCreateKubeClient(o.KubeClient)
+	o.KubeClient, o.Namespace, err = kube.LazyCreateKubeClientAndNamespace(o.KubeClient, o.Namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to create kube client")
 	}

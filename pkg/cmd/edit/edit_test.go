@@ -40,6 +40,7 @@ func TestEdit(t *testing.T) {
 		},
 	}
 
+	o.Namespace = ns
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
 
 	dynObjects := testsecrets.LoadExtSecretDir(t, ns, "test_data")

@@ -39,6 +39,7 @@ func TestVerify(t *testing.T) {
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
 
+	o.Namespace = ns
 	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
 
 	err = o.Run()

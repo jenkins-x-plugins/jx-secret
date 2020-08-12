@@ -1,6 +1,7 @@
 package secretfacade
 
 import (
+	"github.com/jenkins-x/jx-helpers/pkg/kube"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/pkg/errors"
@@ -19,7 +20,7 @@ func (o *Options) Load() ([]*SecretPair, error) {
 			return answer, errors.Wrapf(err, "failed to create an extsecret Client")
 		}
 	}
-	o.KubeClient, err = extsecrets.LazyCreateKubeClient(o.KubeClient)
+	o.KubeClient, o.Namespace, err = kube.LazyCreateKubeClientAndNamespace(o.KubeClient, o.Namespace)
 	if err != nil {
 		return answer, errors.Wrapf(err, "failed to create kube Client")
 	}
