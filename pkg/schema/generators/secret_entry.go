@@ -22,10 +22,16 @@ func GetSecretEntry(kubeClient kubernetes.Interface, namespace, secretName, entr
 		return "", errors.Wrapf(err, "failed to find Secret %s in namespace %s", secretName, namespace)
 	}
 	data := secret.Data
+	answer := ""
 	if data != nil {
-		return string(data[entry]), nil
+		answer = string(data[entry])
 	}
-	return "", nil
+	if answer == "" {
+		log.Logger().Warnf("could not find secret %s with entry %s in namespace %s", secretName, entry, namespace)
+		return answer, nil
+	}
+	log.Logger().Infof("found Secret %s in namespace %s with entry %s", secretName, namespace, entry)
+	return answer, nil
 }
 
 // SecretEntry creates a generator for a secret
