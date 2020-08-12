@@ -90,6 +90,16 @@ func (o *Options) Run() error {
 	for _, r := range results {
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
+
+		// lets wait until the backend is available
+		if !waited[backendType] {
+			err = o.waitForBackend(backendType)
+			if err != nil {
+				return errors.Wrapf(err, "failed to wait for backend type %s", backendType)
+			}
+			waited[backendType] = true
+		}
+
 		secEditor := editors[backendType]
 		log.Logger().Infof("using %s as the secrets store", backendType)
 		if secEditor == nil {
@@ -120,14 +130,6 @@ func (o *Options) Run() error {
 			}
 
 			if len(keyProperties.Properties) > 0 {
-				if !waited[backendType] {
-					err = o.waitForBackend(backendType)
-					if err != nil {
-						return errors.Wrapf(err, "failed to wait for backend type %s", backendType)
-					}
-					waited[backendType] = true
-				}
-
 				err = secEditor.Write(keyProperties)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
