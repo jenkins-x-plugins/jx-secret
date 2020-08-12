@@ -40,6 +40,7 @@ func TestVaultPortForward(t *testing.T) {
 		},
 	}
 
+	o.Namespace = ns
 	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
 
 	runner := &fakerunner.FakeRunner{}

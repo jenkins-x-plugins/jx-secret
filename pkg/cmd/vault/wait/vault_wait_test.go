@@ -12,18 +12,19 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
+const testNs = "jx"
+
 func TestVaultWait(t *testing.T) {
 	var err error
 	_, o := wait.NewCmdWait()
 
 	o.WaitDuration = 2 * time.Second
-	ns := o.Namespace
 
 	kubeObjects := []runtime.Object{
 		&corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      o.PodName,
-				Namespace: ns,
+				Namespace: testNs,
 				Labels: map[string]string{
 					"app": "cheese",
 				},
@@ -41,6 +42,7 @@ func TestVaultWait(t *testing.T) {
 		},
 	}
 
+	o.Namespace = testNs
 	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
 
 	err = o.Run()
@@ -53,6 +55,7 @@ func TestVaultWaitFails(t *testing.T) {
 
 	o.WaitDuration = 1 * time.Second
 
+	o.Namespace = testNs
 	o.KubeClient = fake.NewSimpleClientset()
 
 	err = o.Run()

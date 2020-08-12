@@ -48,6 +48,7 @@ func TestExport(t *testing.T) {
 			},
 		},
 	}
+	o.Namespace = ns
 	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
 
 	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "secrets"))

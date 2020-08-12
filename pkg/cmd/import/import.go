@@ -8,6 +8,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/pkg/options"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/apis/extsecret/v1alpha1"
@@ -94,7 +95,7 @@ func (o *Options) Run() error {
 			return errors.Wrapf(err, "failed to create extsecrets client")
 		}
 	}
-	o.KubeClient, err = extsecrets.LazyCreateKubeClient(o.KubeClient)
+	o.KubeClient, o.Namespace, err = kube.LazyCreateKubeClientAndNamespace(o.KubeClient, o.Namespace)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create kube Client")
 	}

@@ -29,6 +29,7 @@ func TestImport(t *testing.T) {
 
 	fakeDynClient := dynfake.NewSimpleDynamicClient(scheme, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
+	o.Namespace = ns
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets()...)
 
 	require.NoError(t, err, "failed to create fake extsecrets Client")
