@@ -51,7 +51,7 @@ func NewCmdWait() (*cobra.Command, *Options) {
 		},
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
-	cmd.Flags().DurationVarP(&o.Timeout, "timeout", "t", 10*time.Minute, "the maximum amount of time to wait for the secrets to be valid")
+	cmd.Flags().DurationVarP(&o.Timeout, "timeout", "t", 30*time.Minute, "the maximum amount of time to wait for the secrets to be valid")
 	cmd.Flags().DurationVarP(&o.PollPeriod, "poll", "p", 2*time.Second, "the polling period to check if the secrets are valid")
 	return cmd, o
 }
