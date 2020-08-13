@@ -3,7 +3,9 @@ package edit
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
+	"github.com/jenkins-x/jx-secret/pkg/apis/extsecret/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/schema"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
@@ -36,9 +38,10 @@ type Options struct {
 	secretfacade.Options
 
 	Dir           string
+	Filter        string
 	Input         input.Interface
 	Schema        *schema.Schema
-	Results       []*secretfacade.SecretError
+	Results       []*secretfacade.SecretPair
 	CommandRunner cmdrunner.CommandRunner
 }
 
@@ -58,6 +61,7 @@ func NewCmdEdit() (*cobra.Command, *Options) {
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/gitops/secret-schema.yaml file")
+	cmd.Flags().StringVarP(&o.Filter, "filter", "f", "", "filter on the Secret / ExternalSecret names to enter")
 	return cmd, o
 }
 
@@ -101,51 +105,59 @@ func (o *Options) Run() error {
 		// todo do we need to find any surveys that require a confirm?
 		// order them somehow?
 		// maybe skip any?
-		for _, e := range r.EntryErrors {
-			keyProperties := editor.KeyProperties{
-				Key: e.Key,
-			}
-			for _, property := range e.Properties {
+		if o.Matches(r) {
+			data := o.DataToEdit(r)
+
+			m := map[string]*editor.KeyProperties{}
+			for _, d := range data {
+				key := d.Key
+				property := d.Property
+				keyProperties := m[key]
+				if keyProperties == nil {
+					keyProperties = &editor.KeyProperties{
+						Key: key,
+					}
+					m[key] = keyProperties
+				}
+
 				var value string
-				value, err = o.askForSecretValue(e, property, name)
+				value, err = o.askForSecretValue(r, &d)
 				if err != nil {
-					return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, e.Key, name)
+					return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, key, name)
 				}
 
 				keyProperties.Properties = append(keyProperties.Properties, editor.PropertyValue{
 					Property: property,
 					Value:    value,
 				})
-			}
 
-			err = secEditor.Write(keyProperties)
-			if err != nil {
-				return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
 			}
-
+			for _, keyProperties := range m {
+				err = secEditor.Write(keyProperties)
+				if err != nil {
+					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
+				}
+			}
 		}
 	}
 	return nil
 }
 
-func (o *Options) propertyMessage(e *secretfacade.EntryError, property string) (string, string) {
-	return e.Key + "." + property, ""
-}
-
-func (o *Options) askForSecretValue(e *secretfacade.EntryError, property, name string) (string, error) {
+func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1alpha1.Data) (string, error) {
 	var value string
 	var err error
 	var propertySpec *schema.Property
-
+	name := s.ExternalSecret.Name
+	property := d.Property
 	_, propertySpec, err = schema.FindObjectProperty(o.Schema, name, property)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to find schema property for object %s property %s", name, property)
 	}
 	if propertySpec == nil {
-		message, help := o.propertyMessage(e, property)
+		message, help := o.propertyMessage(s, d)
 		value, err = o.Input.PickPassword(message, help) //nolint:govet
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to enter property %s for key %s on ExternalSecret %s", property, e.Key, name)
+			return "", errors.Wrapf(err, "failed to enter property %s for key %s on ExternalSecret %s", property, d.Key, name)
 		}
 		return value, nil
 	}
@@ -172,4 +184,45 @@ func (o *Options) askForSecretValue(e *secretfacade.EntryError, property, name s
 		return o.Input.PickPassword(propertySpec.Question, propertySpec.Help) //nolint:govet
 	}
 	return value, nil
+}
+
+func (o *Options) propertyMessage(s *secretfacade.SecretPair, d *v1alpha1.Data) (string, string) {
+	name := s.ExternalSecret.Name
+	property := d.Property
+	return name + "." + property, ""
+}
+
+// Matches returns true if the secret matches the current filter
+// If no filter then just filter out mandatory properties only?
+func (o *Options) Matches(r *secretfacade.SecretPair) bool {
+	if o.Filter == "" {
+		return r.IsInvalid()
+	}
+	return strings.Contains(r.ExternalSecret.Name, o.Filter)
+}
+
+// DataToEdit returns the properties to edit
+func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1alpha1.Data {
+	// if filtering return all properties
+	if o.Filter != "" {
+		return r.ExternalSecret.Spec.Data
+	}
+
+	missingProperties := map[string]bool{}
+	if r.Error != nil {
+		for _, e := range r.Error.EntryErrors {
+			for _, n := range e.Properties {
+				missingProperties[n] = true
+			}
+		}
+	}
+
+	// otherwise return only missing fields
+	var results []v1alpha1.Data
+	for _, d := range r.ExternalSecret.Spec.Data {
+		if missingProperties[d.Property] {
+			results = append(results, d)
+		}
+	}
+	return results
 }

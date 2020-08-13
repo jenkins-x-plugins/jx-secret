@@ -148,7 +148,7 @@ func (o *Options) Run() error {
 }
 
 func (o *Options) updateProperties(m map[string]interface{}, path string) error {
-	keyProperties := editor.KeyProperties{
+	keyProperties := &editor.KeyProperties{
 		Key: path,
 	}
 	for k, v := range m {

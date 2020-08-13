@@ -36,7 +36,7 @@ func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Inte
 	return c, nil
 }
 
-func (c *client) Write(properties editor.KeyProperties) error {
+func (c *client) Write(properties *editor.KeyProperties) error {
 	key := extsecrets.SimplifyKey("gcpSecretsManager", properties.Key)
 
 	editor.SortPropertyValues(properties.Properties)

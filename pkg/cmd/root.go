@@ -11,6 +11,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/verify"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/version"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/wait"
 	"github.com/jenkins-x/jx-secret/pkg/root"
 	"github.com/spf13/cobra"
 )
@@ -33,6 +34,7 @@ func Main() *cobra.Command {
 	cmd.AddCommand(cobras.SplitCommand(populate.NewCmdPopulate()))
 	cmd.AddCommand(cobras.SplitCommand(verify.NewCmdVerify()))
 	cmd.AddCommand(cobras.SplitCommand(version.NewCmdVersion()))
+	cmd.AddCommand(cobras.SplitCommand(wait.NewCmdWait()))
 	cmd.AddCommand(plugins.NewCmdPlugins())
 	cmd.AddCommand(vault.NewCmdVault())
 	return cmd

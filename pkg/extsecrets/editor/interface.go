@@ -4,7 +4,7 @@ import "strings"
 
 // Interface an editor of a secret
 type Interface interface {
-	Write(properties KeyProperties) error
+	Write(properties *KeyProperties) error
 }
 
 // KeyProperties to specify a set of properties to populate

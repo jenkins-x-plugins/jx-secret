@@ -42,4 +42,21 @@ type SecretPair struct {
 
 	// Secret the secret if there is one
 	Secret *corev1.Secret
+
+	// Error last validation error at last check
+	Error *SecretError
+}
+
+// IsInvalid returns true if the validation failed
+func (p *SecretPair) IsInvalid() bool {
+	return p.Error != nil && len(p.Error.EntryErrors) > 0
+}
+
+// IsMandatory returns true if the secret is a mandatory secret
+func (p *SecretPair) IsMandatory() bool {
+	ann := p.ExternalSecret.Annotations
+	if ann != nil {
+		return ann[extsecrets.KindAnnotation] == extsecrets.KindValueMandatory
+	}
+	return false
 }

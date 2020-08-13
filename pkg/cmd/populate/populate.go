@@ -38,7 +38,7 @@ type Options struct {
 	Dir           string
 	WaitDuration  time.Duration
 	Schema        *schema.Schema
-	Results       []*secretfacade.SecretError
+	Results       []*secretfacade.SecretPair
 	CommandRunner cmdrunner.CommandRunner
 	NoWait        bool
 	Generators    map[string]generators.Generator
@@ -110,29 +110,31 @@ func (o *Options) Run() error {
 			editors[backendType] = secEditor
 		}
 
-		for _, e := range r.EntryErrors {
-			keyProperties := editor.KeyProperties{
-				Key: e.Key,
-			}
-			for _, property := range e.Properties {
-				var value string
-				value, err = o.generateSecretValue(name, property, e)
-				if err != nil {
-					return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, e.Key, name)
+		if r.Error != nil {
+			for _, e := range r.Error.EntryErrors {
+				keyProperties := &editor.KeyProperties{
+					Key: e.Key,
 				}
-				if value == "" {
-					continue
+				for _, property := range e.Properties {
+					var value string
+					value, err = o.generateSecretValue(name, property, e)
+					if err != nil {
+						return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, e.Key, name)
+					}
+					if value == "" {
+						continue
+					}
+					keyProperties.Properties = append(keyProperties.Properties, editor.PropertyValue{
+						Property: property,
+						Value:    value,
+					})
 				}
-				keyProperties.Properties = append(keyProperties.Properties, editor.PropertyValue{
-					Property: property,
-					Value:    value,
-				})
-			}
 
-			if len(keyProperties.Properties) > 0 {
-				err = secEditor.Write(keyProperties)
-				if err != nil {
-					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
+				if len(keyProperties.Properties) > 0 {
+					err = secEditor.Write(keyProperties)
+					if err != nil {
+						return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
+					}
 				}
 			}
 		}
