@@ -10,11 +10,12 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x/jx-secret/pkg/root"
+	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-secret/pkg/schema"
 	"github.com/jenkins-x/jx-secret/pkg/schema/generators"
 	"github.com/pkg/errors"
@@ -37,7 +38,7 @@ type Options struct {
 
 	Dir           string
 	WaitDuration  time.Duration
-	Schema        *schema.Schema
+	Schema        *v1alpha1.Schema
 	Results       []*secretfacade.SecretPair
 	CommandRunner cmdrunner.CommandRunner
 	NoWait        bool
@@ -52,7 +53,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 		Use:     "populate",
 		Short:   "Populates any missing secret values which can be automatically generated",
 		Long:    cmdLong,
-		Example: fmt.Sprintf(cmdExample, root.BinaryName),
+		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)

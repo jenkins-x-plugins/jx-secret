@@ -5,7 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jenkins-x/jx-secret/pkg/apis/extsecret/v1alpha1"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
+	schemaapi "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/schema"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
@@ -18,7 +19,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x/jx-secret/pkg/root"
+	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -40,7 +41,7 @@ type Options struct {
 	Dir           string
 	Filter        string
 	Input         input.Interface
-	Schema        *schema.Schema
+	Schema        *schemaapi.Schema
 	Results       []*secretfacade.SecretPair
 	CommandRunner cmdrunner.CommandRunner
 }
@@ -53,7 +54,7 @@ func NewCmdEdit() (*cobra.Command, *Options) {
 		Use:     "edit",
 		Short:   "Edits any missing properties in the ExternalSecret resources",
 		Long:    editLong,
-		Example: fmt.Sprintf(editExample, root.BinaryName),
+		Example: fmt.Sprintf(editExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)
@@ -144,10 +145,10 @@ func (o *Options) Run() error {
 	return nil
 }
 
-func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1alpha1.Data) (string, error) {
+func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1.Data) (string, error) {
 	var value string
 	var err error
-	var propertySpec *schema.Property
+	var propertySpec *schemaapi.Property
 	name := s.ExternalSecret.Name
 	property := d.Property
 	_, propertySpec, err = schema.FindObjectProperty(o.Schema, name, property)
@@ -177,7 +178,7 @@ func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1alpha1.Data
 
 	// Add TESTS!!!
 
-	kind := propertySpec.Labels[schema.LabelKind]
+	kind := propertySpec.Labels[schemaapi.LabelKind]
 	switch kind {
 	case "confirm":
 		log.Logger().Warn("implement confirm")
@@ -187,7 +188,7 @@ func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1alpha1.Data
 	return value, nil
 }
 
-func (o *Options) propertyMessage(s *secretfacade.SecretPair, d *v1alpha1.Data) (string, string) {
+func (o *Options) propertyMessage(s *secretfacade.SecretPair, d *v1.Data) (string, string) {
 	name := s.ExternalSecret.Name
 	property := d.Property
 	return name + "." + property, ""
@@ -203,7 +204,7 @@ func (o *Options) Matches(r *secretfacade.SecretPair) bool {
 }
 
 // DataToEdit returns the properties to edit
-func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1alpha1.Data {
+func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1.Data {
 	// if filtering return all properties
 	if o.Filter != "" {
 		return r.ExternalSecret.Spec.Data
@@ -219,7 +220,7 @@ func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1alpha1.Data {
 	}
 
 	// otherwise return only missing fields
-	var results []v1alpha1.Data
+	var results []v1.Data
 	for _, d := range r.ExternalSecret.Spec.Data {
 		if missingProperties[d.Property] {
 			results = append(results, d)

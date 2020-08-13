@@ -4,6 +4,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cobras"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/portforward"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/shell"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +21,8 @@ func NewCmdVault() *cobra.Command {
 			}
 		},
 	}
-	command.AddCommand(cobras.SplitCommand(wait.NewCmdWait()))
 	command.AddCommand(cobras.SplitCommand(portforward.NewCmdPortForward()))
+	command.AddCommand(cobras.SplitCommand(shell.NewCmdVaultShell()))
+	command.AddCommand(cobras.SplitCommand(wait.NewCmdWait()))
 	return command
 }

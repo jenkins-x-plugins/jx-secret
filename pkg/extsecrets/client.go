@@ -1,7 +1,7 @@
 package extsecrets
 
 import (
-	"github.com/jenkins-x/jx-secret/pkg/apis/extsecret/v1alpha1"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,7 +16,7 @@ type client struct {
 }
 
 //nolint:gocritic
-func (c *client) List(ns string, listOptions metav1.ListOptions) ([]*v1alpha1.ExternalSecret, error) {
+func (c *client) List(ns string, listOptions metav1.ListOptions) ([]*v1.ExternalSecret, error) {
 	var client dynamic.ResourceInterface
 	if ns != "" {
 		client = c.dynamicClient.Resource(ExternalSecretsResource).Namespace(ns)
@@ -31,11 +31,11 @@ func (c *client) List(ns string, listOptions metav1.ListOptions) ([]*v1alpha1.Ex
 		return nil, errors.Wrap(err, "failed to find external secrets")
 	}
 
-	var answer []*v1alpha1.ExternalSecret
+	var answer []*v1.ExternalSecret
 	if resources != nil {
 		for k := range resources.Items {
 			u := resources.Items[k]
-			extSecret := &v1alpha1.ExternalSecret{}
+			extSecret := &v1.ExternalSecret{}
 			err = FromUnstructured(&u, extSecret)
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to convert to ExternalSecret %s", u.GetName())

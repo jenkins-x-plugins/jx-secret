@@ -7,7 +7,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
-	"github.com/jenkins-x/jx-secret/pkg/root"
+	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -37,7 +37,7 @@ func NewCmdPortForward() (*cobra.Command, *Options) {
 		Short:   "Runs a port forward process so you can access the vault in a kubernetes cluster",
 		Aliases: []string{"portfwd", "port-forward"},
 		Long:    cmdLong,
-		Example: fmt.Sprintf(cmdExample, root.BinaryName),
+		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)

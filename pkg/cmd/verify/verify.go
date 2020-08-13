@@ -10,7 +10,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/table"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x/jx-secret/pkg/root"
+	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -41,7 +41,7 @@ func NewCmdVerify() (*cobra.Command, *Options) {
 		Aliases: []string{"get"},
 		Short:   "Verifies that the ExternalSecret resources have the required properties populated in the underlying secret storage",
 		Long:    verifyLong,
-		Example: fmt.Sprintf(verifyExample, root.BinaryName),
+		Example: fmt.Sprintf(verifyExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)

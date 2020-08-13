@@ -6,14 +6,17 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/pkg/errors"
+
+	"gopkg.in/validator.v2"
 
 	"gopkg.in/yaml.v1"
 )
 
 // LoadSchema loads a specific secret mapping YAML file
-func LoadSchema(fileName string) (*Schema, error) {
-	config := &Schema{}
+func LoadSchema(fileName string) (*v1alpha1.Schema, error) {
+	config := &v1alpha1.Schema{}
 
 	exists, err := files.FileExists(fileName)
 	if err != nil {
@@ -34,7 +37,7 @@ func LoadSchema(fileName string) (*Schema, error) {
 		return nil, fmt.Errorf("failed to unmarshal YAML file %s due to %s", fileName, err)
 	}
 
-	err = config.Validate()
+	err = validator.Validate(config)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to validate secret mapping YAML file %s", fileName)
 	}
@@ -42,7 +45,7 @@ func LoadSchema(fileName string) (*Schema, error) {
 }
 
 // FindObjectProperty finds the schema property for the given object
-func FindObjectProperty(s *Schema, objectName, property string) (*Object, *Property, error) {
+func FindObjectProperty(s *v1alpha1.Schema, objectName, property string) (*v1alpha1.Object, *v1alpha1.Property, error) {
 	if s == nil {
 		return nil, nil, nil
 	}

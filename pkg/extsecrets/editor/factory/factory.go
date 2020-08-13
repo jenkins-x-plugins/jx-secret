@@ -2,7 +2,7 @@ package factory
 
 import (
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
-	"github.com/jenkins-x/jx-secret/pkg/apis/extsecret/v1alpha1"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/gsm"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/vault"
@@ -10,7 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewEditor(secret *v1alpha1.ExternalSecret, commandRunner cmdrunner.CommandRunner, client kubernetes.Interface) (editor.Interface, error) {
+func NewEditor(secret *v1.ExternalSecret, commandRunner cmdrunner.CommandRunner, client kubernetes.Interface) (editor.Interface, error) {
 	backendType := secret.Spec.BackendType
 	switch backendType {
 	case "vault":

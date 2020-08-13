@@ -1,4 +1,4 @@
-package root
+package rootcmd
 
 const (
 	// TopLevelCommand top level command
