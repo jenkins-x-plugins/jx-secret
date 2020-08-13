@@ -119,6 +119,17 @@ string
 <p>Properties the property definitions</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>mandatory</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Mandatory marks this secret as being mandatory to be setup before we can install a cluster</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="secret.jenkins-x.io/v1alpha1.Property">Property
@@ -300,6 +311,7 @@ bool
 </em>
 </td>
 <td>
+<p>Objects the list of objects (or kinds) in the schema</p>
 </td>
 </tr>
 </tbody>
@@ -307,5 +319,5 @@ bool
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>7a9a24f</code>.
+on git commit <code>be7e407</code>.
 </em></p>

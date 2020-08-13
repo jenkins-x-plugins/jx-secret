@@ -22,10 +22,11 @@ Converts all Secret resources in the path to ExternalSecret resources so they ca
 ### Options
 
 ```
-  -d, --dir string                 the directory to recursively look for the *.yaml or *.yml files (default ".")
-  -h, --help                       help for convert
-  -m, --vault-mount-point string   the vault authentication mount point (default "kubernetes")
-  -r, --vault-role string          the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html (default "vault-infra")
+  -d, --dir string                  the directory to recursively look for the *.yaml or *.yml files (default "config-root")
+  -h, --help                        help for convert
+  -m, --vault-mount-point string    the vault authentication mount point (default "kubernetes")
+  -r, --vault-role string           the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html (default "vault-infra")
+      --version-stream-dir string   the directory containing the version stream (default "versionStream")
 ```
 
 ### SEE ALSO

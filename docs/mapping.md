@@ -380,17 +380,6 @@ BackendType
 </tr>
 <tr>
 <td>
-<code>mandatory</code></br>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Mandatory marks this secret as being mandatory</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>gcpSecretsManager</code></br>
 <em>
 <a href="#secret.jenkins-x.io/v1alpha1.GcpSecretsManager">
@@ -407,5 +396,5 @@ GcpSecretsManager
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>7a9a24f</code>.
+on git commit <code>be7e407</code>.
 </em></p>

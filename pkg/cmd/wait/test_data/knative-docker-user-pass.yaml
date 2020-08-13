@@ -2,7 +2,7 @@ apiVersion: kubernetes-client.io/v1
 kind: ExternalSecret
 metadata:
   annotations:
-    "gitops.jenkins-x.io/kind": "mandatory"
+    secret.jenkins-x.io/schema-object: "mandatory: true\n"
   creationTimestamp: "2020-06-18T15:04:47Z"
   generation: 1
   labels:
