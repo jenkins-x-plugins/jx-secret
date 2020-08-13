@@ -16,7 +16,7 @@ Runs a port forward process so you can access the vault in a kubernetes cluster
 
 ### Examples
 
-  jx-secret vault portforward
+  jx-secret vault shell
 
 ### Options
 

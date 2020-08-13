@@ -181,6 +181,11 @@ generate-refdocs: install-refdocs
     -api-dir "./pkg/apis/mapping/v1alpha1" \
     -out-file docs/mapping.md
 
+	${GOHOME}/bin/gen-crd-api-reference-docs -config "hack/configdocs/config.json" \
+	-template-dir hack/configdocs/templates \
+    -api-dir "./pkg/apis/schema/v1alpha1" \
+    -out-file docs/schema.md
+
 bin/docs:
 	go build $(LDFLAGS) -v -o bin/docs cmd/docs/*.go
 

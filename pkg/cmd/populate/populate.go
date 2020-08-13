@@ -10,6 +10,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
@@ -37,7 +38,7 @@ type Options struct {
 
 	Dir           string
 	WaitDuration  time.Duration
-	Schema        *schema.Schema
+	Schema        *v1alpha1.Schema
 	Results       []*secretfacade.SecretPair
 	CommandRunner cmdrunner.CommandRunner
 	NoWait        bool

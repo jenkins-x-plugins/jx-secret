@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jenkins-x/jx-secret/pkg/apis/external/v1alpha1"
+	schemaapi "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/schema"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
@@ -40,7 +41,7 @@ type Options struct {
 	Dir           string
 	Filter        string
 	Input         input.Interface
-	Schema        *schema.Schema
+	Schema        *schemaapi.Schema
 	Results       []*secretfacade.SecretPair
 	CommandRunner cmdrunner.CommandRunner
 }
@@ -147,7 +148,7 @@ func (o *Options) Run() error {
 func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1alpha1.Data) (string, error) {
 	var value string
 	var err error
-	var propertySpec *schema.Property
+	var propertySpec *schemaapi.Property
 	name := s.ExternalSecret.Name
 	property := d.Property
 	_, propertySpec, err = schema.FindObjectProperty(o.Schema, name, property)
@@ -177,7 +178,7 @@ func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1alpha1.Data
 
 	// Add TESTS!!!
 
-	kind := propertySpec.Labels[schema.LabelKind]
+	kind := propertySpec.Labels[schemaapi.LabelKind]
 	switch kind {
 	case "confirm":
 		log.Logger().Warn("implement confirm")
