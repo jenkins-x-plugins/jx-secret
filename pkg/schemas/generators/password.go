@@ -1,7 +1,7 @@
 package generators
 
 import (
-	"github.com/jenkins-x/jx-secret/pkg/schema/secrets"
+	"github.com/jenkins-x/jx-secret/pkg/schemas/secrets"
 	"github.com/pkg/errors"
 )
 

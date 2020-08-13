@@ -2,16 +2,21 @@ package convert
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cobras"
+	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/convert/edit"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x/jx-secret/pkg/schemas"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/pkg/kyamls"
 	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
+	schema "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-secret/pkg/secretmapping"
 	"github.com/pkg/errors"
@@ -36,11 +41,12 @@ var (
 
 // LabelOptions the options for the command
 type Options struct {
-	Dir             string
-	Backend         string
-	VaultMountPoint string
-	VaultRole       string
-	SecretMapping   *v1alpha1.SecretMapping
+	Dir              string
+	VersionStreamDir string
+	Backend          string
+	VaultMountPoint  string
+	VaultRole        string
+	SecretMapping    *v1alpha1.SecretMapping
 
 	Prefix string
 }
@@ -60,7 +66,8 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 			helper.CheckErr(err)
 		},
 	}
-	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to recursively look for the *.yaml or *.yml files")
+	cmd.Flags().StringVarP(&o.Dir, "dir", "d", "config-root", "the directory to recursively look for the *.yaml or *.yml files")
+	cmd.Flags().StringVarP(&o.VersionStreamDir, "version-stream-dir", "", "versionStream", "the directory containing the version stream")
 	cmd.Flags().StringVarP(&o.VaultMountPoint, "vault-mount-point", "m", "kubernetes", "the vault authentication mount point")
 	cmd.Flags().StringVarP(&o.VaultRole, "vault-role", "r", "vault-infra", "the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html")
 
@@ -138,7 +145,7 @@ func (o *Options) Run() error {
 		if err != nil {
 			return flag, err
 		}
-		flag, err = o.moveMetadataToTemplate(node, path, secret)
+		flag, err = o.moveMetadataToTemplate(node, path)
 		if err != nil {
 			return flag, err
 		}
@@ -310,7 +317,7 @@ func (o *Options) modifyGSM(rNode *yaml.RNode, field, secretName, path string) e
 	return nil
 }
 
-func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string, secret *v1alpha1.SecretRule) (bool, error) {
+func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, error) {
 	// lets move annotations/labels/type  over to the template field
 	typeValue := kyamls.GetStringField(node, path, "type")
 
@@ -324,7 +331,8 @@ func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string, secret *
 	}
 
 	if typeValue != "" || labels != nil || annotations != nil {
-		templateNode, err := node.Pipe(yaml.LookupCreate(yaml.MappingNode, "spec", "template"))
+		var templateNode *yaml.RNode
+		templateNode, err = node.Pipe(yaml.LookupCreate(yaml.MappingNode, "spec", "template"))
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to set kind")
 		}
@@ -375,13 +383,52 @@ func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string, secret *
 		}
 	}
 
-	// now lets add any optional annotations
-	if secret.Mandatory {
-		err := node.PipeE(yaml.SetAnnotation(extsecrets.KindAnnotation, extsecrets.KindValueMandatory))
+	// add the optional schema annotation if we can find the schema
+	schemaAnnotation, err := o.findSchemaObjectAnnotation(node, path)
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to find schema for secret at path %s", path)
+	}
+	if schemaAnnotation != "" {
+		err = node.PipeE(yaml.SetAnnotation(extsecrets.SchemaObjectAnnotation, schemaAnnotation))
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to add mandatory annotation to file %s", path)
 		}
 	}
-
 	return true, nil
+}
+
+func (o *Options) findSchemaSchemaObject(node *yaml.RNode, path string) (*schema.Object, error) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to find absolute path for %s", path)
+	}
+	paths := strings.Split(absPath, string(os.PathSeparator))
+	if len(paths) < 2 {
+		log.Logger().Warnf("cannot find the chart name from such a small path %s", absPath)
+		return nil, nil
+	}
+	lastDir := paths[len(paths)-2]
+	g := filepath.Join(o.VersionStreamDir, "charts", "*", lastDir, "secret-schema.yaml")
+	files, err := filepath.Glob(g)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to find files at glob: %s", g)
+	}
+	if len(files) == 0 {
+		return nil, nil
+	}
+	name := kyamls.GetName(node, path)
+	return schemas.LoadSchemaObjectFromFiles(name, files)
+}
+
+func (o *Options) findSchemaObjectAnnotation(node *yaml.RNode, path string) (string, error) {
+	schema, err := o.findSchemaSchemaObject(node, path)
+	if schema == nil || err != nil {
+		return "", err
+	}
+	// lets convert to YAML so we can store it as an annotation
+	text, err := schemas.ToString(schema)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to convert schema for path %s to YAML", path)
+	}
+	return text, nil
 }

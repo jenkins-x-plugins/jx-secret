@@ -2,7 +2,6 @@ package populate
 
 import (
 	"fmt"
-	"path/filepath"
 	"time"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
@@ -16,8 +15,8 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
-	"github.com/jenkins-x/jx-secret/pkg/schema"
-	"github.com/jenkins-x/jx-secret/pkg/schema/generators"
+	"github.com/jenkins-x/jx-secret/pkg/schemas"
+	"github.com/jenkins-x/jx-secret/pkg/schemas/generators"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -84,7 +83,7 @@ func (o *Options) Run() error {
 	editors := map[string]editor.Interface{}
 	waited := map[string]bool{}
 
-	o.Schema, err = schema.LoadSchema(filepath.Join(o.Dir, ".jx", "gitops", "secret-schema.yaml"))
+	o.Schema, err = schemas.LoadSchema(o.Dir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load survey schema used to prompt the user for questions")
 	}
@@ -144,7 +143,7 @@ func (o *Options) Run() error {
 }
 
 func (o *Options) generateSecretValue(secretName, property string, e *secretfacade.EntryError) (string, error) {
-	object, propertySchema, err := schema.FindObjectProperty(o.Schema, secretName, property)
+	object, propertySchema, err := schemas.FindObjectProperty(o.Schema, secretName, property)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to find schema for entry %s property %s", e.Key, property)
 	}

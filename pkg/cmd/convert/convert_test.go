@@ -154,3 +154,23 @@ func TestGCPProjectIDValidation(t *testing.T) {
 	log.Logger().Infof("%s", err.Error())
 	assert.True(t, strings.Contains(err.Error(), "Spec.Defaults.BackendType: zero value"), "failed to get correct validation error")
 }
+
+func TestConvertAndSchemaEnrich(t *testing.T) {
+	sourceData := filepath.Join("test_data", "schema")
+	require.DirExists(t, sourceData)
+
+	tmpDir, err := ioutil.TempDir("", "")
+	require.NoError(t, err, "could not create temp dir")
+
+	err = files.CopyDir(sourceData, tmpDir, true)
+	require.NoError(t, err, "failed to copy %s to %s", sourceData, tmpDir)
+
+	_, eo := convert.NewCmdSecretConvert()
+	eo.VersionStreamDir = filepath.Join(tmpDir, "versionStream")
+	eo.Dir = filepath.Join(tmpDir, "somedir")
+
+	err = eo.Run()
+	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
+
+	t.Logf("converted the Secrets to ExternalSecrets in dir %s", eo.Dir)
+}

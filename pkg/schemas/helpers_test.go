@@ -1,18 +1,18 @@
-package schema_test
+package schemas_test
 
 import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-secret/pkg/schema"
-	"github.com/jenkins-x/jx-secret/pkg/schema/testschemas"
+	"github.com/jenkins-x/jx-secret/pkg/schemas"
+	"github.com/jenkins-x/jx-secret/pkg/schemas/testschemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestLoadSurveySchema(t *testing.T) {
 	fileName := filepath.Join("test_data", "load", "schema.yaml")
-	s, err := schema.LoadSchema(fileName)
+	s, err := schemas.LoadSchemaFile(fileName)
 	assert.NoError(t, err, "should not have errored when loading survey schema")
 	assert.Equal(t, 3, len(s.Spec.Objects), "should have matched 10 survey schema")
 
@@ -26,7 +26,7 @@ func TestLoadSurveySchema(t *testing.T) {
 
 func TestValidateMissingName(t *testing.T) {
 	fileName := filepath.Join("test_data", "validate", "schema.yaml")
-	s, err := schema.LoadSchema(fileName)
+	s, err := schemas.LoadSchemaFile(fileName)
 	require.Error(t, err, "should have errored when validating survey s")
 	t.Logf("got expected error %s", err.Error())
 	assert.Contains(t, err.Error(), "Spec.Objects[0].Properties[1].Name: zero value", "should have failed validation")

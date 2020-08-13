@@ -2,12 +2,11 @@ package edit
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	schemaapi "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
-	"github.com/jenkins-x/jx-secret/pkg/schema"
+	"github.com/jenkins-x/jx-secret/pkg/schemas"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
@@ -86,7 +85,7 @@ func (o *Options) Run() error {
 
 	editors := map[string]editor.Interface{}
 
-	o.Schema, err = schema.LoadSchema(filepath.Join(o.Dir, ".jx", "gitops", "secret-schema.yaml"))
+	o.Schema, err = schemas.LoadSchema(o.Dir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load survey schema used to prompt the user for questions")
 	}
@@ -151,7 +150,7 @@ func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1.Data) (str
 	var propertySpec *schemaapi.Property
 	name := s.ExternalSecret.Name
 	property := d.Property
-	_, propertySpec, err = schema.FindObjectProperty(o.Schema, name, property)
+	_, propertySpec, err = schemas.FindObjectProperty(o.Schema, name, property)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to find schema property for object %s property %s", name, property)
 	}

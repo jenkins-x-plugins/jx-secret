@@ -34,7 +34,19 @@ type SchemaList struct {
 
 // SchemaSpec defines the objects and their properties
 type SchemaSpec struct {
+	// Objects the list of objects (or kinds) in the schema
 	Objects []Object `yaml:"objects"`
+}
+
+// FindObject returns the object for the given name or nil
+func (s *SchemaSpec) FindObject(name string) *Object {
+	for i := range s.Objects {
+		o := &s.Objects[i]
+		if o.Name == name {
+			return o
+		}
+	}
+	return nil
 }
 
 // Object defines a type of object with some properties
@@ -44,6 +56,9 @@ type Object struct {
 
 	// Properties the property definitions
 	Properties []Property `yaml:"properties"`
+
+	// Mandatory marks this secret as being mandatory to be setup before we can install a cluster
+	Mandatory bool `json:"mandatory,omitempty"`
 }
 
 // Property defines a property in an object

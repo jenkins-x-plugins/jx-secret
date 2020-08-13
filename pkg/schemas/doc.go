@@ -1,4 +1,4 @@
-package schema
+package schemas
 
 /*
 Package schema contains packages to help work with a survey to automatically ask

@@ -3,8 +3,6 @@ apiVersion: kubernetes-client.io/v1
 kind: ExternalSecret
 metadata:
   name: lighthouse-oauth-token
-  annotations:
-    gitops.jenkins-x.io/kind: 'mandatory'
 spec:
   backendType: vault
   vaultMountPoint: kubernetes
