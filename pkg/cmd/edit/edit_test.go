@@ -53,8 +53,8 @@ func TestEdit(t *testing.T) {
 
 	input := &fakeinput.FakeInput{
 		Values: map[string]string{
-			"secret/data/knative/docker/user/pass.password": "dummyDockerPwd",
-			"secret/data/jx/pipelineUser.token":             "dummyPipelineToken",
+			"knative-docker-user-pass.password": "dummyDockerPwd",
+			"lighthouse-oauth-token.token":      "dummyPipelineToken",
 		},
 	}
 	o.Input = input

@@ -53,7 +53,7 @@ func NewCmdVerify() (*cobra.Command, *Options) {
 
 // Run implements the command
 func (o *Options) Run() error {
-	pairs, err := o.Load()
+	pairs, err := o.Verify()
 	if err != nil {
 		return errors.Wrap(err, "failed to verify secrets")
 	}
@@ -63,11 +63,7 @@ func (o *Options) Run() error {
 	t.AddRow("SECRET", "STATUS")
 	for _, r := range pairs {
 		name := r.ExternalSecret.Name
-
-		state, err := secretfacade.VerifySecret(&r.ExternalSecret, r.Secret)
-		if err != nil {
-			return errors.Wrapf(err, "failed to verify secret")
-		}
+		state := r.Error
 		if state == nil {
 			t.AddRow(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.Keys(), ", "))))
 		} else {
