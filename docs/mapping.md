@@ -199,7 +199,7 @@ string
 </em>
 </td>
 <td>
-<p>ProjectId for the secret, defaults to the current GCP project</p>
+<p>ProjectID for the secret, defaults to the current GCP project</p>
 </td>
 </tr>
 <tr>
@@ -407,5 +407,5 @@ GcpSecretsManager
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>46ba607</code>.
+on git commit <code>7a9a24f</code>.
 </em></p>
