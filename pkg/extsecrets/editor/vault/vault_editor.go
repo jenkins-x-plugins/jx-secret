@@ -29,7 +29,7 @@ type client struct {
 
 func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Interface) (editor.Interface, error) {
 	if commandRunner == nil {
-		commandRunner = cmdrunner.DefaultCommandRunner
+		commandRunner = MaskedCommandRunner
 	}
 	c := &client{
 		commandRunner: commandRunner,
@@ -42,11 +42,11 @@ func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Inte
 	return c, nil
 }
 
-// VaultCommandRunner do not output the
-func VaultCommandRunner(c *cmdrunner.Command) (string, error) {
+// MaskedCommandRunner mask the command line arguments when logging
+func MaskedCommandRunner(c *cmdrunner.Command) (string, error) {
 	args := MastSecretArgs(c.Args)
-
 	log.Logger().Infof("about to run: %s %s", termcolor.ColorInfo(c.Name), termcolor.ColorInfo(strings.Join(args, " ")))
+
 	result, err := c.RunWithoutRetry()
 	if result != "" {
 		log.Logger().Infof(termcolor.ColorStatus(result))
