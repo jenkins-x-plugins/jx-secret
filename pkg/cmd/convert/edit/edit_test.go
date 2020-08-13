@@ -31,12 +31,12 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 			callback: func(t *testing.T, sm *v1alpha1.SecretMapping) {
 				assert.Equal(t, 2, len(sm.Spec.Secrets), "should have found 2 mappings")
 				for _, secret := range sm.Spec.Secrets {
-					assert.Equal(t, "foo", secret.GcpSecretsManager.ProjectId, "secret.GcpSecretsManager.ProjectId")
+					assert.Equal(t, "foo", secret.GcpSecretsManager.ProjectID, "secret.GcpSecretsManager.ProjectID")
 					assert.Equal(t, "bar", secret.GcpSecretsManager.UniquePrefix, "secret.GcpSecretsManager.UniquePrefix")
 					assert.Equal(t, "latest", secret.GcpSecretsManager.Version, "secret.GcpSecretsManager.Version")
 				}
 
-				assert.Equal(t, "foo", sm.Spec.Defaults.GcpSecretsManager.ProjectId, "sm.Spec.Defaults.GcpSecretsManager.ProjectId")
+				assert.Equal(t, "foo", sm.Spec.Defaults.GcpSecretsManager.ProjectID, "sm.Spec.Defaults.GcpSecretsManager.ProjectID")
 				assert.Equal(t, "bar", sm.Spec.Defaults.GcpSecretsManager.UniquePrefix, "secret.GcpSecretsManager.UniquePrefix")
 
 			},
@@ -46,10 +46,10 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 			args: []string{"--gcp-project-id=foo", "--gcp-unique-prefix=bar"},
 			callback: func(t *testing.T, sm *v1alpha1.SecretMapping) {
 				assert.Equal(t, 2, len(sm.Spec.Secrets), "should have found 2 mappings")
-				assert.Equal(t, "phill", sm.Spec.Secrets[0].GcpSecretsManager.ProjectId, "secret.GcpSecretsManager.ProjectId")
+				assert.Equal(t, "phill", sm.Spec.Secrets[0].GcpSecretsManager.ProjectID, "secret.GcpSecretsManager.ProjectID")
 				assert.Equal(t, "collins", sm.Spec.Secrets[0].GcpSecretsManager.UniquePrefix, "secret.GcpSecretsManager.UniquePrefix")
 				assert.Equal(t, "1", sm.Spec.Secrets[0].GcpSecretsManager.Version, "secret.GcpSecretsManager.Version")
-				assert.Equal(t, "foo", sm.Spec.Secrets[1].GcpSecretsManager.ProjectId, "secret.GcpSecretsManager.ProjectId")
+				assert.Equal(t, "foo", sm.Spec.Secrets[1].GcpSecretsManager.ProjectID, "secret.GcpSecretsManager.ProjectID")
 				assert.Equal(t, "latest", sm.Spec.Secrets[1].GcpSecretsManager.Version, "secret.GcpSecretsManager.Version")
 			},
 		},

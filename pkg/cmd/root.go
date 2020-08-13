@@ -29,7 +29,7 @@ func Main() *cobra.Command {
 			}
 		},
 	}
-	cmd.AddCommand(cobras.SplitCommand(convert.NewCmdSecretsMapping()))
+	cmd.AddCommand(cobras.SplitCommand(convert.NewCmdSecretConvert()))
 	cmd.AddCommand(cobras.SplitCommand(edit.NewCmdEdit()))
 	cmd.AddCommand(cobras.SplitCommand(export.NewCmdExport()))
 	cmd.AddCommand(cobras.SplitCommand(importcmd.NewCmdImport()))

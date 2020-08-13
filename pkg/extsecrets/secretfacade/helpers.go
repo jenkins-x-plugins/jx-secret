@@ -1,12 +1,12 @@
 package secretfacade
 
 import (
-	"github.com/jenkins-x/jx-secret/pkg/apis/external/v1alpha1"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // VerifySecret verifies the secret
-func VerifySecret(es *v1alpha1.ExternalSecret, secret *corev1.Secret) (*SecretError, error) {
+func VerifySecret(es *v1.ExternalSecret, secret *corev1.Secret) (*SecretError, error) {
 	var answer []*EntryError
 	for _, d := range es.Spec.Data {
 		valid := false

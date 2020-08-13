@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jenkins-x/jx-secret/pkg/apis/external/v1alpha1"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	schemaapi "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/schema"
 
@@ -145,7 +145,7 @@ func (o *Options) Run() error {
 	return nil
 }
 
-func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1alpha1.Data) (string, error) {
+func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1.Data) (string, error) {
 	var value string
 	var err error
 	var propertySpec *schemaapi.Property
@@ -188,7 +188,7 @@ func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1alpha1.Data
 	return value, nil
 }
 
-func (o *Options) propertyMessage(s *secretfacade.SecretPair, d *v1alpha1.Data) (string, string) {
+func (o *Options) propertyMessage(s *secretfacade.SecretPair, d *v1.Data) (string, string) {
 	name := s.ExternalSecret.Name
 	property := d.Property
 	return name + "." + property, ""
@@ -204,7 +204,7 @@ func (o *Options) Matches(r *secretfacade.SecretPair) bool {
 }
 
 // DataToEdit returns the properties to edit
-func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1alpha1.Data {
+func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1.Data {
 	// if filtering return all properties
 	if o.Filter != "" {
 		return r.ExternalSecret.Spec.Data
@@ -220,7 +220,7 @@ func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1alpha1.Data {
 	}
 
 	// otherwise return only missing fields
-	var results []v1alpha1.Data
+	var results []v1.Data
 	for _, d := range r.ExternalSecret.Spec.Data {
 		if missingProperties[d.Property] {
 			results = append(results, d)

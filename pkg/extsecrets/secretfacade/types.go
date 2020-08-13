@@ -1,7 +1,7 @@
 package secretfacade
 
 import (
-	"github.com/jenkins-x/jx-secret/pkg/apis/external/v1alpha1"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -14,13 +14,13 @@ type Options struct {
 	Namespace    string
 
 	// ExternalSecrets the loaded secrets
-	ExternalSecrets []*v1alpha1.ExternalSecret
+	ExternalSecrets []*v1.ExternalSecret
 }
 
 // SecretError returns an error for a secret
 type SecretError struct {
 	// ExternalSecret the external secret which is not valid
-	ExternalSecret v1alpha1.ExternalSecret
+	ExternalSecret v1.ExternalSecret
 
 	// EntryErrors the errors for each secret entry
 	EntryErrors []*EntryError
@@ -38,7 +38,7 @@ type EntryError struct {
 // SecretPair the external secret and the associated Secret an error for a secret
 type SecretPair struct {
 	// ExternalSecret the external secret which is not valid
-	ExternalSecret v1alpha1.ExternalSecret
+	ExternalSecret v1.ExternalSecret
 
 	// Secret the secret if there is one
 	Secret *corev1.Secret

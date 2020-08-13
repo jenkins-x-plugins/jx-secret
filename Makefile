@@ -173,7 +173,7 @@ install-refdocs:
 generate-refdocs: install-refdocs
 	${GOHOME}/bin/gen-crd-api-reference-docs -config "hack/configdocs/config.json" \
 	-template-dir hack/configdocs/templates \
-    -api-dir "./pkg/apis/external/v1alpha1" \
+    -api-dir "./pkg/apis/external/v1" \
     -out-file docs/external.md
 
 	${GOHOME}/bin/gen-crd-api-reference-docs -config "hack/configdocs/config.json" \

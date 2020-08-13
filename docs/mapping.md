@@ -73,8 +73,7 @@ SecretMappingSpec
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>Spec holds the desired state of the SecretMapping from the client</p>
+<p>Spec the definition of the secret mappings</p>
 <br/>
 <br/>
 <table>
@@ -408,5 +407,5 @@ GcpSecretsManager
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>ff815cf</code>.
+on git commit <code>46ba607</code>.
 </em></p>

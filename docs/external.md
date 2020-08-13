@@ -7,18 +7,18 @@ weight: 10
 <p>Packages:</p>
 <ul>
 <li>
-<a href="#secret.jenkins-x.io%2fv1alpha1">secret.jenkins-x.io/v1alpha1</a>
+<a href="#kubernetes-client.io%2fv1">kubernetes-client.io/v1</a>
 </li>
 </ul>
-<h2 id="secret.jenkins-x.io/v1alpha1">secret.jenkins-x.io/v1alpha1</h2>
+<h2 id="kubernetes-client.io/v1">kubernetes-client.io/v1</h2>
 <p>
 <p>Package v1alpha1 is the v1alpha1 version of the API.</p>
 </p>
 Resource Types:
 <ul><li>
-<a href="#secret.jenkins-x.io/v1alpha1.ExternalSecret">ExternalSecret</a>
+<a href="#kubernetes-client.io/v1.ExternalSecret">ExternalSecret</a>
 </li></ul>
-<h3 id="secret.jenkins-x.io/v1alpha1.ExternalSecret">ExternalSecret
+<h3 id="kubernetes-client.io/v1.ExternalSecret">ExternalSecret
 </h3>
 <p>
 <p>ExternalSecret represents a collection of mappings of Secrets to destinations in the underlying secret store (e.g. Vault keys)</p>
@@ -37,7 +37,7 @@ Resource Types:
 string</td>
 <td>
 <code>
-secret.jenkins-x.io/v1alpha1
+kubernetes-client.io/v1
 </code>
 </td>
 </tr>
@@ -67,7 +67,7 @@ Refer to the Kubernetes API documentation for the fields of the
 <td>
 <code>spec</code></br>
 <em>
-<a href="#secret.jenkins-x.io/v1alpha1.ExternalSecretSpec">
+<a href="#kubernetes-client.io/v1.ExternalSecretSpec">
 ExternalSecretSpec
 </a>
 </em>
@@ -112,7 +112,7 @@ string
 <td>
 <code>data</code></br>
 <em>
-<a href="#secret.jenkins-x.io/v1alpha1.Data">
+<a href="#kubernetes-client.io/v1.Data">
 []Data
 </a>
 </em>
@@ -125,7 +125,7 @@ string
 <td>
 <code>template</code></br>
 <em>
-<a href="#secret.jenkins-x.io/v1alpha1.Template">
+<a href="#kubernetes-client.io/v1.Template">
 Template
 </a>
 </em>
@@ -141,7 +141,7 @@ Template
 <td>
 <code>status</code></br>
 <em>
-<a href="#secret.jenkins-x.io/v1alpha1.ExternalSecretStatus">
+<a href="#kubernetes-client.io/v1.ExternalSecretStatus">
 ExternalSecretStatus
 </a>
 </em>
@@ -153,11 +153,11 @@ ExternalSecretStatus
 </tr>
 </tbody>
 </table>
-<h3 id="secret.jenkins-x.io/v1alpha1.Data">Data
+<h3 id="kubernetes-client.io/v1.Data">Data
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#secret.jenkins-x.io/v1alpha1.ExternalSecretSpec">ExternalSecretSpec</a>)
+<a href="#kubernetes-client.io/v1.ExternalSecretSpec">ExternalSecretSpec</a>)
 </p>
 <p>
 <p>Data the data properties</p>
@@ -205,11 +205,11 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="secret.jenkins-x.io/v1alpha1.ExternalSecretSpec">ExternalSecretSpec
+<h3 id="kubernetes-client.io/v1.ExternalSecretSpec">ExternalSecretSpec
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#secret.jenkins-x.io/v1alpha1.ExternalSecret">ExternalSecret</a>)
+<a href="#kubernetes-client.io/v1.ExternalSecret">ExternalSecret</a>)
 </p>
 <p>
 <p>ExternalSecretSpec defines the desired state of ExternalSecret.</p>
@@ -256,7 +256,7 @@ string
 <td>
 <code>data</code></br>
 <em>
-<a href="#secret.jenkins-x.io/v1alpha1.Data">
+<a href="#kubernetes-client.io/v1.Data">
 []Data
 </a>
 </em>
@@ -269,7 +269,7 @@ string
 <td>
 <code>template</code></br>
 <em>
-<a href="#secret.jenkins-x.io/v1alpha1.Template">
+<a href="#kubernetes-client.io/v1.Template">
 Template
 </a>
 </em>
@@ -280,11 +280,11 @@ Template
 </tr>
 </tbody>
 </table>
-<h3 id="secret.jenkins-x.io/v1alpha1.ExternalSecretStatus">ExternalSecretStatus
+<h3 id="kubernetes-client.io/v1.ExternalSecretStatus">ExternalSecretStatus
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#secret.jenkins-x.io/v1alpha1.ExternalSecret">ExternalSecret</a>)
+<a href="#kubernetes-client.io/v1.ExternalSecret">ExternalSecret</a>)
 </p>
 <p>
 <p>ExternalSecretStatus defines the current status of the ExternalSecret.</p>
@@ -331,11 +331,11 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="secret.jenkins-x.io/v1alpha1.Template">Template
+<h3 id="kubernetes-client.io/v1.Template">Template
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#secret.jenkins-x.io/v1alpha1.ExternalSecretSpec">ExternalSecretSpec</a>)
+<a href="#kubernetes-client.io/v1.ExternalSecretSpec">ExternalSecretSpec</a>)
 </p>
 <p>
 <p>Template the template data</p>
@@ -379,5 +379,5 @@ Refer to the Kubernetes API documentation for the fields of the
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>ff815cf</code>.
+on git commit <code>46ba607</code>.
 </em></p>

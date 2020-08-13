@@ -45,8 +45,8 @@ type Options struct {
 	Prefix string
 }
 
-// NewCmdSecretsMapping creates a command object for the command
-func NewCmdSecretsMapping() (*cobra.Command, *Options) {
+// NewCmdSecretConvert creates a command object for the command
+func NewCmdSecretConvert() (*cobra.Command, *Options) {
 	o := &Options{}
 
 	cmd := &cobra.Command{
@@ -101,18 +101,18 @@ func (o *Options) Run() error {
 		}
 
 		if secret.BackendType == v1alpha1.BackendTypeGSM {
-			if secret.GcpSecretsManager.ProjectId != "" {
-				err = kyamls.SetStringValue(node, path, secret.GcpSecretsManager.ProjectId, "spec", "projectId")
+			if secret.GcpSecretsManager.ProjectID != "" {
+				err = kyamls.SetStringValue(node, path, secret.GcpSecretsManager.ProjectID, "spec", "projectId")
 				if err != nil {
 					return false, err
 				}
-			} else if o.SecretMapping.Spec.Defaults.GcpSecretsManager.ProjectId != "" {
-				err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.Defaults.GcpSecretsManager.ProjectId, "spec", "projectId")
+			} else if o.SecretMapping.Spec.Defaults.GcpSecretsManager.ProjectID != "" {
+				err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.Defaults.GcpSecretsManager.ProjectID, "spec", "projectId")
 				if err != nil {
 					return false, err
 				}
 			} else {
-				return false, errors.New("missing secret mapping secret.GcpSecretsManager.ProjectId")
+				return false, errors.New("missing secret mapping secret.GcpSecretsManager.ProjectID")
 			}
 
 			// if we have a unique prefix for the specific secret or a default one then set it to use as a gsm secret prefix later
@@ -163,8 +163,9 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	var contents []*yaml.Node
 	style := node.Document().Style
 
+	var fields []string
 	if data != nil {
-		fields, err := data.Fields()
+		fields, err = data.Fields()
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to find data fields for path %s", path)
 		}
@@ -178,10 +179,10 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 
 			switch backendType {
 			case v1alpha1.BackendTypeVault:
-				err = o.modifyVault(field, secretName, err, rNode, path)
+				err = o.modifyVault(rNode, field, secretName, path)
 
 			case v1alpha1.BackendTypeGSM:
-				err = o.modifyGSM(field, secretName, err, rNode, path)
+				err = o.modifyGSM(rNode, field, secretName, path)
 			}
 
 			if err != nil {
@@ -210,7 +211,7 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	return true, nil
 }
 
-func (o *Options) modifyVault(field string, secretName string, err error, rNode *yaml.RNode, path string) error {
+func (o *Options) modifyVault(rNode *yaml.RNode, field, secretName, path string) error {
 	// trim the suffix from the name and use it on the property?
 	property := field
 	secretPath := strings.ReplaceAll(secretName, "-", "/")
@@ -232,7 +233,7 @@ func (o *Options) modifyVault(field string, secretName string, err error, rNode 
 		}
 	}
 
-	err = kyamls.SetStringValue(rNode, path, field, "name")
+	err := kyamls.SetStringValue(rNode, path, field, "name")
 	if err != nil {
 		return err
 	}
@@ -247,8 +248,7 @@ func (o *Options) modifyVault(field string, secretName string, err error, rNode 
 	return nil
 }
 
-func (o *Options) modifyGSM(field string, secretName string, err error, rNode *yaml.RNode, path string) error {
-
+func (o *Options) modifyGSM(rNode *yaml.RNode, field, secretName, path string) error {
 	var property string
 	var key string
 
@@ -289,7 +289,7 @@ func (o *Options) modifyGSM(field string, secretName string, err error, rNode *y
 		return fmt.Errorf("no key found when mapping secret %s", secretName)
 	}
 
-	err = kyamls.SetStringValue(rNode, path, field, "name")
+	err := kyamls.SetStringValue(rNode, path, field, "name")
 	if err != nil {
 		return err
 	}
@@ -310,7 +310,7 @@ func (o *Options) modifyGSM(field string, secretName string, err error, rNode *y
 	return nil
 }
 
-func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string, secret v1alpha1.SecretRule) (bool, error) {
+func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string, secret *v1alpha1.SecretRule) (bool, error) {
 	// lets move annotations/labels/type  over to the template field
 	typeValue := kyamls.GetStringField(node, path, "type")
 
@@ -333,14 +333,16 @@ func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string, secret v
 		}
 
 		if annotations != nil {
-			newAnnotations, err := templateNode.Pipe(yaml.LookupCreate(yaml.MappingNode, "metadata", "annotations"))
+			var newAnnotations *yaml.RNode
+			newAnnotations, err = templateNode.Pipe(yaml.LookupCreate(yaml.MappingNode, "metadata", "annotations"))
 			if err != nil {
 				return false, errors.Wrapf(err, "failed to set annotations on template")
 			}
 			newAnnotations.SetYNode(annotations.YNode())
 		}
 		if labels != nil {
-			newLabels, err := templateNode.Pipe(yaml.LookupCreate(yaml.MappingNode, "metadata", "labels"))
+			var newLabels *yaml.RNode
+			newLabels, err = templateNode.Pipe(yaml.LookupCreate(yaml.MappingNode, "metadata", "labels"))
 			if err != nil {
 				return false, errors.Wrapf(err, "failed to set annotations on template")
 			}
@@ -356,7 +358,8 @@ func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string, secret v
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to clear type")
 		}
-		metadata, err := node.Pipe(yaml.Lookup("metadata"))
+		var metadata *yaml.RNode
+		metadata, err = node.Pipe(yaml.Lookup("metadata"))
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to get metadata")
 		}

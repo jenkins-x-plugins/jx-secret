@@ -15,12 +15,74 @@ weight: 10
 <p>Package v1alpha1 is the v1alpha1 version of the API.</p>
 </p>
 Resource Types:
-<ul></ul>
+<ul><li>
+<a href="#secret.jenkins-x.io/v1alpha1.Schema">Schema</a>
+</li></ul>
+<h3 id="secret.jenkins-x.io/v1alpha1.Schema">Schema
+</h3>
+<p>
+<p>Schema defines a schema of objects with properties</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+secret.jenkins-x.io/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>Schema</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>Spec</code></br>
+<em>
+<a href="#secret.jenkins-x.io/v1alpha1.SchemaSpec">
+SchemaSpec
+</a>
+</em>
+</td>
+<td>
+<p>Spec the schema specification</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="secret.jenkins-x.io/v1alpha1.Object">Object
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#secret.jenkins-x.io/v1alpha1.Spec">Spec</a>)
+<a href="#secret.jenkins-x.io/v1alpha1.SchemaSpec">SchemaSpec</a>)
 </p>
 <p>
 <p>Object defines a type of object with some properties</p>
@@ -211,54 +273,7 @@ bool
 </tr>
 </tbody>
 </table>
-<h3 id="secret.jenkins-x.io/v1alpha1.Schema">Schema
-</h3>
-<p>
-<p>Schema defines a schema of objects with properties</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>APIVersion</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>Kind</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>Spec</code></br>
-<em>
-<a href="#secret.jenkins-x.io/v1alpha1.Spec">
-Spec
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="secret.jenkins-x.io/v1alpha1.Spec">Spec
+<h3 id="secret.jenkins-x.io/v1alpha1.SchemaSpec">SchemaSpec
 </h3>
 <p>
 (<em>Appears on:</em>
@@ -292,5 +307,5 @@ Spec
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>ff815cf</code>.
+on git commit <code>46ba607</code>.
 </em></p>

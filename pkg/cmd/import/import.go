@@ -11,7 +11,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/pkg/options"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx-secret/pkg/apis/external/v1alpha1"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
@@ -41,7 +41,7 @@ type Options struct {
 	KubeClient       kubernetes.Interface
 	CommandRunner    cmdrunner.CommandRunner
 	FailOnUnknownKey bool
-	ExternalSecrets  []*v1alpha1.ExternalSecret
+	ExternalSecrets  []*v1.ExternalSecret
 	Handlers         map[string]*backendHandler
 }
 

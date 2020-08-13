@@ -1,18 +1,39 @@
 package v1alpha1
 
+import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 const (
 	LabelKind = "kind"
 )
 
+// +genclient
+// +genclient:noStatus
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 // Schema defines a schema of objects with properties
+//
+// +k8s:openapi-gen=true
 type Schema struct {
-	APIVersion string `yaml:"apiVersion"`
-	Kind       string `yaml:"kind"`
-	Spec       Spec   `yaml:"spec"`
+	metav1.TypeMeta `json:",inline"`
+	// +optional
+	metav1.ObjectMeta `json:"metadata"`
+
+	// Spec the schema specification
+	Spec SchemaSpec `yaml:"spec"`
+}
+
+// SchemaList contains a list of Schema objects
+//
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type SchemaList struct {
+	metav1.TypeMeta `json:",inline"`
+	// +optional
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Schema `json:"items"`
 }
 
 // SchemaSpec defines the objects and their properties
-type Spec struct {
+type SchemaSpec struct {
 	Objects []Object `yaml:"objects"`
 }
 

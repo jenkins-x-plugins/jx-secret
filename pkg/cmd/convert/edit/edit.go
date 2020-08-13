@@ -123,13 +123,13 @@ func (o *Options) applyDefaults() error {
 		}
 	}
 
-	for k, secret := range s.Spec.Secrets {
+	for k := range s.Spec.Secrets {
+		secret := &s.Spec.Secrets[k]
 		if secret.BackendType == v1alpha1.BackendTypeGSM {
 			err := o.applyGSMDefaults(&secret.GcpSecretsManager)
 			if err != nil {
 				return errors.Wrapf(err, "failed to apply defaults to GcpSecretsManager for secret %s", secret.Name)
 			}
-			s.Spec.Secrets[k] = secret
 		}
 	}
 	return nil
@@ -139,11 +139,11 @@ func (o *Options) applyGSMDefaults(gsmConfig *v1alpha1.GcpSecretsManager) error 
 	if gsmConfig == nil {
 		gsmConfig = &v1alpha1.GcpSecretsManager{}
 	}
-	if gsmConfig.ProjectId == "" {
+	if gsmConfig.ProjectID == "" {
 		if o.Flags.GCPProjectID == "" {
 			return fmt.Errorf("found an empty gcp project id and no %s flag", flagGCPProjectID)
 		}
-		gsmConfig.ProjectId = o.Flags.GCPProjectID
+		gsmConfig.ProjectID = o.Flags.GCPProjectID
 	}
 	if gsmConfig.UniquePrefix == "" {
 		if o.Flags.ClusterName == "" {

@@ -34,29 +34,30 @@ func TestToExtSecrets(t *testing.T) {
 
 	var testCases []testCase
 	for _, f := range fileNames {
-		if f.IsDir() {
-			name := f.Name()
-			if name == ".jx" {
-				continue
-			}
-			srcFile := filepath.Join(sourceData, name, "source.yaml")
-			expectedFile := filepath.Join(sourceData, name, "expected.yaml")
-			require.FileExists(t, srcFile)
-			require.FileExists(t, expectedFile)
-
-			outFile := filepath.Join(tmpDir, name+".yaml")
-			err = files.CopyFile(srcFile, outFile)
-			require.NoError(t, err, "failed to copy %s to %s", srcFile, outFile)
-
-			testCases = append(testCases, testCase{
-				SourceFile:   srcFile,
-				ResultFile:   outFile,
-				ExpectedFile: expectedFile,
-			})
+		if !f.IsDir() {
+			continue
 		}
+		name := f.Name()
+		if name == ".jx" {
+			continue
+		}
+		srcFile := filepath.Join(sourceData, name, "source.yaml")
+		expectedFile := filepath.Join(sourceData, name, "expected.yaml")
+		require.FileExists(t, srcFile)
+		require.FileExists(t, expectedFile)
+
+		outFile := filepath.Join(tmpDir, name+".yaml")
+		err = files.CopyFile(srcFile, outFile)
+		require.NoError(t, err, "failed to copy %s to %s", srcFile, outFile)
+
+		testCases = append(testCases, testCase{
+			SourceFile:   srcFile,
+			ResultFile:   outFile,
+			ExpectedFile: expectedFile,
+		})
 	}
 
-	_, eo := convert.NewCmdSecretsMapping()
+	_, eo := convert.NewCmdSecretConvert()
 	eo.Dir = tmpDir
 
 	eo.SecretMapping, _, err = secretmapping.LoadSecretMapping(sourceData, true)
@@ -97,29 +98,30 @@ func TestMultipleBackendTypes(t *testing.T) {
 
 	var testCases []testCase
 	for _, f := range fileNames {
-		if f.IsDir() {
-			name := f.Name()
-			if name == ".jx" {
-				continue
-			}
-			srcFile := filepath.Join(sourceData, name, "source.yaml")
-			expectedFile := filepath.Join(sourceData, name, "expected.yaml")
-			require.FileExists(t, srcFile)
-			require.FileExists(t, expectedFile)
-
-			outFile := filepath.Join(tmpDir, name+".yaml")
-			err = files.CopyFile(srcFile, outFile)
-			require.NoError(t, err, "failed to copy %s to %s", srcFile, outFile)
-
-			testCases = append(testCases, testCase{
-				SourceFile:   srcFile,
-				ResultFile:   outFile,
-				ExpectedFile: expectedFile,
-			})
+		if !f.IsDir() {
+			continue
 		}
+		name := f.Name()
+		if name == ".jx" {
+			continue
+		}
+		srcFile := filepath.Join(sourceData, name, "source.yaml")
+		expectedFile := filepath.Join(sourceData, name, "expected.yaml")
+		require.FileExists(t, srcFile)
+		require.FileExists(t, expectedFile)
+
+		outFile := filepath.Join(tmpDir, name+".yaml")
+		err = files.CopyFile(srcFile, outFile)
+		require.NoError(t, err, "failed to copy %s to %s", srcFile, outFile)
+
+		testCases = append(testCases, testCase{
+			SourceFile:   srcFile,
+			ResultFile:   outFile,
+			ExpectedFile: expectedFile,
+		})
 	}
 
-	_, eo := convert.NewCmdSecretsMapping()
+	_, eo := convert.NewCmdSecretConvert()
 	eo.Dir = tmpDir
 
 	eo.SecretMapping, _, err = secretmapping.LoadSecretMapping(sourceData, true)
