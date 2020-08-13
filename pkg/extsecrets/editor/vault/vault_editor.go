@@ -5,9 +5,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
@@ -27,7 +29,7 @@ type client struct {
 
 func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Interface) (editor.Interface, error) {
 	if commandRunner == nil {
-		commandRunner = cmdrunner.DefaultCommandRunner
+		commandRunner = MaskedCommandRunner
 	}
 	c := &client{
 		commandRunner: commandRunner,
@@ -38,6 +40,36 @@ func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Inte
 		return c, errors.Wrapf(err, "failed to setup vault secret editor")
 	}
 	return c, nil
+}
+
+// MaskedCommandRunner mask the command line arguments when logging
+func MaskedCommandRunner(c *cmdrunner.Command) (string, error) {
+	args := MastSecretArgs(c.Args)
+	log.Logger().Infof("about to run: %s %s", termcolor.ColorInfo(c.Name), termcolor.ColorInfo(strings.Join(args, " ")))
+
+	result, err := c.RunWithoutRetry()
+	if result != "" {
+		log.Logger().Infof(termcolor.ColorStatus(result))
+	}
+	return result, err
+}
+
+// MastSecretArgs lets mask any passwords/tokens in the arguments passed into the vault CLI
+// e.g. for the arguments: :
+// kv put secret/jx/pipelineUser token=dummyPipelineToken
+func MastSecretArgs(args []string) []string {
+	if len(args) < 3 {
+		return args
+	}
+	result := []string{}
+	result = append(result, args...)
+	for i := 2; i < len(result); i++ {
+		values := strings.SplitN(result[i], "=", 2)
+		if len(values) == 2 {
+			result[i] = fmt.Sprintf("%s=****", values[0])
+		}
+	}
+	return result
 }
 
 func (c *client) Write(properties *editor.KeyProperties) error {
@@ -149,7 +181,7 @@ func getSecretKey(kubeClient kubernetes.Interface, ns, secretName, key string) (
 		return "", errors.Wrapf(err, "failed to find secret %s in namespace %s", secretName, ns)
 	}
 	if secret == nil || secret.Data == nil {
-		return "", errors.Errorf("no data forsecret %s in namespace %s", secretName, ns)
+		return "", errors.Errorf("no data for secret %s in namespace %s", secretName, ns)
 	}
 	value := secret.Data[key]
 	if len(value) == 0 {

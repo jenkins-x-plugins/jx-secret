@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner/fakerunner"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -40,10 +42,39 @@ func TestVaultWait(t *testing.T) {
 				},
 			},
 		},
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "vault-unseal-keys",
+				Namespace: "vault-infra",
+			},
+			Data: map[string][]byte{
+				"vault-root": []byte("dummyValue"),
+			},
+		},
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "vault-tls",
+				Namespace: "vault-infra",
+			},
+			Data: map[string][]byte{
+				"ca.crt": []byte("dummyValue"),
+			},
+		},
 	}
 
 	o.Namespace = testNs
 	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
+
+	runner := &fakerunner.FakeRunner{
+		CommandRunner: func(cmd *cmdrunner.Command) (string, error) {
+			args := cmd.Args
+			if len(args) > 2 && args[0] == "kv" && args[1] == "list" {
+				return "ok", nil
+			}
+			return "", nil
+		},
+	}
+	o.CommandRunner = runner.Run
 
 	err = o.Run()
 	require.NoError(t, err, "failed to run")
