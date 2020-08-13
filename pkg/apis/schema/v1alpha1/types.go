@@ -34,6 +34,7 @@ type SchemaList struct {
 
 // SchemaSpec defines the objects and their properties
 type SchemaSpec struct {
+	// Objects the list of objects (or kinds) in the schema
 	Objects []Object `yaml:"objects"`
 }
 
