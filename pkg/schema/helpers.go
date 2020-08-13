@@ -3,6 +3,7 @@ package schema
 import (
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-logging/pkg/log"
@@ -14,8 +15,19 @@ import (
 	"gopkg.in/yaml.v1"
 )
 
-// LoadSchema loads a specific secret mapping YAML file
-func LoadSchema(fileName string) (*v1alpha1.Schema, error) {
+// LoadSchema loads the schema file(s) from the given directory
+func LoadSchema(dir string) (*v1alpha1.Schema, error) {
+	absolute, err := filepath.Abs(dir)
+	if err != nil {
+		return nil, errors.Wrap(err, "creating absolute path")
+	}
+
+	fileName := filepath.Join(absolute, ".jx", "secret", "schema", "secret-schema.yaml")
+	return LoadSchemaFile(fileName)
+}
+
+// LoadSchemaFile loads a specific secret mapping YAML file
+func LoadSchemaFile(fileName string) (*v1alpha1.Schema, error) {
 	config := &v1alpha1.Schema{}
 
 	exists, err := files.FileExists(fileName)
