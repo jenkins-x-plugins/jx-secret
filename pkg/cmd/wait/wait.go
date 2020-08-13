@@ -29,10 +29,11 @@ var (
 type Options struct {
 	secretfacade.Options
 
-	Timeout    time.Duration
-	PollPeriod time.Duration
-	Results    []*secretfacade.SecretError
-	messages   map[string]string
+	Timeout       time.Duration
+	PollPeriod    time.Duration
+	Results       []*secretfacade.SecretError
+	messages      map[string]string
+	loggedMissing bool
 }
 
 // NewCmdWait creates a command object for the command
@@ -111,7 +112,10 @@ func (o *Options) WaitCheck() (bool, error) {
 		}
 	}
 	if count == 0 {
-		log.Logger().Infof("no mandatory ExternalSecrets found")
+		if !o.loggedMissing {
+			o.loggedMissing = true
+			log.Logger().Infof("no mandatory ExternalSecrets found")
+		}
 		return false, nil
 	}
 	if valid {
