@@ -29,10 +29,11 @@ var (
 type Options struct {
 	secretfacade.Options
 
-	Timeout    time.Duration
-	PollPeriod time.Duration
-	Results    []*secretfacade.SecretError
-	messages   map[string]string
+	Timeout       time.Duration
+	PollPeriod    time.Duration
+	Results       []*secretfacade.SecretError
+	messages      map[string]string
+	loggedMissing bool
 }
 
 // NewCmdWait creates a command object for the command
@@ -51,7 +52,7 @@ func NewCmdWait() (*cobra.Command, *Options) {
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().DurationVarP(&o.Timeout, "timeout", "t", 10*time.Minute, "the maximum amount of time to wait for the secrets to be valid")
-	cmd.Flags().DurationVarP(&o.Timeout, "poll", "p", 2*time.Second, "the polling period to check if the secrets are valid")
+	cmd.Flags().DurationVarP(&o.PollPeriod, "poll", "p", 2*time.Second, "the polling period to check if the secrets are valid")
 	return cmd, o
 }
 
@@ -111,7 +112,10 @@ func (o *Options) WaitCheck() (bool, error) {
 		}
 	}
 	if count == 0 {
-		log.Logger().Infof("no mandatory ExternalSecrets found")
+		if !o.loggedMissing {
+			o.loggedMissing = true
+			log.Logger().Infof("no mandatory ExternalSecrets found")
+		}
 		return false, nil
 	}
 	if valid {
