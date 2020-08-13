@@ -167,11 +167,25 @@ lint: ## Lint the code
 .PHONY: all
 all: fmt build lint test
 
+install-refdocs:
+	$(GO) get github.com/jenkins-x/gen-crd-api-reference-docs
+
+generate-refdocs: install-refdocs
+	${GOHOME}/bin/gen-crd-api-reference-docs -config "hack/configdocs/config.json" \
+	-template-dir hack/configdocs/templates \
+    -api-dir "./pkg/apis/external/v1alpha1" \
+    -out-file docs/external.md
+
+	${GOHOME}/bin/gen-crd-api-reference-docs -config "hack/configdocs/config.json" \
+	-template-dir hack/configdocs/templates \
+    -api-dir "./pkg/apis/mapping/v1alpha1" \
+    -out-file docs/mapping.md
+
 bin/docs:
 	go build $(LDFLAGS) -v -o bin/docs cmd/docs/*.go
 
 .PHONY: docs
-docs: bin/docs ## update docs
+docs: bin/docs generate-refdocs ## update docs
 	@echo "Generating docs"
 	@./bin/docs --target=./docs/cmd
 	@./bin/docs --target=./docs/man/man1 --kind=man

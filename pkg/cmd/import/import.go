@@ -11,7 +11,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/pkg/options"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx-secret/pkg/apis/extsecret/v1alpha1"
+	"github.com/jenkins-x/jx-secret/pkg/apis/external/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"

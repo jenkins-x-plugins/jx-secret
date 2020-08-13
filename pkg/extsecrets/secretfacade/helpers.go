@@ -1,7 +1,7 @@
 package secretfacade
 
 import (
-	"github.com/jenkins-x/jx-secret/pkg/apis/extsecret/v1alpha1"
+	"github.com/jenkins-x/jx-secret/pkg/apis/external/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 )
 

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jenkins-x/jx-secret/pkg/apis/extsecret/v1alpha1"
+	"github.com/jenkins-x/jx-secret/pkg/apis/external/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/schema"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"

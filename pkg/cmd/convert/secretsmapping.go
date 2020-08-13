@@ -6,6 +6,7 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/pkg/cobras"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/convert/edit"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
@@ -20,12 +21,12 @@ import (
 
 var (
 	labelLong = templates.LongDesc(`
-		Converts all Secret resources in the path to ExternalSecret CRDs
+		Converts all Secret resources in the path to ExternalSecret resources so they can be checked into git
 `)
 
 	labelExample = templates.Examples(`
-		# updates recursively labels all resources in the current directory 
-		%s secretsmapping --dir=.
+		# converts all the Secret resources into ExternalSecret resources so they can be checked into git
+		%s convert --dir=.
 	`)
 
 	secretFilter = kyamls.Filter{
@@ -49,9 +50,9 @@ func NewCmdSecretsMapping() (*cobra.Command, *Options) {
 	o := &Options{}
 
 	cmd := &cobra.Command{
-		Use:     "secretsmapping",
-		Aliases: []string{"sm", "secretmapping"},
-		Short:   "Converts all Secret resources in the path to ExternalSecret CRDs",
+		Use:     "convert",
+		Aliases: []string{"secretmappings", "sm", "secretmapping"},
+		Short:   "Converts all Secret resources in the path to ExternalSecret resources so they can be checked into git",
 		Long:    labelLong,
 		Example: fmt.Sprintf(labelExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -373,7 +374,7 @@ func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string, secret v
 
 	// now lets add any optional annotations
 	if secret.Mandatory {
-		err := node.PipeE(yaml.SetAnnotation(KindAnnotation, KindValueMandatory))
+		err := node.PipeE(yaml.SetAnnotation(extsecrets.KindAnnotation, extsecrets.KindValueMandatory))
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to add mandatory annotation to file %s", path)
 		}

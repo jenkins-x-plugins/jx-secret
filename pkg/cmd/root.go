@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/jenkins-x/jx-helpers/pkg/cobras"
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/convert"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/edit"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/export"
 	importcmd "github.com/jenkins-x/jx-secret/pkg/cmd/import"
@@ -28,6 +29,7 @@ func Main() *cobra.Command {
 			}
 		},
 	}
+	cmd.AddCommand(cobras.SplitCommand(convert.NewCmdSecretsMapping()))
 	cmd.AddCommand(cobras.SplitCommand(edit.NewCmdEdit()))
 	cmd.AddCommand(cobras.SplitCommand(export.NewCmdExport()))
 	cmd.AddCommand(cobras.SplitCommand(importcmd.NewCmdImport()))
