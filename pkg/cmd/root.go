@@ -12,14 +12,14 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/cmd/verify"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/version"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/wait"
-	"github.com/jenkins-x/jx-secret/pkg/root"
+	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/spf13/cobra"
 )
 
 // Main creates the new command
 func Main() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   root.TopLevelCommand,
+		Use:   rootcmd.TopLevelCommand,
 		Short: "External Secrets utility commands",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()

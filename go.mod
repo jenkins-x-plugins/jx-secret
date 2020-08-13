@@ -7,8 +7,9 @@ require (
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/repr v0.0.0-20200325044227-4184120f674c // indirect
 	github.com/cpuguy83/go-md2man v1.0.10
+	github.com/google/go-cmp v0.4.0
 	github.com/jenkins-x/jx-api v0.0.17
-	github.com/jenkins-x/jx-helpers v1.0.40
+	github.com/jenkins-x/jx-helpers v1.0.41
 	github.com/jenkins-x/jx-logging v0.0.11
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
@@ -21,6 +22,7 @@ require (
 	k8s.io/apimachinery v0.17.6
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/pkg v0.0.0-20200626182828-bce16cf78661
+	sigs.k8s.io/kustomize/kyaml v0.6.0
 	sigs.k8s.io/yaml v1.2.0
 )
 

@@ -12,7 +12,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/vault"
-	"github.com/jenkins-x/jx-secret/pkg/root"
+	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -48,7 +48,7 @@ func NewCmdWait() (*cobra.Command, *Options) {
 		Use:     "wait",
 		Short:   "Waits for vault to be ready for use",
 		Long:    cmdLong,
-		Example: fmt.Sprintf(cmdExample, root.BinaryName),
+		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)

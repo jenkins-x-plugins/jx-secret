@@ -16,7 +16,7 @@ import (
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x/jx-secret/pkg/root"
+	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -47,7 +47,7 @@ func NewCmdExport() (*cobra.Command, *Options) {
 		Use:     "export",
 		Short:   "Exports the current populated values to a YAML file",
 		Long:    editLong,
-		Example: fmt.Sprintf(editExample, root.BinaryName),
+		Example: fmt.Sprintf(editExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)

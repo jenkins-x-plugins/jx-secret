@@ -18,7 +18,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x/jx-secret/pkg/root"
+	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -53,7 +53,7 @@ func NewCmdEdit() (*cobra.Command, *Options) {
 		Use:     "edit",
 		Short:   "Edits any missing properties in the ExternalSecret resources",
 		Long:    editLong,
-		Example: fmt.Sprintf(editExample, root.BinaryName),
+		Example: fmt.Sprintf(editExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)

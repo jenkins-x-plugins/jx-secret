@@ -15,7 +15,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
-	"github.com/jenkins-x/jx-secret/pkg/root"
+	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,7 +53,7 @@ func NewCmdImport() (*cobra.Command, *Options) {
 		Use:     "import",
 		Short:   "Imports a YAML file of secret values",
 		Long:    editLong,
-		Example: fmt.Sprintf(editExample, root.BinaryName),
+		Example: fmt.Sprintf(editExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)
