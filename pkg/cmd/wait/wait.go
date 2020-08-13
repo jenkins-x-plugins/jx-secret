@@ -85,28 +85,29 @@ func (o *Options) WaitCheck() (bool, error) {
 	valid := true
 	count := 0
 	for _, r := range pairs {
-		if o.Matches(r) {
-			count++
-			state, err := secretfacade.VerifySecret(&r.ExternalSecret, r.Secret)
-			if err != nil {
-				return false, errors.Wrapf(err, "failed to verify secret")
-			}
-			name := r.ExternalSecret.Name
+		if !o.Matches(r) {
+			continue
+		}
+		count++
+		state, err := secretfacade.VerifySecret(&r.ExternalSecret, r.Secret)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to verify secret")
+		}
+		name := r.ExternalSecret.Name
 
-			if state != nil && len(state.EntryErrors) > 0 {
-				valid = false
-				buf := strings.Builder{}
+		if state != nil && len(state.EntryErrors) > 0 {
+			valid = false
+			buf := strings.Builder{}
 
-				for i, e := range state.EntryErrors {
-					if i > 0 {
-						buf.WriteString(", ")
-					}
-					buf.WriteString(fmt.Sprintf("key %s missing properties: %s", e.Key, strings.Join(e.Properties, ", ")))
+			for i, e := range state.EntryErrors {
+				if i > 0 {
+					buf.WriteString(", ")
 				}
-				o.logMessage(name, termcolor.ColorWarning(buf.String()))
-			} else {
-				o.logMessage(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.Keys(), ", "))))
+				buf.WriteString(fmt.Sprintf("key %s missing properties: %s", e.Key, strings.Join(e.Properties, ", ")))
 			}
+			o.logMessage(name, termcolor.ColorWarning(buf.String()))
+		} else {
+			o.logMessage(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.Keys(), ", "))))
 		}
 	}
 	if count == 0 {

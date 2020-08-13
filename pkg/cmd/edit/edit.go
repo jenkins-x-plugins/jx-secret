@@ -109,7 +109,8 @@ func (o *Options) Run() error {
 			data := o.DataToEdit(r)
 
 			m := map[string]*editor.KeyProperties{}
-			for _, d := range data {
+			for i := range data {
+				d := &data[i]
 				key := d.Key
 				property := d.Property
 				keyProperties := m[key]
@@ -121,7 +122,7 @@ func (o *Options) Run() error {
 				}
 
 				var value string
-				value, err = o.askForSecretValue(r, &d)
+				value, err = o.askForSecretValue(r, d)
 				if err != nil {
 					return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, key, name)
 				}
