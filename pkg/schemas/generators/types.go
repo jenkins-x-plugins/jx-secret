@@ -6,7 +6,6 @@ import (
 
 // Arguments the generator arguments
 type Arguments struct {
-	Schema   *v1alpha1.Schema
 	Object   *v1alpha1.Object
 	Property *v1alpha1.Property
 }

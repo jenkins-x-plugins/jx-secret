@@ -1,15 +1,6 @@
 package extsecrets
 
 const (
-	// SchemaAnnotation
-	SchemaAnnotation = "secret.jenkins-x.io/schema"
-
-	// SchemaObjectAnnotation
+	// SchemaObjectAnnotation the annotation which contains the JSON encoded schema object definintion
 	SchemaObjectAnnotation = "secret.jenkins-x.io/schema-object"
-
-	// KindAnnotation
-	KindAnnotation = "secret.jenkins-x.io/kind"
-
-	// KindValueMandatory the kind annotation value for mandatory
-	KindValueMandatory = "mandatory"
 )

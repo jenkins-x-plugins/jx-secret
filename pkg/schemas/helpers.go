@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-logging/pkg/log"
@@ -15,17 +14,6 @@ import (
 
 	"gopkg.in/yaml.v1"
 )
-
-// LoadSchema loads the schema file(s) from the given directory
-func LoadSchema(dir string) (*v1alpha1.Schema, error) {
-	absolute, err := filepath.Abs(dir)
-	if err != nil {
-		return nil, errors.Wrap(err, "creating absolute path")
-	}
-
-	fileName := filepath.Join(absolute, ".jx", "secret", "schema", "secret-schema.yaml")
-	return LoadSchemaFile(fileName)
-}
 
 // LoadSchemaFile loads a specific secret mapping YAML file
 func LoadSchemaFile(fileName string) (*v1alpha1.Schema, error) {
@@ -54,22 +42,6 @@ func LoadSchemaFile(fileName string) (*v1alpha1.Schema, error) {
 		return nil, errors.Wrapf(err, "failed to validate secret mapping YAML file %s", fileName)
 	}
 	return config, nil
-}
-
-// LoadSchemaFiles loads a list of schema files returning an error if they conflict
-func LoadSchemaFiles(fileNames []string) (*v1alpha1.Schema, error) {
-	answer := &v1alpha1.Schema{}
-	for _, f := range fileNames {
-		schema, err := LoadSchemaFile(f)
-		if err != nil {
-			return answer, err
-		}
-		err = MergeSchemas(schema, answer, f, true)
-		if err != nil {
-			return answer, errors.Wrapf(err, "failed to merge schema from file %s", f)
-		}
-	}
-	return answer, nil
 }
 
 // LoadSchemaObjectFromFiles loads a list of schema files and finds the schema object for the given name
@@ -143,20 +115,7 @@ func ObjectFromAnnotationString(text string) (*v1alpha1.Object, error) {
 }
 
 // FindObjectProperty finds the schema property for the given object
-func FindObjectProperty(s *v1alpha1.Schema, objectName, property string) (*v1alpha1.Object, *v1alpha1.Property, error) {
-	if s == nil {
-		return nil, nil, nil
-	}
-	for i := range s.Spec.Objects {
-		o := &s.Spec.Objects[i]
-		if o.Name == objectName {
-			for i := range o.Properties {
-				p := &o.Properties[i]
-				if p.Name == property {
-					return o, p, nil
-				}
-			}
-		}
-	}
-	return nil, nil, nil
+func FindObjectProperty(s *v1alpha1.Schema, objectName, property string) (*v1alpha1.Object, *v1alpha1.Property) {
+	o := s.Spec.FindObject(objectName)
+	return o, o.FindProperty(property)
 }

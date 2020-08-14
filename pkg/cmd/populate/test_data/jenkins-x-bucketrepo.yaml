@@ -1,6 +1,9 @@
 apiVersion: kubernetes-client.io/v1
 kind: ExternalSecret
 metadata:
+  annotations:
+    secret.jenkins-x.io/schema-object: |
+      {"name":"jenkins-x-bucketrepo","properties":[{"name":"username","question":"bucket repository user name","help":"The username used to authenticate with the bucket repository","defaultValue":"admin"},{"name":"password","question":"bucket repository password","help":"The password to authenticate with the bucket repository","minLength":5,"maxLength":41,"generator":"password"}]}
   labels:
     gitops.jenkins-x.io/pipeline: environment
   name: jenkins-x-bucketrepo

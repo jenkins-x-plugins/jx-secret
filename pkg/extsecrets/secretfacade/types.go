@@ -12,9 +12,10 @@ import (
 
 // Options options for verifying secrets
 type Options struct {
+	Dir          string
+	Namespace    string
 	SecretClient extsecrets.Interface
 	KubeClient   kubernetes.Interface
-	Namespace    string
 
 	// ExternalSecrets the loaded secrets
 	ExternalSecrets []*v1.ExternalSecret

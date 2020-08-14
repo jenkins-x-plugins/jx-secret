@@ -79,7 +79,6 @@ func NewCmdSecretMappingEdit() (*cobra.Command, *Options) {
 
 // Run runs the command
 func (o *Options) Run() error {
-
 	if o.Dir == "" {
 		o.Dir = filepath.Join(".jx", "gitops")
 	}

@@ -63,6 +63,9 @@ type Object struct {
 
 // FindProperty returns the property for the given name or nil
 func (s *Object) FindProperty(name string) *Property {
+	if s == nil {
+		return nil
+	}
 	for i := range s.Properties {
 		p := &s.Properties[i]
 		if p.Name == name {
