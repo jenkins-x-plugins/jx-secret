@@ -81,7 +81,7 @@ type Property struct {
 	Name string `json:"name" yaml:"name" validate:"nonzero"`
 
 	// Question the main prompt generated in a user interface when asking to populate the property
-	Question string `yaml:"question" yaml:"question" validate:"nonzero"`
+	Question string `json:"question" yaml:"question" validate:"nonzero"`
 
 	// Help the tooltip or help text for this property
 	Help string `json:"help,omitempty" yaml:"help"`

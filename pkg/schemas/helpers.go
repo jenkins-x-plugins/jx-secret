@@ -117,5 +117,6 @@ func ObjectFromAnnotationString(text string) (*v1alpha1.Object, error) {
 // FindObjectProperty finds the schema property for the given object
 func FindObjectProperty(s *v1alpha1.Schema, objectName, property string) (*v1alpha1.Object, *v1alpha1.Property) {
 	o := s.Spec.FindObject(objectName)
-	return o, o.FindProperty(property)
+	p := o.FindProperty(property)
+	return o, p
 }

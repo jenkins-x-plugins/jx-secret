@@ -108,7 +108,7 @@ func (o *Options) Run() error {
 				}
 				for _, property := range e.Properties {
 					var value string
-					value, err = o.generateSecretValue(r, name, property, e)
+					value, err = o.generateSecretValue(r, name, property)
 					if err != nil {
 						return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, e.Key, name)
 					}
@@ -133,7 +133,7 @@ func (o *Options) Run() error {
 	return nil
 }
 
-func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, property string, e *secretfacade.EntryError) (string, error) {
+func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, property string) (string, error) {
 	object, err := s.SchemaObject()
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to find object schema for object %s property %s", secretName, property)

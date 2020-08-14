@@ -97,7 +97,7 @@ SchemaSpec
 <tbody>
 <tr>
 <td>
-<code>Name</code></br>
+<code>name</code></br>
 <em>
 string
 </em>
@@ -108,7 +108,7 @@ string
 </tr>
 <tr>
 <td>
-<code>Properties</code></br>
+<code>properties</code></br>
 <em>
 <a href="#secret.jenkins-x.io/v1alpha1.Property">
 []Property
@@ -151,7 +151,7 @@ bool
 <tbody>
 <tr>
 <td>
-<code>Name</code></br>
+<code>name</code></br>
 <em>
 string
 </em>
@@ -162,7 +162,7 @@ string
 </tr>
 <tr>
 <td>
-<code>Question</code></br>
+<code>question</code></br>
 <em>
 string
 </em>
@@ -173,7 +173,7 @@ string
 </tr>
 <tr>
 <td>
-<code>Help</code></br>
+<code>help</code></br>
 <em>
 string
 </em>
@@ -184,7 +184,7 @@ string
 </tr>
 <tr>
 <td>
-<code>DefaultValue</code></br>
+<code>defaultValue</code></br>
 <em>
 string
 </em>
@@ -195,7 +195,7 @@ string
 </tr>
 <tr>
 <td>
-<code>Pattern</code></br>
+<code>pattern</code></br>
 <em>
 string
 </em>
@@ -206,7 +206,7 @@ string
 </tr>
 <tr>
 <td>
-<code>Requires</code></br>
+<code>requires</code></br>
 <em>
 string
 </em>
@@ -217,7 +217,7 @@ string
 </tr>
 <tr>
 <td>
-<code>Format</code></br>
+<code>format</code></br>
 <em>
 string
 </em>
@@ -228,7 +228,7 @@ string
 </tr>
 <tr>
 <td>
-<code>Generator</code></br>
+<code>generator</code></br>
 <em>
 string
 </em>
@@ -240,7 +240,7 @@ if this value is non zero we assume Generate is effectively true</p>
 </tr>
 <tr>
 <td>
-<code>Labels</code></br>
+<code>labels</code></br>
 <em>
 map[string]string
 </em>
@@ -251,7 +251,7 @@ map[string]string
 </tr>
 <tr>
 <td>
-<code>MinLength</code></br>
+<code>minLength</code></br>
 <em>
 int
 </em>
@@ -262,7 +262,7 @@ int
 </tr>
 <tr>
 <td>
-<code>MaxLength</code></br>
+<code>maxLength</code></br>
 <em>
 int
 </em>
@@ -273,7 +273,7 @@ int
 </tr>
 <tr>
 <td>
-<code>Mask</code></br>
+<code>mask</code></br>
 <em>
 bool
 </em>
@@ -319,5 +319,5 @@ bool
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>be7e407</code>.
+on git commit <code>8890607</code>.
 </em></p>
