@@ -5,6 +5,7 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner/fakerunner"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/portforward"
+	"github.com/jenkins-x/jx-secret/pkg/vaults"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,7 +52,7 @@ func TestVaultPortForward(t *testing.T) {
 
 	runner.ExpectResults(t,
 		fakerunner.FakeResult{
-			CLI: "kubectl port-forward --namespace vault-infra service/vault 8200",
+			CLI: "kubectl port-forward --namespace " + vaults.DefaultVaultNamespace + " service/vault 8200",
 		},
 	)
 

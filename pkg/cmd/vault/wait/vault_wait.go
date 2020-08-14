@@ -13,6 +13,7 @@ import (
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/vault"
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
+	"github.com/jenkins-x/jx-secret/pkg/vaults"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -61,19 +62,32 @@ func NewCmdWait() (*cobra.Command, *Options) {
 // AddFlags adds the options flags to the command
 func (o *Options) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.PodName, "pod", "p", "vault-0", "the name of the vault pod which needs to be running before the port forward can take place")
-	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "vault-infra", "the namespace where vault is running")
+	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", vaults.DefaultVaultNamespace, "the namespace where vault is running")
 	cmd.Flags().DurationVarP(&o.WaitDuration, "duration", "d", 5*time.Minute, "the maximum time period to wait for vault to be ready")
 	cmd.Flags().DurationVarP(&o.PollPeriod, "poll", "", 2*time.Second, "the polling period to check if the secrets are valid")
 }
 
-// Run implements the command
-func (o *Options) Run() error {
-	o.Start = time.Now()
+// Validate validates the setup
+func (o *Options) Validate() error {
+	if o.CommandRunner == nil {
+		o.CommandRunner = cmdrunner.DefaultCommandRunner
+	}
 	var err error
 	o.KubeClient, o.Namespace, err = kube.LazyCreateKubeClientAndNamespace(o.KubeClient, o.Namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to create kube client")
 	}
+	return nil
+}
+
+// Run implements the command
+func (o *Options) Run() error {
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate settings")
+	}
+
+	o.Start = time.Now()
 	err = o.waitForPod()
 	if err != nil {
 		return errors.Wrapf(err, "failed to wait for vault pod")
