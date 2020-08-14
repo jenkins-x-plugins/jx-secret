@@ -1,6 +1,7 @@
 package schemas
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -119,24 +120,24 @@ func MergeSchemas(source, dest *v1alpha1.Schema, path string, failOnDuplicate bo
 	return nil
 }
 
-// ToString converts the schema object to YAML so we can store it as an annotation
-func ToString(s interface{}) (string, error) {
-	data, err := yaml.Marshal(s)
+// ToAnnotationString converts the schema object to YAML so we can store it as an annotation
+func ToAnnotationString(s interface{}) (string, error) {
+	data, err := json.Marshal(s)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to marshal object %v to YAML", s)
+		return "", errors.Wrapf(err, "failed to marshal object %v to JSON", s)
 	}
 	return string(data), nil
 }
 
-// ObjectFromString converts the string to a schema object
-func ObjectFromString(text string) (*v1alpha1.Object, error) {
+// ObjectFromAnnotationString converts the string to a schema object
+func ObjectFromAnnotationString(text string) (*v1alpha1.Object, error) {
 	if text == "" {
 		return nil, nil
 	}
 	object := &v1alpha1.Object{}
-	err := yaml.Unmarshal([]byte(text), object)
+	err := json.Unmarshal([]byte(text), object)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to unmarshal YAML %s", text)
+		return nil, errors.Wrapf(err, "failed to unmarshal JSON %s", text)
 	}
 	return object, nil
 }

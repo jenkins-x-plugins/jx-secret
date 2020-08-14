@@ -2,7 +2,7 @@ apiVersion: kubernetes-client.io/v1
 kind: ExternalSecret
 metadata:
   annotations:
-    secret.jenkins-x.io/schema-object: "mandatory: true\n"
+    secret.jenkins-x.io/schema-object: '{"mandatory": true}'
   generation: 1
   labels:
     gitops.jenkins-x.io/pipeline: environment
