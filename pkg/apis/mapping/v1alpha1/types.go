@@ -171,3 +171,28 @@ func (c *SecretMapping) SaveConfig(fileName string) error {
 
 	return nil
 }
+
+// DestinationString returns a unique string for where the entry will be stored so that we can find
+// secrets using the same storage location.
+func (c *SecretMapping) DestinationString(rule *SecretRule, mapping *Mapping) string {
+	defaults := c.Spec.Defaults
+	backend := rule.BackendType
+	if backend == BackendTypeNone {
+		backend = defaults.BackendType
+	}
+
+	switch backend {
+	case BackendTypeGSM:
+		projectID := rule.GcpSecretsManager.ProjectID
+		if projectID == "" {
+			projectID = defaults.GcpSecretsManager.ProjectID
+		}
+		prefix := rule.GcpSecretsManager.UniquePrefix
+		if prefix == "" {
+			prefix = c.Spec.GcpSecretsManager.UniquePrefix
+		}
+		return projectID + "/" + prefix + "-" + mapping.Key + "/" + mapping.Property
+	default:
+		return mapping.Key + "/" + mapping.Property
+	}
+}

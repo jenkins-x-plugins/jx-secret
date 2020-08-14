@@ -68,6 +68,11 @@ func (p *SecretPair) IsMandatory() bool {
 	return false
 }
 
+// SetSchemaObject sets the cached schema object: typically used for testing
+func (p *SecretPair) SetSchemaObject(schemaObject *schema.Object) {
+	p.schemaObject = schemaObject
+}
+
 // SchemaObject returns the optional schema object from the annotation
 func (p *SecretPair) SchemaObject() (*schema.Object, error) {
 	if p.schemaObject != nil {
@@ -87,4 +92,19 @@ func (p *SecretPair) SchemaObject() (*schema.Object, error) {
 		return nil, errors.Wrapf(err, "failed to load schema object from ExternalSecret annotation for %s", p.ExternalSecret.Name)
 	}
 	return p.schemaObject, nil
+}
+
+// Name returns the name of the secret
+func (p *SecretPair) Name() string {
+	return p.ExternalSecret.Name
+}
+
+// Namespace returns the namespace of the secret
+func (p *SecretPair) Namespace() string {
+	return p.ExternalSecret.Namespace
+}
+
+// Key returns the unique key of the secret
+func (p *SecretPair) Key() string {
+	return p.Namespace() + "/" + p.Name()
 }
