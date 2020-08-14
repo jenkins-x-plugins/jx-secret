@@ -6,9 +6,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jenkins-x/jx-helpers/pkg/yamls"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/jx-helpers/pkg/files"
@@ -173,4 +175,50 @@ func TestConvertAndSchemaEnrich(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	t.Logf("converted the Secrets to ExternalSecrets in dir %s", eo.Dir)
+
+	// now lets verify a number of schema properties
+	testCases := []struct {
+		path       string
+		properties []string
+	}{
+		{
+			path:       filepath.Join("chartmuseum", "secret.yaml"),
+			properties: []string{"username", "password"},
+		},
+		{
+			path:       filepath.Join("tekton", "250-docker-secret.yaml"),
+			properties: []string{"username", "password"},
+		},
+		{
+			path:       filepath.Join("tekton", "250-git-secret.yaml"),
+			properties: []string{"username", "token"},
+		},
+		{
+			path:       filepath.Join("jxboot-helmfile-resources", "maven-settings-secret.yaml"),
+			properties: []string{"settingsXml", "securityXml"},
+		},
+	}
+
+	for _, tc := range testCases {
+		file := filepath.Join(eo.Dir, "namespaces", "jx", tc.path)
+		require.FileExists(t, file)
+
+		// lets load it and assert its got the schema
+		es := v1.ExternalSecret{}
+		err := yamls.LoadFile(file, &es)
+		require.NoError(t, err, "failed to load ExternalSecret %s", file)
+
+		sp := &secretfacade.SecretPair{
+			ExternalSecret: es,
+		}
+		object, err := sp.SchemaObject()
+		require.NoError(t, err, "failed to not find Object schema for file %s", file)
+		require.NotNil(t, object, "no Object schema for file %s", file)
+
+		for _, propertyName := range tc.properties {
+			property := object.FindProperty(propertyName)
+			assert.NotNil(t, property, "could not find property %s for object schema on file %s", propertyName, file)
+		}
+		t.Logf("ExternalSecret %s has object schema annotation with properties %#v\n", es.Name, tc.properties)
+	}
 }

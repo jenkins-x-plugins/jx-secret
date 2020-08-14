@@ -52,51 +52,65 @@ func (s *SchemaSpec) FindObject(name string) *Object {
 // Object defines a type of object with some properties
 type Object struct {
 	// Name the name of the object kind
-	Name string `yaml:"name" validate:"nonzero"`
+	Name string `json:"name" yaml:"name" validate:"nonzero"`
 
 	// Properties the property definitions
-	Properties []Property `yaml:"properties"`
+	Properties []Property `json:"properties" yaml:"properties"`
 
 	// Mandatory marks this secret as being mandatory to be setup before we can install a cluster
-	Mandatory bool `json:"mandatory,omitempty"`
+	Mandatory bool `json:"mandatory,omitempty" yaml:"mandatory,omitempty"`
+}
+
+// FindProperty returns the property for the given name or nil
+func (s *Object) FindProperty(name string) *Property {
+	if s == nil {
+		return nil
+	}
+	for i := range s.Properties {
+		p := &s.Properties[i]
+		if p.Name == name {
+			return p
+		}
+	}
+	return nil
 }
 
 // Property defines a property in an object
 type Property struct {
 	// Name the name of the property
-	Name string `yaml:"name" validate:"nonzero"`
+	Name string `json:"name" yaml:"name" validate:"nonzero"`
 
 	// Question the main prompt generated in a user interface when asking to populate the property
-	Question string `yaml:"question" validate:"nonzero"`
+	Question string `json:"question" yaml:"question" validate:"nonzero"`
 
 	// Help the tooltip or help text for this property
-	Help string `yaml:"help"`
+	Help string `json:"help,omitempty" yaml:"help"`
 
 	// DefaultValue is used to specify default values populated on startup
-	DefaultValue string `yaml:"defaultValue,omitempty"`
+	DefaultValue string `json:"defaultValue,omitempty" yaml:"defaultValue,omitempty"`
 
 	// Pattern is a regular expression pattern used for validation
-	Pattern string `yaml:"pattern,omitempty"`
+	Pattern string `json:"pattern,omitempty" yaml:"pattern,omitempty"`
 
 	// Requires specifies a requirements expression
-	Requires string `yaml:"requires,omitempty"`
+	Requires string `json:"requires,omitempty" yaml:"requires,omitempty"`
 
 	// Format the format of the value
-	Format string `yaml:"format,omitempty"`
+	Format string `json:"format,omitempty" yaml:"format,omitempty"`
 
 	// Generator the name of the generator to use to create values
 	// if this value is non zero we assume Generate is effectively true
-	Generator string `yaml:"generator,omitempty"`
+	Generator string `json:"generator,omitempty" yaml:"generator,omitempty"`
 
 	// Labels allows arbitrary metadata labels to be associated with the property
-	Labels map[string]string `yaml:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 
 	// MinLength the minimum number of characters in the value
-	MinLength int `yaml:"minLength,omitempty"`
+	MinLength int `json:"minLength,omitempty" yaml:"minLength,omitempty"`
 
 	// MaxLength the maximum number of characters in the value
-	MaxLength int `yaml:"maxLength,omitempty"`
+	MaxLength int `json:"maxLength,omitempty" yaml:"maxLength,omitempty"`
 
 	// Mask whether a mask is used on input
-	Mask bool `yaml:"mask,omitempty"`
+	Mask bool `json:"mask,omitempty" yaml:"mask,omitempty"`
 }

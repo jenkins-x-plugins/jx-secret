@@ -9,13 +9,11 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
-	"github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
-	"github.com/jenkins-x/jx-secret/pkg/schemas"
 	"github.com/jenkins-x/jx-secret/pkg/schemas/generators"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -23,7 +21,7 @@ import (
 
 var (
 	cmdLong = templates.LongDesc(`
-		Populates any missing secret values which can be automatically generated"
+		Populates any missing secret values which can be automatically generated or that have default values"
 `)
 
 	cmdExample = templates.Examples(`
@@ -34,10 +32,7 @@ var (
 // Options the options for the command
 type Options struct {
 	secretfacade.Options
-
-	Dir           string
 	WaitDuration  time.Duration
-	Schema        *v1alpha1.Schema
 	Results       []*secretfacade.SecretPair
 	CommandRunner cmdrunner.CommandRunner
 	NoWait        bool
@@ -50,7 +45,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 
 	cmd := &cobra.Command{
 		Use:     "populate",
-		Short:   "Populates any missing secret values which can be automatically generated",
+		Short:   "Populates any missing secret values which can be automatically generated or that have default values",
 		Long:    cmdLong,
 		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -59,7 +54,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 		},
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
-	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/gitops/secret-schema.yaml file")
+	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/secret/mapping/secret-mappings.yaml file")
 	cmd.Flags().BoolVarP(&o.NoWait, "no-wait", "", false, "disables waiting for the secret store (e.g. vault) to be available")
 	cmd.Flags().DurationVarP(&o.WaitDuration, "wait", "w", 5*time.Minute, "the maximum time period to wait for the vault pod to be ready if using the vault backendType")
 	return cmd, o
@@ -68,7 +63,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 // Run implements the command
 func (o *Options) Run() error {
 	// get a list of external secrets which do not have corresponding k8s secret data populated
-	results, err := o.Verify()
+	results, err := o.VerifyAndFilter()
 	if err != nil {
 		return errors.Wrap(err, "failed to verify secrets")
 	}
@@ -83,10 +78,6 @@ func (o *Options) Run() error {
 	editors := map[string]editor.Interface{}
 	waited := map[string]bool{}
 
-	o.Schema, err = schemas.LoadSchema(o.Dir)
-	if err != nil {
-		return errors.Wrapf(err, "failed to load survey schema used to prompt the user for questions")
-	}
 	for _, r := range results {
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
@@ -117,7 +108,7 @@ func (o *Options) Run() error {
 				}
 				for _, property := range e.Properties {
 					var value string
-					value, err = o.generateSecretValue(name, property, e)
+					value, err = o.generateSecretValue(r, name, property)
 					if err != nil {
 						return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, e.Key, name)
 					}
@@ -142,11 +133,15 @@ func (o *Options) Run() error {
 	return nil
 }
 
-func (o *Options) generateSecretValue(secretName, property string, e *secretfacade.EntryError) (string, error) {
-	object, propertySchema, err := schemas.FindObjectProperty(o.Schema, secretName, property)
+func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, property string) (string, error) {
+	object, err := s.SchemaObject()
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to find schema for entry %s property %s", e.Key, property)
+		return "", errors.Wrapf(err, "failed to find object schema for object %s property %s", secretName, property)
 	}
+	if object == nil {
+		return "", nil
+	}
+	propertySchema := object.FindProperty(property)
 	if propertySchema == nil {
 		return "", nil
 	}
@@ -166,7 +161,6 @@ func (o *Options) generateSecretValue(secretName, property string, e *secretfaca
 	}
 
 	args := &generators.Arguments{
-		Schema:   o.Schema,
 		Object:   object,
 		Property: propertySchema,
 	}

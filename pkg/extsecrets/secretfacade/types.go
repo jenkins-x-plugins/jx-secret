@@ -12,9 +12,10 @@ import (
 
 // Options options for verifying secrets
 type Options struct {
+	Dir          string
+	Namespace    string
 	SecretClient extsecrets.Interface
 	KubeClient   kubernetes.Interface
-	Namespace    string
 
 	// ExternalSecrets the loaded secrets
 	ExternalSecrets []*v1.ExternalSecret
@@ -81,7 +82,7 @@ func (p *SecretPair) SchemaObject() (*schema.Object, error) {
 		return nil, nil
 	}
 	var err error
-	p.schemaObject, err = schemas.ObjectFromString(text)
+	p.schemaObject, err = schemas.ObjectFromAnnotationString(text)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to load schema object from ExternalSecret annotation for %s", p.ExternalSecret.Name)
 	}

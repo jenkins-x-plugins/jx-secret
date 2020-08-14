@@ -4,10 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
-	schemaapi "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
-	"github.com/jenkins-x/jx-secret/pkg/schemas"
-
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
@@ -15,6 +11,8 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/input/survey"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
+	schemaapi "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
@@ -25,22 +23,23 @@ import (
 
 var (
 	editLong = templates.LongDesc(`
-		Edits any missing properties in the ExternalSecret resources
+		Edits secret values in the underlying secret stores for ExternalSecrets
 `)
 
 	editExample = templates.Examples(`
+		# edit any missing mandatory secrets
 		%s edit
+
+		# edit any secrets with a given filter
+		%s edit --filter nexus
 	`)
 )
 
 // Options the options for the command
 type Options struct {
 	secretfacade.Options
-
-	Dir           string
 	Filter        string
 	Input         input.Interface
-	Schema        *schemaapi.Schema
 	Results       []*secretfacade.SecretPair
 	CommandRunner cmdrunner.CommandRunner
 }
@@ -51,16 +50,16 @@ func NewCmdEdit() (*cobra.Command, *Options) {
 
 	cmd := &cobra.Command{
 		Use:     "edit",
-		Short:   "Edits any missing properties in the ExternalSecret resources",
+		Short:   "Edits secret values in the underlying secret stores for ExternalSecrets",
 		Long:    editLong,
-		Example: fmt.Sprintf(editExample, rootcmd.BinaryName),
+		Example: fmt.Sprintf(editExample, rootcmd.BinaryName, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)
 		},
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
-	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/gitops/secret-schema.yaml file")
+	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/secret/mapping/secret-mappings.yaml file")
 	cmd.Flags().StringVarP(&o.Filter, "filter", "f", "", "filter on the Secret / ExternalSecret names to enter")
 	return cmd, o
 }
@@ -68,7 +67,7 @@ func NewCmdEdit() (*cobra.Command, *Options) {
 // Run implements the command
 func (o *Options) Run() error {
 	// get a list of external secrets which do not have corresponding k8s secret data populated
-	results, err := o.Verify()
+	results, err := o.VerifyAndFilter()
 	if err != nil {
 		return errors.Wrap(err, "failed to verify secrets")
 	}
@@ -84,11 +83,6 @@ func (o *Options) Run() error {
 	}
 
 	editors := map[string]editor.Interface{}
-
-	o.Schema, err = schemas.LoadSchema(o.Dir)
-	if err != nil {
-		return errors.Wrapf(err, "failed to load survey schema used to prompt the user for questions")
-	}
 	for _, r := range results {
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
@@ -147,13 +141,13 @@ func (o *Options) Run() error {
 func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1.Data) (string, error) {
 	var value string
 	var err error
-	var propertySpec *schemaapi.Property
 	name := s.ExternalSecret.Name
 	property := d.Property
-	_, propertySpec, err = schemas.FindObjectProperty(o.Schema, name, property)
+	object, err := s.SchemaObject()
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to find schema property for object %s property %s", name, property)
+		return "", errors.Wrapf(err, "failed to find object schema for object %s property %s", name, property)
 	}
+	propertySpec := object.FindProperty(property)
 	if propertySpec == nil {
 		message, help := o.propertyMessage(s, d)
 		value, err = o.Input.PickPassword(message, help) //nolint:govet
