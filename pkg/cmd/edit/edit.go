@@ -25,11 +25,15 @@ import (
 
 var (
 	editLong = templates.LongDesc(`
-		Edits any missing properties in the ExternalSecret resources
+		Edits secret values in the underlying secret stores for ExternalSecrets
 `)
 
 	editExample = templates.Examples(`
+		# edit any missing mandatory secrets
 		%s edit
+
+		# edit any secrets with a given filter
+		%s edit --filter nexus
 	`)
 )
 
@@ -51,9 +55,9 @@ func NewCmdEdit() (*cobra.Command, *Options) {
 
 	cmd := &cobra.Command{
 		Use:     "edit",
-		Short:   "Edits any missing properties in the ExternalSecret resources",
+		Short:   "Edits secret values in the underlying secret stores for ExternalSecrets",
 		Long:    editLong,
-		Example: fmt.Sprintf(editExample, rootcmd.BinaryName),
+		Example: fmt.Sprintf(editExample, rootcmd.BinaryName, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)

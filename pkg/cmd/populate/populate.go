@@ -23,7 +23,7 @@ import (
 
 var (
 	cmdLong = templates.LongDesc(`
-		Populates any missing secret values which can be automatically generated"
+		Populates any missing secret values which can be automatically generated or that have default values"
 `)
 
 	cmdExample = templates.Examples(`
@@ -50,7 +50,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 
 	cmd := &cobra.Command{
 		Use:     "populate",
-		Short:   "Populates any missing secret values which can be automatically generated",
+		Short:   "Populates any missing secret values which can be automatically generated or that have default values",
 		Long:    cmdLong,
 		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
