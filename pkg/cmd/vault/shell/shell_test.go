@@ -38,6 +38,24 @@ func TestVaultShell(t *testing.T) {
 				},
 			},
 		},
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "vault-unseal-keys",
+				Namespace: ns,
+			},
+			Data: map[string][]byte{
+				"vault-root": []byte("dummyValue"),
+			},
+		},
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "vault-tls",
+				Namespace: ns,
+			},
+			Data: map[string][]byte{
+				"ca.crt": []byte("dummyValue"),
+			},
+		},
 	}
 
 	o.Namespace = ns
@@ -49,10 +67,7 @@ func TestVaultShell(t *testing.T) {
 	err = o.Run()
 	require.NoError(t, err, "failed to run edit")
 
-	runner.ExpectResults(t,
-		fakerunner.FakeResult{
-			CLI: "kubectl port-forward --namespace vault-infra service/vault 8200",
-		},
-	)
-
+	for _, c := range runner.OrderedCommands {
+		t.Logf("ran %s\n", c.CLI())
+	}
 }

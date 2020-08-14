@@ -6,7 +6,7 @@ metadata:
 spec:
   backendType: vault
   vaultMountPoint: kubernetes
-  vaultRole: vault-infra
+  vaultRole: secret-infra
   data:
   - name: oauth
     key: secret/data/jx/pipelineUser

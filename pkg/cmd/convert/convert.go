@@ -11,6 +11,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/cmd/convert/edit"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/schemas"
+	"github.com/jenkins-x/jx-secret/pkg/vaults"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
@@ -69,7 +70,7 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", "config-root", "the directory to recursively look for the *.yaml or *.yml files")
 	cmd.Flags().StringVarP(&o.VersionStreamDir, "version-stream-dir", "", "versionStream", "the directory containing the version stream")
 	cmd.Flags().StringVarP(&o.VaultMountPoint, "vault-mount-point", "m", "kubernetes", "the vault authentication mount point")
-	cmd.Flags().StringVarP(&o.VaultRole, "vault-role", "r", "vault-infra", "the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html")
+	cmd.Flags().StringVarP(&o.VaultRole, "vault-role", "r", vaults.DefaultVaultNamespace, "the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html")
 
 	cmd.AddCommand(cobras.SplitCommand(edit.NewCmdSecretMappingEdit()))
 	return cmd, o

@@ -7,6 +7,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner/fakerunner"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
+	"github.com/jenkins-x/jx-secret/pkg/vaults"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,7 +46,7 @@ func TestVaultWait(t *testing.T) {
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "vault-unseal-keys",
-				Namespace: "vault-infra",
+				Namespace: vaults.DefaultVaultNamespace,
 			},
 			Data: map[string][]byte{
 				"vault-root": []byte("dummyValue"),
@@ -54,7 +55,7 @@ func TestVaultWait(t *testing.T) {
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "vault-tls",
-				Namespace: "vault-infra",
+				Namespace: vaults.DefaultVaultNamespace,
 			},
 			Data: map[string][]byte{
 				"ca.crt": []byte("dummyValue"),
