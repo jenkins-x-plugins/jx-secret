@@ -61,6 +61,17 @@ type Object struct {
 	Mandatory bool `json:"mandatory,omitempty"`
 }
 
+// FindProperty returns the property for the given name or nil
+func (s *Object) FindProperty(name string) *Property {
+	for i := range s.Properties {
+		p := &s.Properties[i]
+		if p.Name == name {
+			return p
+		}
+	}
+	return nil
+}
+
 // Property defines a property in an object
 type Property struct {
 	// Name the name of the property
