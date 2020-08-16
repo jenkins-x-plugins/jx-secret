@@ -108,7 +108,7 @@ func (o *Options) WaitCheck() (bool, error) {
 			}
 			o.logMessage(name, termcolor.ColorWarning(buf.String()))
 		} else {
-			o.logMessage(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.Keys(), ", "))))
+			o.logMessage(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.KeyAndNames(), ", "))))
 		}
 	}
 	if count == 0 {

@@ -65,7 +65,7 @@ func (o *Options) Run() error {
 		name := r.ExternalSecret.Name
 		state := r.Error
 		if state == nil {
-			t.AddRow(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.Keys(), ", "))))
+			t.AddRow(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.KeyAndNames(), ", "))))
 		} else {
 			o.Results = append(o.Results, state)
 			for _, e := range state.EntryErrors {

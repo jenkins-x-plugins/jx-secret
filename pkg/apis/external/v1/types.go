@@ -36,6 +36,17 @@ func (s *ExternalSecret) Keys() []string {
 	return keys
 }
 
+// KeyAndNames returns the data key and names for the secret
+func (s *ExternalSecret) KeyAndNames() []string {
+	var keys []string
+	if s.Spec.Data != nil {
+		for _, d := range s.Spec.Data {
+			keys = append(keys, d.Key+"/"+d.Name)
+		}
+	}
+	return keys
+}
+
 // ExternalSecretSpec defines the desired state of ExternalSecret.
 type ExternalSecretSpec struct {
 	BackendType     string `json:"backendType,omitempty"`

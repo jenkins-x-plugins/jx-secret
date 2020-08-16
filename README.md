@@ -8,11 +8,22 @@
 
 `jx-secret` is a small command line tool working with [Kubernetes External Secrets](https://github.com/godaddy/kubernetes-external-secrets).
 
+You can find more about how we use the [jx-secret binary](https://github.com/jenkins-x/jx-secret/releases) binary inside Jenkins X in the [guide on working with Secrets](https://jenkins-x.io/docs/v3/guides/secrets/)
+
+
 ## Getting Started
 
 Download the [jx-secret binary](https://github.com/jenkins-x/jx-secret/releases) for your operating system and add it to your `$PATH`.
 
-There will be an `app` you can install soon too...
+See the [jx-secret command reference](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret.md) for the available commands
+
+
+## Schema
+
+To improve the UX around editing Secrets via [jx secret edit](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret_edit.md) or populating initial or generated secrets on first install via [jx secret populate](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret_populate.md) we use a Schema definition (similar to JSON Schema) which allows you to provide better validation and configuration for default values and the generator to be used.
+
+For details of the schema configuration see [Schema](docs/schema.md#secret.jenkins-x.io/v1alpha1.Schema)
+
 
 ### Mappings
 
@@ -24,12 +35,6 @@ You can then customise the `key` and/or `property` values that are used in the g
 
 For more details see the [Mapping Configuration Reference](docs/mapping.md#secret.jenkins-x.io/v1alpha1.SecretMapping)
 
-
-## Schema
-
-To improve the UX around editing Secrets via [jx secret edit](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret_edit.md) or populating initial or generated secrets on first install via [jx secret populate](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret_populate.md) we use a Schema definition (similar to JSON Schema) which allows you to provide better validation and configuration for default values and the generator to be used.
-
-For details of the schema configuration see [Schema](docs/schema.md#secret.jenkins-x.io/v1alpha1.Schema)
 
 # Reference Guides
 
