@@ -41,7 +41,7 @@ func (s *ExternalSecret) KeyAndNames() []string {
 	var keys []string
 	if s.Spec.Data != nil {
 		for _, d := range s.Spec.Data {
-			keys = append(keys, d.Key + "/" + d.Name)
+			keys = append(keys, d.Key+"/"+d.Name)
 		}
 	}
 	return keys
