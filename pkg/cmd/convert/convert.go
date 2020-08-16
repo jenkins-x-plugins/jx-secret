@@ -163,48 +163,50 @@ func (o *Options) Run() error {
 func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha1.BackendType) (bool, error) {
 	secretName := kyamls.GetStringField(node, path, "metadata", "name")
 
-	data, err := node.Pipe(yaml.Lookup("data"))
-	if err != nil {
-		return false, errors.Wrapf(err, "failed to get data for path %s", path)
-	}
-
 	var contents []*yaml.Node
 	style := node.Document().Style
 
-	var fields []string
-	if data != nil {
-		fields, err = data.Fields()
+	for _, dataPath := range []string{"data", "stringData"} {
+		data, err := node.Pipe(yaml.Lookup(dataPath))
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to find data fields for path %s", path)
+			return false, errors.Wrapf(err, "failed to get data for path %s", path)
 		}
-		for _, field := range fields {
-			newNode := &yaml.Node{
-				Kind:  yaml.MappingNode,
-				Style: style,
-			}
 
-			rNode := yaml.NewRNode(newNode)
-
-			switch backendType {
-			case v1alpha1.BackendTypeVault:
-				err = o.modifyVault(rNode, field, secretName, path)
-
-			case v1alpha1.BackendTypeGSM:
-				err = o.modifyGSM(rNode, field, secretName, path)
-			}
-
+		var fields []string
+		if data != nil {
+			fields, err = data.Fields()
 			if err != nil {
-				return false, errors.Wrapf(err, "failed to modify ExternalSecret with configuration")
+				return false, errors.Wrapf(err, "failed to find data fields for path %s", path)
 			}
-			contents = append(contents, newNode)
+			for _, field := range fields {
+				newNode := &yaml.Node{
+					Kind:  yaml.MappingNode,
+					Style: style,
+				}
+
+				rNode := yaml.NewRNode(newNode)
+
+				switch backendType {
+				case v1alpha1.BackendTypeVault:
+					err = o.modifyVault(rNode, field, secretName, path)
+
+				case v1alpha1.BackendTypeGSM:
+					err = o.modifyGSM(rNode, field, secretName, path)
+				}
+
+				if err != nil {
+					return false, errors.Wrapf(err, "failed to modify ExternalSecret with configuration")
+				}
+				contents = append(contents, newNode)
+			}
+		}
+		err = node.PipeE(yaml.Clear(dataPath))
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to remove %s", dataPath)
 		}
 	}
 
-	err = node.PipeE(yaml.Clear("data"))
-	if err != nil {
-		return false, errors.Wrapf(err, "failed to remove data")
-	}
-	data, err = node.Pipe(yaml.LookupCreate(yaml.SequenceNode, "spec", "data"))
+	data, err := node.Pipe(yaml.LookupCreate(yaml.SequenceNode, "spec", "data"))
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to replace data for path %s", path)
 	}
