@@ -27,7 +27,6 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 	}{
 		{
 			name: "gsm_defaults_add",
-			args: []string{"--gcp-project-id=foo", "--gcp-unique-prefix=bar"},
 			callback: func(t *testing.T, sm *v1alpha1.SecretMapping) {
 				assert.Equal(t, 2, len(sm.Spec.Secrets), "should have found 2 mappings")
 				for _, secret := range sm.Spec.Secrets {
@@ -43,7 +42,6 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 		},
 		{
 			name: "gsm_defaults_dont_replace",
-			args: []string{"--gcp-project-id=foo", "--gcp-unique-prefix=bar"},
 			callback: func(t *testing.T, sm *v1alpha1.SecretMapping) {
 				assert.Equal(t, 2, len(sm.Spec.Secrets), "should have found 2 mappings")
 				assert.Equal(t, "phill", sm.Spec.Secrets[0].GcpSecretsManager.ProjectID, "secret.GcpSecretsManager.ProjectID")

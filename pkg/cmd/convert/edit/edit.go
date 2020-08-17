@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/jenkins-x/jx-api/pkg/config"
+
 	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/secretmapping"
 
@@ -23,21 +25,10 @@ import (
 type Options struct {
 	Dir           string
 	SecretMapping v1alpha1.SecretMapping
-	Flags         SecretMappingOverrides
 	Cmd           *cobra.Command
 	Args          []string
+	requirements  *config.RequirementsConfig
 }
-
-// RequirementBools for the boolean flags we only update if specified on the CLI
-type SecretMappingOverrides struct {
-	ClusterName  string
-	GCPProjectID string
-}
-
-const (
-	flagGCPProjectID    = "gcp-project-id"
-	flagGCPUniquePrefix = "gcp-unique-prefix"
-)
 
 var (
 	cmdLong = templates.LongDesc(`
@@ -70,9 +61,7 @@ func NewCmdSecretMappingEdit() (*cobra.Command, *Options) {
 			return options.Run()
 		},
 	}
-	cmd.Flags().StringVarP(&options.Dir, "dir", "", "", "base directory containing '.jx/gitops/secret-mappings.yaml' file")
-	cmd.Flags().StringVarP(&options.Flags.ClusterName, flagGCPUniquePrefix, "", "", "the cluster name")
-	cmd.Flags().StringVarP(&options.Flags.GCPProjectID, flagGCPProjectID, "", "", "if GCP this is the project ID that hosts GSM secrets")
+	cmd.Flags().StringVarP(&options.Dir, "dir", "", "", "base directory containing '.jx/secret/mapping/secret-mappings.yaml' file")
 
 	return cmd, options
 }
@@ -91,6 +80,11 @@ func (o *Options) Run() error {
 		fileName = filepath.Join(o.Dir, v1alpha1.SecretMappingFileName)
 	}
 	o.SecretMapping = *secretMapping
+
+	o.requirements, _, err = config.LoadRequirementsConfig(o.Dir, false)
+	if err != nil {
+		return errors.Wrapf(err, "failed to load requirements in dir %s", o.Dir)
+	}
 
 	// lets re-parse the CLI arguments to re-populate the loaded requirements
 	err = o.Cmd.Flags().Parse(os.Args)
@@ -115,6 +109,7 @@ func (o *Options) Run() error {
 func (o *Options) applyDefaults() error {
 	s := &o.SecretMapping
 
+	//
 	if s.Spec.Defaults.BackendType == v1alpha1.BackendTypeGSM {
 		err := o.applyGSMDefaults(&s.Spec.Defaults.GcpSecretsManager)
 		if err != nil {
@@ -139,16 +134,16 @@ func (o *Options) applyGSMDefaults(gsmConfig *v1alpha1.GcpSecretsManager) error 
 		gsmConfig = &v1alpha1.GcpSecretsManager{}
 	}
 	if gsmConfig.ProjectID == "" {
-		if o.Flags.GCPProjectID == "" {
-			return fmt.Errorf("found an empty gcp project id and no %s flag", flagGCPProjectID)
+		if o.requirements.Cluster.ProjectID == "" {
+			return errors.New("found an empty gcp project id and no requirements.Cluster.ProjectID")
 		}
-		gsmConfig.ProjectID = o.Flags.GCPProjectID
+		gsmConfig.ProjectID = o.requirements.Cluster.ProjectID
 	}
 	if gsmConfig.UniquePrefix == "" {
-		if o.Flags.ClusterName == "" {
-			return fmt.Errorf("found an empty gcp unique prefix and no %s flag", flagGCPUniquePrefix)
+		if o.requirements.Cluster.ClusterName == "" {
+			return errors.New("found an empty gcp project id and no requirements.Cluster.ClusterName")
 		}
-		gsmConfig.UniquePrefix = o.Flags.ClusterName
+		gsmConfig.UniquePrefix = o.requirements.Cluster.ClusterName
 	}
 	if gsmConfig.Version == "" {
 		gsmConfig.Version = "latest"

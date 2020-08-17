@@ -1,0 +1,3 @@
+cluster:
+  clusterName: bar
+  project: foo
