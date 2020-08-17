@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
+
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
@@ -87,7 +89,6 @@ func (o *Options) Run() error {
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
 		secEditor := editors[backendType]
-		log.Logger().Infof("using %s as the secrets store", backendType)
 		if secEditor == nil {
 			secEditor, err = factory.NewEditor(&r.ExternalSecret, o.CommandRunner, o.KubeClient)
 			if err != nil {
@@ -95,7 +96,6 @@ func (o *Options) Run() error {
 			}
 			editors[backendType] = secEditor
 		}
-
 		// todo do we need to find any surveys that require a confirm?
 		// order them somehow?
 		// maybe skip any?
@@ -112,6 +112,14 @@ func (o *Options) Run() error {
 					keyProperties = &editor.KeyProperties{
 						Key: key,
 					}
+					if r.ExternalSecret.Spec.BackendType == string(v1alpha1.BackendTypeGSM) {
+						if r.ExternalSecret.Spec.ProjectID != "" {
+							keyProperties.GCPProject = r.ExternalSecret.Spec.ProjectID
+						} else {
+							log.Logger().Warnf("no GCP project ID found for external secret %s, defaulting to current project", r.ExternalSecret.Name)
+						}
+					}
+
 					m[key] = keyProperties
 				}
 

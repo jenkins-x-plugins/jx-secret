@@ -9,6 +9,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
@@ -92,7 +93,6 @@ func (o *Options) Run() error {
 		}
 
 		secEditor := editors[backendType]
-		log.Logger().Infof("using %s as the secrets store", backendType)
 		if secEditor == nil {
 			secEditor, err = factory.NewEditor(&r.ExternalSecret, o.CommandRunner, o.KubeClient)
 			if err != nil {
@@ -100,11 +100,17 @@ func (o *Options) Run() error {
 			}
 			editors[backendType] = secEditor
 		}
-
 		if r.Error != nil {
 			for _, e := range r.Error.EntryErrors {
 				keyProperties := &editor.KeyProperties{
 					Key: e.Key,
+				}
+				if r.ExternalSecret.Spec.BackendType == string(v1alpha1.BackendTypeGSM) {
+					if r.ExternalSecret.Spec.ProjectID != "" {
+						keyProperties.GCPProject = r.ExternalSecret.Spec.ProjectID
+					} else {
+						log.Logger().Warnf("no GCP project ID found for external secret %s, defaulting to current project", r.ExternalSecret.Name)
+					}
 				}
 				for _, property := range e.Properties {
 					var value string
@@ -120,7 +126,6 @@ func (o *Options) Run() error {
 						Value:    value,
 					})
 				}
-
 				if len(keyProperties.Properties) > 0 {
 					err = secEditor.Write(keyProperties)
 					if err != nil {

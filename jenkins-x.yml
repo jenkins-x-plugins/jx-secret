@@ -15,6 +15,10 @@ pipelineConfig:
             steps:
             - name: lint
               command: make lint
+              image: golangci/golangci-lint
+            - name: test
+              command: make test
+
     release:
       pipeline:
         stages:
