@@ -11,6 +11,8 @@ type Interface interface {
 type KeyProperties struct {
 	Key        string
 	Properties []PropertyValue
+	// optional GCP project ID where secrets manager is running
+	GCPProject string
 }
 
 // SecretProperty the property to edit
