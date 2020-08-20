@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner/fakerunner"
-	"github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/templatertesting"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/plugins"
@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	dynfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/fake"
@@ -27,7 +26,8 @@ func TestPopulate(t *testing.T) {
 	vaultBin, err := plugins.GetVaultBinary(plugins.VaultVersion)
 	require.NoError(t, err, "failed to find vault binary plugin")
 
-	expectedMavenSettingsFile := filepath.Join("test_data", "expected-maven-settings.xml")
+	ns := "jx"
+	expectedMavenSettingsFile := filepath.Join("test_data", "expected", "jenkins-maven-settings", "settingsXml", "nexus.xml")
 	require.FileExists(t, expectedMavenSettingsFile)
 	expectedMaveSettingsData, err := ioutil.ReadFile(expectedMavenSettingsFile)
 	require.NoError(t, err, "failed to load file %s", expectedMavenSettingsFile)
@@ -35,13 +35,6 @@ func TestPopulate(t *testing.T) {
 	schemaFile := filepath.Join("test_data", "secret-schema.yaml")
 	schema, err := schemas.LoadSchemaFile(schemaFile)
 	require.NoError(t, err, "failed to load schema file %s")
-
-	_, o := populate.NewCmdPopulate()
-	o.Dir = "test_data"
-	o.NoWait = true
-	scheme := runtime.NewScheme()
-
-	ns := "jx"
 
 	kubeObjects := []runtime.Object{
 		&corev1.Secret{
@@ -86,13 +79,17 @@ func TestPopulate(t *testing.T) {
 		},
 	}
 
+	_, o := populate.NewCmdPopulate()
+	o.Dir = "test_data"
+	o.NoWait = true
 	o.Namespace = ns
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
 
 	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "secrets"))
-	err = AddSchemaAnnotations(t, schema, dynObjects)
+	err = templatertesting.AddSchemaAnnotations(t, schema, dynObjects)
 	require.NoError(t, err, "failed to add the schema annotations")
 
+	scheme := runtime.NewScheme()
 	fakeDynClient := dynfake.NewSimpleDynamicClient(scheme, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
@@ -157,7 +154,7 @@ func TestPopulate(t *testing.T) {
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
 
 	dynObjects = testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "secrets"))
-	err = AddSchemaAnnotations(t, schema, dynObjects)
+	err = templatertesting.AddSchemaAnnotations(t, schema, dynObjects)
 	require.NoError(t, err, "failed to add the schema annotations")
 
 	fakeDynClient = dynfake.NewSimpleDynamicClient(scheme, dynObjects...)
@@ -172,35 +169,15 @@ func TestPopulate(t *testing.T) {
 
 	secretMaps2 := testsecrets.LoadFakeVaultSecrets(t, runner.OrderedCommands, vaultBin)
 
-	// we should not have populated any more secrets now as all the default values are generated
-	if secretMaps2.Objects != nil {
-		for k, values := range secretMaps2.Objects {
+	// we should only have populated the maven settings as the underlying secrets have changed
+	// so new values appear in the template output
+	require.Len(t, secretMaps2.Objects, 1, "incorrect number of secrets populated")
+
+	for k, values := range secretMaps2.Objects {
+		if assert.Equal(t, "secret/jx/mavenSettings", k) {
+			t.Logf("generated expected %d secret values", len(values))
+		} else {
 			t.Logf("should not have populated secret %s with values %#v\n", k, values)
 		}
 	}
-
-	assert.Empty(t, secretMaps2.Objects, "should not have populated any more secrets on the second run")
-}
-
-func AddSchemaAnnotations(t *testing.T, schema *v1alpha1.Schema, dynObjects []runtime.Object) error {
-	var err error
-	for _, r := range dynObjects {
-		u, ok := r.(*unstructured.Unstructured)
-		if ok && u != nil {
-			name := u.GetName()
-			obj := schema.Spec.FindObject(name)
-			if obj != nil {
-				ann := u.GetAnnotations()
-				if ann == nil {
-					ann = map[string]string{}
-				}
-				value := ""
-				value, err = schemas.ToAnnotationString(obj)
-				require.NoError(t, err, "failed to create annotation value for schema %#v on secret %s", obj, name)
-				ann[extsecrets.SchemaObjectAnnotation] = value
-				u.SetAnnotations(ann)
-			}
-		}
-	}
-	return err
 }

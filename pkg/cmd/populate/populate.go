@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jenkins-x/jx-api/pkg/config"
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
@@ -38,6 +39,7 @@ type Options struct {
 	CommandRunner cmdrunner.CommandRunner
 	NoWait        bool
 	Generators    map[string]generators.Generator
+	Requirements  *config.RequirementsConfig
 }
 
 // NewCmdPopulate creates a command object for the command
@@ -174,7 +176,7 @@ func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, pr
 
 	templateText := propertySchema.Template
 	if templateText != "" {
-		return o.evaluateTemplate(secretName, property, templateText)
+		return o.EvaluateTemplate(secretName, property, templateText)
 	}
 
 	// for now don't regenerate if we have a current value
