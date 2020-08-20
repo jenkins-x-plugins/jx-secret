@@ -1,4 +1,4 @@
-FROM gcr.io/jenkinsxio-labs-private/jxl-base:0.0.52
+FROM gcr.io/jenkinsxio/jx-cli-base:0.0.10
 
 ENTRYPOINT ["jx-secret"]
 
