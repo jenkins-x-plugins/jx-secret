@@ -240,6 +240,21 @@ if this value is non zero we assume Generate is effectively true</p>
 </tr>
 <tr>
 <td>
+<code>template</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Template the go template used to generate the value of this secret
+if we need to combine multiple secret values together into a composite secret value.</p>
+<p>For example if we want to create a maven-settings.xml file or a docker config JSON
+document made up of lots of static text but some real secrets embedded we can
+define the template in the schema</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labels</code></br>
 <em>
 map[string]string
@@ -319,5 +334,5 @@ bool
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>8890607</code>.
+on git commit <code>16c22be</code>.
 </em></p>
