@@ -60,6 +60,20 @@ func TestTemplater(t *testing.T) {
 	runner := templatertesting.Runner{
 		TestCases: []templatertesting.TestCase{
 			{
+				TestName:   "docker-gke",
+				ObjectName: "jenkins-docker-cfg",
+				Property:   "config.json",
+				Format:     "json",
+				Requirements: &config.RequirementsConfig{
+					Repository: "nexus",
+					Cluster: config.ClusterConfig{
+						Provider:    "gke",
+						ProjectID:   "myproject",
+						ClusterName: "mycluster",
+					},
+				},
+			},
+			{
 				TestName:   "nexus",
 				ObjectName: "jenkins-maven-settings",
 				Property:   "settingsXml",

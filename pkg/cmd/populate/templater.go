@@ -16,8 +16,9 @@ import (
 func (o *Options) EvaluateTemplate(secretName, property, templateText string) (string, error) {
 	funcMap := sprig.TxtFuncMap()
 
-	// represents the helm template function
-	// which can be used like: `{{ secret "name" "key" }}
+	// template function to lookup a value in a secret:
+	//
+	// use like this: `{{ secret "my-secret-name" "key-name" }}
 	funcMap["secret"] = func(lookupSecret, lookupKey string) string {
 		secret, err := o.KubeClient.CoreV1().Secrets(o.Namespace).Get(lookupSecret, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
@@ -27,6 +28,22 @@ func (o *Options) EvaluateTemplate(secretName, property, templateText string) (s
 		answer := ""
 		if secret != nil && secret.Data != nil {
 			return string(secret.Data[lookupKey])
+		}
+		return answer
+	}
+
+	// template function to lookup a user + password in a secret and concatenate in a string like `"username:password"`.
+	//
+	// use like this: `{{ auth "my-secret-name" "username-key" "password-key }}
+	funcMap["auth"] = func(lookupSecret, userKey, passwordKey string) string {
+		secret, err := o.KubeClient.CoreV1().Secrets(o.Namespace).Get(lookupSecret, metav1.GetOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, o.Namespace, secretName, property)
+			return ""
+		}
+		answer := ""
+		if secret != nil && secret.Data != nil {
+			return string(secret.Data[userKey]) + ":" + string(secret.Data[passwordKey])
 		}
 		return answer
 	}
