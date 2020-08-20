@@ -100,10 +100,18 @@ func (o *Options) Run() error {
 			}
 			editors[backendType] = secEditor
 		}
-		if r.Error != nil {
-			for _, e := range r.Error.EntryErrors {
-				keyProperties := &editor.KeyProperties{
-					Key: e.Key,
+
+		data := r.ExternalSecret.Spec.Data
+		m := map[string]*editor.KeyProperties{}
+		newValueMap := map[string]bool{}
+		for i := range data {
+			d := &data[i]
+			key := d.Key
+			property := d.Property
+			keyProperties := m[key]
+			if keyProperties == nil {
+				keyProperties = &editor.KeyProperties{
+					Key: key,
 				}
 				if r.ExternalSecret.Spec.BackendType == string(v1alpha1.BackendTypeGSM) {
 					if r.ExternalSecret.Spec.ProjectID != "" {
@@ -112,25 +120,39 @@ func (o *Options) Run() error {
 						log.Logger().Warnf("no GCP project ID found for external secret %s, defaulting to current project", r.ExternalSecret.Name)
 					}
 				}
-				for _, property := range e.Properties {
-					var value string
-					value, err = o.generateSecretValue(r, name, property)
-					if err != nil {
-						return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, e.Key, name)
-					}
-					if value == "" {
-						continue
-					}
-					keyProperties.Properties = append(keyProperties.Properties, editor.PropertyValue{
-						Property: property,
-						Value:    value,
-					})
-				}
-				if len(keyProperties.Properties) > 0 {
-					err = secEditor.Write(keyProperties)
-					if err != nil {
-						return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
-					}
+
+				m[key] = keyProperties
+			}
+
+
+			currentValue := ""
+			if r.Secret != nil && r.Secret.Data != nil {
+				currentValue = string(r.Secret.Data[d.Name])
+			}
+			var value string
+			value, err = o.generateSecretValue(r, name, property, currentValue)
+			if err != nil {
+				return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, key, name)
+			}
+			if value != "" && value != currentValue {
+				newValueMap[key] = true
+			}
+			if value == "" {
+				value = currentValue
+			}
+
+			// lets always modify all entries if there is a new value
+			// as back ends like vault can't handle only writing 1 value
+			keyProperties.Properties = append(keyProperties.Properties, editor.PropertyValue{
+				Property: property,
+				Value:    value,
+			})
+		}
+		for key, keyProperties := range m {
+			if newValueMap[key] && len(keyProperties.Properties) > 0 {
+				err = secEditor.Write(keyProperties)
+				if err != nil {
+					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
 				}
 			}
 		}
@@ -138,7 +160,7 @@ func (o *Options) Run() error {
 	return nil
 }
 
-func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, property string) (string, error) {
+func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, property, currentValue string) (string, error) {
 	object, err := s.SchemaObject()
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to find object schema for object %s property %s", secretName, property)
@@ -155,13 +177,16 @@ func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, pr
 	if templateText != "" {
 		return o.evaluateTemplate(secretName, property, templateText)
 	}
-	if propertySchema.DefaultValue != "" {
-		return propertySchema.DefaultValue, nil
+
+	// for now don't regenerate if we have a current value
+	// longer term we could maybe use metadata to decide how frequently to run generators or regenerate if the value is too old etc
+	if currentValue != "" {
+		return "", nil
 	}
 
 	generatorName := propertySchema.Generator
 	if generatorName == "" {
-		return "", nil
+		return propertySchema.DefaultValue, nil
 	}
 
 	generator := o.Generators[generatorName]

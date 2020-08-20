@@ -80,7 +80,7 @@ type ExternalSecretList struct {
 
 // Data the data properties
 type Data struct {
-	// Name name of the secret entry
+	// Name name of the secret data entry
 	Name string `json:"name,omitempty"`
 
 	// Key the key in the underlying secret storage (e.g. the key in vault)
