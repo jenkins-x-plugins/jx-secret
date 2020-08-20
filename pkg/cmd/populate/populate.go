@@ -46,7 +46,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 
 	cmd := &cobra.Command{
 		Use:     "populate",
-		Short:   "Populates any missing secret values which can be automatically generated or that have default values",
+		Short:   "Populates any missing secret values which can be automatically generated, generated using a template or that have default values",
 		Long:    cmdLong,
 		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -151,6 +151,10 @@ func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, pr
 		return "", nil
 	}
 
+	templateText := propertySchema.Template
+	if templateText != "" {
+		return o.evaluateTemplate(secretName, property, templateText)
+	}
 	if propertySchema.DefaultValue != "" {
 		return propertySchema.DefaultValue, nil
 	}

@@ -1,0 +1,46 @@
+<settings>
+    <!-- sets the local maven repository outside of the ~/.m2 folder for easier mounting of secrets and repo -->
+    <localRepository>${user.home}/.mvnrepository</localRepository>
+    <!-- lets disable the download progress indicator that fills up logs -->
+    <interactiveMode>false</interactiveMode>
+    <mirrors>
+        <mirror>
+        <id>nexus</id>
+        <mirrorOf>external:*</mirrorOf>
+        <url>http://nexus:8081/repository/maven-group/</url>
+        </mirror>
+    </mirrors>
+    <servers>
+        <server>
+        <id>nexus</id>
+        <username>admin</username>
+        <password>my-nexus-password</password>
+    </server>
+    <server>
+        <id>oss-sonatype-staging</id>
+        <username>my-sonatype-username</username>
+        <password>my-sonatype-password</password>
+        </server>
+    </servers>
+    <profiles>
+        <profile>
+            <id>nexus</id>
+            <properties>
+                <altDeploymentRepository>nexus::default::http://nexus/repository/maven-snapshots/</altDeploymentRepository>
+                <altReleaseDeploymentRepository>nexus::default::http://nexus/repository/maven-releases/</altReleaseDeploymentRepository>
+                <altSnapshotDeploymentRepository>nexus::default::http://nexus/repository/maven-snapshots/</altSnapshotDeploymentRepository>
+            </properties>
+        </profile>
+        <profile>
+            <id>release</id>
+            <properties>
+                <gpg.executable>gpg</gpg.executable>
+                <gpg.passphrase>my-secret-gpg-passphrase</gpg.passphrase>
+            </properties>
+        </profile>
+    </profiles>
+    <activeProfiles>
+        <!--make the profile active all the time -->
+        <activeProfile>nexus</activeProfile>
+    </activeProfiles>
+</settings>
