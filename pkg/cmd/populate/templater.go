@@ -5,14 +5,15 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig"
+	"github.com/jenkins-x/jx-api/pkg/config"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// evaluateTemplate evaluates the go template to create the value
-func (o *Options) evaluateTemplate(secretName, property, templateText string) (string, error) {
+// EvaluateTemplate evaluates the go template to create the value
+func (o *Options) EvaluateTemplate(secretName, property, templateText string) (string, error) {
 	funcMap := sprig.TxtFuncMap()
 
 	// represents the helm template function
@@ -34,7 +35,21 @@ func (o *Options) evaluateTemplate(secretName, property, templateText string) (s
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to parse Secret %s property %s with template: %s", secretName, property, templateText)
 	}
-	templateData := map[string]interface{}{}
+
+	if o.Requirements == nil {
+		o.Requirements, _, err = config.LoadRequirementsConfig(o.Dir, false)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to load jx-requirements.yml in dir %s", o.Dir)
+		}
+	}
+	requirementsMap, err := o.Requirements.ToMap()
+	if err != nil {
+		return "", errors.Wrapf(err, "failed turn requirements into a map: %v", o.Requirements)
+	}
+
+	templateData := map[string]interface{}{
+		"Requirements": requirementsMap,
+	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, templateData)
