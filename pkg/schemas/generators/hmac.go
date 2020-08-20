@@ -6,7 +6,7 @@ import (
 )
 
 // Hmac generates a hmac value for webhooks
-func Hmac(args *Arguments) (string, error) {
+func Hmac(_ *Arguments) (string, error) {
 	value, err := stringhelpers.RandStringBytesMaskImprSrc(41)
 	if err != nil {
 		return value, errors.Wrapf(err, "generating hmac")

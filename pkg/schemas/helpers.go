@@ -68,29 +68,6 @@ func LoadSchemaObjectFromFiles(name string, fileNames []string) (*v1alpha1.Objec
 }
 
 // MergeSchemas merges values from the source into the destination
-func MergeSchemas(source, dest *v1alpha1.Schema, path string, failOnDuplicate bool) error {
-	for i := range source.Spec.Objects {
-		so := &source.Spec.Objects[i]
-
-		found := false
-		for j := range dest.Spec.Objects {
-			do := &dest.Spec.Objects[j]
-
-			if do.Name != so.Name {
-				continue
-			}
-			if failOnDuplicate {
-				return errors.Errorf("duplicate object definition %s in file %s", do.Name, path)
-			}
-			dest.Spec.Objects[j] = *so
-			found = true
-		}
-		if !found {
-			dest.Spec.Objects = append(dest.Spec.Objects, *so)
-		}
-	}
-	return nil
-}
 
 // ToAnnotationString converts the schema object to YAML so we can store it as an annotation
 func ToAnnotationString(s interface{}) (string, error) {

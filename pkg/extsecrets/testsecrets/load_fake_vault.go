@@ -43,6 +43,7 @@ func LoadFakeVaultSecrets(t *testing.T, cmds []*cmdrunner.Command, vaultBin stri
 	return s
 }
 
+// AssertHasValue asserts the given property has a value populated
 func (s *FakeVaultSecrets) AssertHasValue(t *testing.T, objectName, propertyName string) {
 	object := s.Objects[objectName]
 	if assert.NotNil(t, object, "no object found for %s", objectName) {
@@ -50,5 +51,15 @@ func (s *FakeVaultSecrets) AssertHasValue(t *testing.T, objectName, propertyName
 		if assert.NotEmpty(t, value, "no property value for secret %s property %s", objectName, propertyName) {
 			t.Logf("secret %s has expected property %s=%s\n", objectName, propertyName, value)
 		}
+	}
+}
+
+// AssertValueEquals asserts the given property value
+func (s *FakeVaultSecrets) AssertValueEquals(t *testing.T, objectName, propertyName, expectedValue string) {
+	object := s.Objects[objectName]
+	if assert.NotNil(t, object, "no object found for %s", objectName) {
+		value := object[propertyName]
+		assert.Equal(t, expectedValue, value, "property value for secret %s property %s", objectName, propertyName)
+		t.Logf("secret %s has expected property %s=%s\n", objectName, propertyName, value)
 	}
 }

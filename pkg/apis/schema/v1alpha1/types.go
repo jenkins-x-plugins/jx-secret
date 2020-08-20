@@ -102,6 +102,14 @@ type Property struct {
 	// if this value is non zero we assume Generate is effectively true
 	Generator string `json:"generator,omitempty" yaml:"generator,omitempty"`
 
+	// Template the go template used to generate the value of this secret
+	// if we need to combine multiple secret values together into a composite secret value.
+	//
+	// For example if we want to create a maven-settings.xml file or a docker config JSON
+	// document made up of lots of static text but some real secrets embedded we can
+	// define the template in the schema
+	Template string `json:"template,omitempty" yaml:"template,omitempty"`
+
 	// Labels allows arbitrary metadata labels to be associated with the property
 	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 

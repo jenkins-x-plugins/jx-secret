@@ -46,7 +46,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 
 	cmd := &cobra.Command{
 		Use:     "populate",
-		Short:   "Populates any missing secret values which can be automatically generated or that have default values",
+		Short:   "Populates any missing secret values which can be automatically generated, generated using a template or that have default values",
 		Long:    cmdLong,
 		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -57,7 +57,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/secret/mapping/secret-mappings.yaml file")
 	cmd.Flags().BoolVarP(&o.NoWait, "no-wait", "", false, "disables waiting for the secret store (e.g. vault) to be available")
-	cmd.Flags().DurationVarP(&o.WaitDuration, "wait", "w", 5*time.Minute, "the maximum time period to wait for the vault pod to be ready if using the vault backendType")
+	cmd.Flags().DurationVarP(&o.WaitDuration, "wait", "w", 2*time.Hour, "the maximum time period to wait for the vault pod to be ready if using the vault backendType")
 	return cmd, o
 }
 
@@ -151,6 +151,10 @@ func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, pr
 		return "", nil
 	}
 
+	templateText := propertySchema.Template
+	if templateText != "" {
+		return o.evaluateTemplate(secretName, property, templateText)
+	}
 	if propertySchema.DefaultValue != "" {
 		return propertySchema.DefaultValue, nil
 	}

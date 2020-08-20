@@ -55,7 +55,7 @@ func MastSecretArgs(args []string) []string {
 	if len(args) < 3 {
 		return args
 	}
-	result := []string{}
+	var result []string
 	result = append(result, args...)
 	for i := 2; i < len(result); i++ {
 		values := strings.SplitN(result[i], "=", 2)
