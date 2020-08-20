@@ -43,6 +43,7 @@ var (
 // LabelOptions the options for the command
 type Options struct {
 	Dir              string
+	SourceDir        string
 	VersionStreamDir string
 	Backend          string
 	VaultMountPoint  string
@@ -67,7 +68,8 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 			helper.CheckErr(err)
 		},
 	}
-	cmd.Flags().StringVarP(&o.Dir, "dir", "d", "config-root", "the directory to recursively look for the *.yaml or *.yml files")
+	cmd.Flags().StringVarP(&o.Dir, "dir", "d", "config-root", "the directory to look for the version stream and requirements")
+	cmd.Flags().StringVarP(&o.SourceDir, "source-dir", "", "", "the source directory to recursively look for the *.yaml or *.yml files")
 	cmd.Flags().StringVarP(&o.VersionStreamDir, "version-stream-dir", "", "versionStream", "the directory containing the version stream")
 	cmd.Flags().StringVarP(&o.VaultMountPoint, "vault-mount-point", "m", "kubernetes", "the vault authentication mount point")
 	cmd.Flags().StringVarP(&o.VaultRole, "vault-role", "r", vaults.DefaultVaultNamespace, "the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html")
@@ -153,7 +155,10 @@ func (o *Options) Run() error {
 		return true, nil
 	}
 
-	err := kyamls.ModifyFiles(dir, modifyFn, secretFilter)
+	if o.SourceDir == "" {
+		o.SourceDir = dir
+	}
+	err := kyamls.ModifyFiles(o.SourceDir, modifyFn, secretFilter)
 	if err != nil {
 		return errors.Wrapf(err, "failed to modify files")
 	}
