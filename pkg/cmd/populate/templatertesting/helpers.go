@@ -16,7 +16,7 @@ import (
 )
 
 // AssertValidXML asserts that the given text is valid XML
-func AssertValidXML(t *testing.T, text string, message string) {
+func AssertValidXML(t *testing.T, text, message string) {
 	require.NotEmpty(t, text, message)
 
 	decoder := xml.NewDecoder(strings.NewReader(text))
@@ -33,7 +33,7 @@ func AssertValidXML(t *testing.T, text string, message string) {
 }
 
 // AssertValidJSON asserts that the given text is valid JSON
-func AssertValidJSON(t *testing.T, text string, message string) {
+func AssertValidJSON(t *testing.T, text, message string) {
 	var j map[string]interface{}
 	err := json.Unmarshal([]byte(text), &j)
 	require.NoError(t, err, "failed to parse JSON for %s", message)

@@ -31,7 +31,7 @@ type TestCase struct {
 	// Property name to render; this name is used to find the template in the schema
 	Property string
 
-	// TestName is the name of teh test
+	// TestName is the name of the test
 	TestName string
 
 	// ExpectedFile expected file name to compare the generated results against
