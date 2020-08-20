@@ -122,8 +122,7 @@ func TestPopulate(t *testing.T) {
 				Name:      es.Name,
 				Namespace: ns,
 			},
-			Data: map[string][]byte{
-			},
+			Data: map[string][]byte{},
 		}
 
 		for _, d := range es.Spec.Data {

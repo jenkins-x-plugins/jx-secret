@@ -65,4 +65,3 @@ func (s *FakeVaultSecrets) AssertValueEquals(t *testing.T, objectName, propertyN
 		t.Logf("secret %s has expected property %s=%s\n", objectName, propertyName, value)
 	}
 }
-

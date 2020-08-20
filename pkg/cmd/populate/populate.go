@@ -124,7 +124,6 @@ func (o *Options) Run() error {
 				m[key] = keyProperties
 			}
 
-
 			currentValue := ""
 			if r.Secret != nil && r.Secret.Data != nil {
 				currentValue = string(r.Secret.Data[d.Name])
