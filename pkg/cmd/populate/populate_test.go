@@ -98,7 +98,8 @@ func TestPopulate(t *testing.T) {
 				if ann == nil {
 					ann = map[string]string{}
 				}
-				value, err := schemas.ToAnnotationString(obj)
+				value := ""
+				value, err = schemas.ToAnnotationString(obj)
 				require.NoError(t, err, "failed to create annotation value for schema %#v on secret %s", obj, name)
 				ann[extsecrets.SchemaObjectAnnotation] = value
 				u.SetAnnotations(ann)

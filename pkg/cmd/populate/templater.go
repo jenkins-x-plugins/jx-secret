@@ -12,7 +12,7 @@ import (
 )
 
 // evaluateTemplate evaluates the go template to create the value
-func (o *Options) evaluateTemplate(secretName string, property string, templateText string) (string, error) {
+func (o *Options) evaluateTemplate(secretName, property, templateText string) (string, error) {
 	funcMap := sprig.TxtFuncMap()
 
 	// represents the helm template function
@@ -41,5 +41,5 @@ func (o *Options) evaluateTemplate(secretName string, property string, templateT
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to evaluate template to create value of Secret %s property %s", secretName, property)
 	}
-	return string(buf.Bytes()), nil
+	return buf.String(), nil
 }

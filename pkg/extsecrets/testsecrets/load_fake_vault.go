@@ -55,7 +55,7 @@ func (s *FakeVaultSecrets) AssertHasValue(t *testing.T, objectName, propertyName
 }
 
 // AssertValueEquals asserts the given property value
-func (s *FakeVaultSecrets) AssertValueEquals(t *testing.T, objectName, propertyName string, expectedValue string) {
+func (s *FakeVaultSecrets) AssertValueEquals(t *testing.T, objectName, propertyName, expectedValue string) {
 	object := s.Objects[objectName]
 	if assert.NotNil(t, object, "no object found for %s", objectName) {
 		value := object[propertyName]

@@ -429,12 +429,12 @@ func (o *Options) findSchemaSchemaObject(node *yaml.RNode, path string) (*schema
 }
 
 func (o *Options) findSchemaObjectAnnotation(node *yaml.RNode, path string) (string, error) {
-	schema, err := o.findSchemaSchemaObject(node, path)
-	if schema == nil || err != nil {
+	sch, err := o.findSchemaSchemaObject(node, path)
+	if sch == nil || err != nil {
 		return "", err
 	}
 	// lets convert to YAML so we can store it as an annotation
-	text, err := schemas.ToAnnotationString(schema)
+	text, err := schemas.ToAnnotationString(sch)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to convert schema for path %s to YAML", path)
 	}
