@@ -188,7 +188,7 @@ string
 </em>
 </td>
 <td>
-<p>Name name of the secret entry</p>
+<p>Name name of the secret data entry</p>
 </td>
 </tr>
 <tr>
@@ -399,5 +399,5 @@ Refer to the Kubernetes API documentation for the fields of the
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>16c22be</code>.
+on git commit <code>5106684</code>.
 </em></p>
