@@ -8,7 +8,9 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/files"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"gopkg.in/validator.v2"
 
@@ -76,6 +78,22 @@ func ToAnnotationString(s interface{}) (string, error) {
 		return "", errors.Wrapf(err, "failed to marshal object %v to JSON", s)
 	}
 	return string(data), nil
+}
+
+// ObjectFromObjectMeta returns the schema object for the given object metadata
+func ObjectFromObjectMeta(m *metav1.ObjectMeta) (*v1alpha1.Object, error) {
+	if m == nil {
+		return nil, nil
+	}
+	ann := m.Annotations
+	if ann == nil {
+		return nil, nil
+	}
+	text := ann[extsecrets.SchemaObjectAnnotation]
+	if text == "" {
+		return nil, nil
+	}
+	return ObjectFromAnnotationString(text)
 }
 
 // ObjectFromAnnotationString converts the string to a schema object
