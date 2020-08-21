@@ -8,13 +8,10 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner/fakerunner"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"k8s.io/apimachinery/pkg/runtime"
-	dynfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -28,7 +25,6 @@ func (r *Runner) Run(t *testing.T) {
 
 	_, o := populate.NewCmdPopulate()
 	o.NoWait = true
-	scheme := runtime.NewScheme()
 
 	ns := r.Namespace
 	if ns == "" {
@@ -37,14 +33,6 @@ func (r *Runner) Run(t *testing.T) {
 	kubeObjects := r.KubeObjects
 	o.Namespace = r.Namespace
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
-
-	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "secrets"))
-	err = AddSchemaAnnotations(t, schema, dynObjects)
-	require.NoError(t, err, "failed to add the schema annotations")
-
-	fakeDynClient := dynfake.NewSimpleDynamicClient(scheme, dynObjects...)
-	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
-	require.NoError(t, err, "failed to create fake extsecrets Client")
 
 	runner := &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run
