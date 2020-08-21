@@ -109,9 +109,9 @@ func (o *Options) Run() error {
 func (o *Options) applyDefaults() error {
 	s := &o.SecretMapping
 
-	//
+	var err error
 	if s.Spec.Defaults.BackendType == v1alpha1.BackendTypeGSM {
-		err := o.applyGSMDefaults(&s.Spec.Defaults.GcpSecretsManager)
+		s.Spec.Defaults.GcpSecretsManager, err = o.applyGSMDefaults(s.Spec.Defaults.GcpSecretsManager)
 		if err != nil {
 			return errors.Wrapf(err, "failed to apply defaults to GcpSecretsManager")
 		}
@@ -120,7 +120,7 @@ func (o *Options) applyDefaults() error {
 	for k := range s.Spec.Secrets {
 		secret := &s.Spec.Secrets[k]
 		if secret.BackendType == v1alpha1.BackendTypeGSM {
-			err := o.applyGSMDefaults(&secret.GcpSecretsManager)
+			secret.GcpSecretsManager, err = o.applyGSMDefaults(secret.GcpSecretsManager)
 			if err != nil {
 				return errors.Wrapf(err, "failed to apply defaults to GcpSecretsManager for secret %s", secret.Name)
 			}
@@ -129,24 +129,24 @@ func (o *Options) applyDefaults() error {
 	return nil
 }
 
-func (o *Options) applyGSMDefaults(gsmConfig *v1alpha1.GcpSecretsManager) error {
+func (o *Options) applyGSMDefaults(gsmConfig *v1alpha1.GcpSecretsManager) (*v1alpha1.GcpSecretsManager, error) {
 	if gsmConfig == nil {
 		gsmConfig = &v1alpha1.GcpSecretsManager{}
 	}
 	if gsmConfig.ProjectID == "" {
 		if o.requirements.Cluster.ProjectID == "" {
-			return errors.New("found an empty gcp project id and no requirements.Cluster.ProjectID")
+			return gsmConfig, errors.New("found an empty gcp project id and no requirements.Cluster.ProjectID")
 		}
 		gsmConfig.ProjectID = o.requirements.Cluster.ProjectID
 	}
 	if gsmConfig.UniquePrefix == "" {
 		if o.requirements.Cluster.ClusterName == "" {
-			return errors.New("found an empty gcp project id and no requirements.Cluster.ClusterName")
+			return gsmConfig, errors.New("found an empty gcp project id and no requirements.Cluster.ClusterName")
 		}
 		gsmConfig.UniquePrefix = o.requirements.Cluster.ClusterName
 	}
 	if gsmConfig.Version == "" {
 		gsmConfig.Version = "latest"
 	}
-	return nil
+	return gsmConfig, nil
 }

@@ -43,8 +43,9 @@ type SecretMappingSpec struct {
 type Defaults struct {
 	// DefaultBackendType the default back end to use if there's no specific mapping
 	BackendType BackendType `json:"backendType,omitempty" validate:"nonzero"`
+
 	// GcpSecretsManager config
-	GcpSecretsManager GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
+	GcpSecretsManager *GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
 }
 
 // SecretMappingList contains a list of SecretMapping
@@ -68,7 +69,7 @@ type SecretRule struct {
 	// Mappings one more mappings
 	Mappings []Mapping `json:"mappings,omitempty"`
 	// GcpSecretsManager config
-	GcpSecretsManager GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
+	GcpSecretsManager *GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
 }
 
 // BackendType describes a secrets backend
@@ -183,6 +184,9 @@ func (c *SecretMapping) DestinationString(rule *SecretRule, mapping *Mapping) st
 
 	switch backend {
 	case BackendTypeGSM:
+		if rule.GcpSecretsManager == nil {
+			rule.GcpSecretsManager = &GcpSecretsManager{}
+		}
 		projectID := rule.GcpSecretsManager.ProjectID
 		if projectID == "" {
 			projectID = defaults.GcpSecretsManager.ProjectID
