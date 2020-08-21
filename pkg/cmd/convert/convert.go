@@ -111,6 +111,9 @@ func (o *Options) Run() error {
 		}
 
 		if secret.BackendType == v1alpha1.BackendTypeGSM {
+			if secret.GcpSecretsManager == nil {
+				secret.GcpSecretsManager = &v1alpha1.GcpSecretsManager{}
+			}
 			if secret.GcpSecretsManager.ProjectID != "" {
 				err = kyamls.SetStringValue(node, path, secret.GcpSecretsManager.ProjectID, "spec", "projectId")
 				if err != nil {
@@ -290,7 +293,7 @@ func (o *Options) modifyGSM(rNode *yaml.RNode, field, secretName, path string) e
 
 		}
 		secret := o.SecretMapping.FindSecret(secretName)
-		if secret != nil {
+		if secret != nil && secret.GcpSecretsManager != nil {
 			if secret.GcpSecretsManager.Version != "" {
 				version = secret.GcpSecretsManager.Version
 			}
@@ -400,6 +403,15 @@ func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, e
 		err = node.PipeE(yaml.SetAnnotation(extsecrets.SchemaObjectAnnotation, schemaAnnotation))
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to add mandatory annotation to file %s", path)
+		}
+
+		templateAnnotationsNode, err := node.Pipe(yaml.LookupCreate(yaml.MappingNode, "spec", "template", "metadata", "annotations"))
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to create the template annotations node")
+		}
+		err = templateAnnotationsNode.PipeE(yaml.SetField(extsecrets.SchemaObjectAnnotation, yaml.NewScalarRNode(schemaAnnotation)))
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to add template annotation to file %s", path)
 		}
 	}
 	return true, nil
