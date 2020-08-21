@@ -26,10 +26,6 @@ func (r *Runner) Run(t *testing.T) {
 	_, o := populate.NewCmdPopulate()
 	o.NoWait = true
 
-	ns := r.Namespace
-	if ns == "" {
-		ns = "jx"
-	}
 	kubeObjects := r.KubeObjects
 	o.Namespace = r.Namespace
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
