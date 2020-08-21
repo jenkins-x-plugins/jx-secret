@@ -78,16 +78,8 @@ func (p *SecretPair) SchemaObject() (*schema.Object, error) {
 	if p.schemaObject != nil {
 		return p.schemaObject, nil
 	}
-	ann := p.ExternalSecret.Annotations
-	if ann == nil {
-		return nil, nil
-	}
-	text := ann[extsecrets.SchemaObjectAnnotation]
-	if text == "" {
-		return nil, nil
-	}
 	var err error
-	p.schemaObject, err = schemas.ObjectFromAnnotationString(text)
+	p.schemaObject, err = schemas.ObjectFromObjectMeta(&p.ExternalSecret.ObjectMeta)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to load schema object from ExternalSecret annotation for %s", p.ExternalSecret.Name)
 	}
