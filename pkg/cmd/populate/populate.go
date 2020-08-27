@@ -9,6 +9,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
+	"github.com/jenkins-x/jx-kube-client/pkg/kubeclient"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
@@ -227,6 +228,17 @@ func (o *Options) loadGenerators() {
 	}
 	o.Generators["hmac"] = generators.Hmac
 	o.Generators["password"] = generators.Password
-	o.Generators["gitOperator.username"] = generators.SecretEntry(o.KubeClient, o.Namespace, "jx-boot", "username")
-	o.Generators["gitOperator.password"] = generators.SecretEntry(o.KubeClient, o.Namespace, "jx-boot", "password")
+	ns := o.Namespace
+	if ns == "" {
+		var err error
+		ns, err = kubeclient.CurrentNamespace()
+		if err != nil {
+			log.Logger().Warnf("failed to get current namespace %s", err.Error())
+		}
+		if ns == "" {
+			ns = "jx"
+		}
+	}
+	o.Generators["gitOperator.username"] = generators.SecretEntry(o.KubeClient, ns, "jx-boot", "username")
+	o.Generators["gitOperator.password"] = generators.SecretEntry(o.KubeClient, ns, "jx-boot", "password")
 }

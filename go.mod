@@ -13,6 +13,7 @@ require (
 	github.com/jenkins-x/gen-crd-api-reference-docs v0.1.6 // indirect
 	github.com/jenkins-x/jx-api v0.0.17
 	github.com/jenkins-x/jx-helpers v1.0.46
+	github.com/jenkins-x/jx-kube-client v0.0.8
 	github.com/jenkins-x/jx-logging v0.0.11
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
