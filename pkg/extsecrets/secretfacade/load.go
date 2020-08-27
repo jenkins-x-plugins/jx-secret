@@ -20,7 +20,7 @@ func (o *Options) Load() ([]*SecretPair, error) {
 			return answer, errors.Wrapf(err, "failed to create an extsecret Client")
 		}
 	}
-	o.KubeClient, o.Namespace, err = kube.LazyCreateKubeClientAndNamespace(o.KubeClient, o.Namespace)
+	o.KubeClient, err = kube.LazyCreateKubeClient(o.KubeClient)
 	if err != nil {
 		return answer, errors.Wrapf(err, "failed to create kube Client")
 	}
