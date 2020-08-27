@@ -120,6 +120,7 @@ func TestEditLocal(t *testing.T) {
 	runner := &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run
 
+	/* #nosec */
 	const expectedDockerPwd = "dummyDockerPwd"
 	const expectedPipelineToken = "dummyPipelineToken"
 	input := &fakeinput.FakeInput{

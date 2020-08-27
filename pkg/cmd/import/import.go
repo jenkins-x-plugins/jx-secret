@@ -126,7 +126,8 @@ func (o *Options) Run() error {
 			property := data.Property
 			handler := o.Handlers[key]
 			if handler == nil {
-				e, err := factory.NewEditor(o.EditorCache, r, o.CommandRunner, o.KubeClient)
+				var e editor.Interface
+				e, err = factory.NewEditor(o.EditorCache, r, o.CommandRunner, o.KubeClient)
 				if err != nil {
 					return errors.Wrapf(err, "failed to create e for secret %s of type %s", name, backendType)
 				}

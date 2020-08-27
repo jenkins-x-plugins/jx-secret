@@ -16,6 +16,7 @@ func TestLocalEditor(t *testing.T) {
 	kubeClient := fake.NewSimpleClientset()
 
 	ns := "jx"
+	/* #nosec */
 	secretName := "knative-docker-user-pass"
 	propertyName := "token"
 	expectedPropertyValue := "someTokenValue"
