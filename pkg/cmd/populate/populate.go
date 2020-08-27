@@ -176,7 +176,7 @@ func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, pr
 
 	templateText := propertySchema.Template
 	if templateText != "" {
-		return o.EvaluateTemplate(secretName, property, templateText)
+		return o.EvaluateTemplate(s.ExternalSecret.Namespace, secretName, property, templateText)
 	}
 
 	// for now don't regenerate if we have a current value

@@ -13,16 +13,16 @@ import (
 )
 
 // EvaluateTemplate evaluates the go template to create the value
-func (o *Options) EvaluateTemplate(secretName, property, templateText string) (string, error) {
+func (o *Options) EvaluateTemplate(ns, secretName, property, templateText string) (string, error) {
 	funcMap := sprig.TxtFuncMap()
 
 	// template function to lookup a value in a secret:
 	//
 	// use like this: `{{ secret "my-secret-name" "key-name" }}
 	funcMap["secret"] = func(lookupSecret, lookupKey string) string {
-		secret, err := o.KubeClient.CoreV1().Secrets(o.Namespace).Get(lookupSecret, metav1.GetOptions{})
+		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(lookupSecret, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
-			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, o.Namespace, secretName, property)
+			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
 			return ""
 		}
 		answer := ""
@@ -36,9 +36,9 @@ func (o *Options) EvaluateTemplate(secretName, property, templateText string) (s
 	//
 	// use like this: `{{ auth "my-secret-name" "username-key" "password-key }}
 	funcMap["auth"] = func(lookupSecret, userKey, passwordKey string) string {
-		secret, err := o.KubeClient.CoreV1().Secrets(o.Namespace).Get(lookupSecret, metav1.GetOptions{})
+		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(lookupSecret, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
-			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, o.Namespace, secretName, property)
+			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
 			return ""
 		}
 		answer := ""
