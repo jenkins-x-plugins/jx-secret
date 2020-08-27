@@ -47,7 +47,7 @@ func NewCmdVerify() (*cobra.Command, *Options) {
 			helper.CheckErr(err)
 		},
 	}
-	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
+	cmd.Flags().StringVarP(&o.Namespace, "namespace", "n", "", "the namespace to filter the ExternalSecret resources")
 	return cmd, o
 }
 
@@ -64,12 +64,17 @@ func (o *Options) Run() error {
 	for _, r := range pairs {
 		name := r.ExternalSecret.Name
 		state := r.Error
+		ns := r.ExternalSecret.Namespace
+		fullName := name
+		if ns != "" && o.Namespace == "" {
+			fullName = ns + "/" + name
+		}
 		if state == nil {
-			t.AddRow(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.KeyAndNames(), ", "))))
+			t.AddRow(fullName, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.KeyAndNames(), ", "))))
 		} else {
 			o.Results = append(o.Results, state)
 			for _, e := range state.EntryErrors {
-				t.AddRow(name, termcolor.ColorWarning(fmt.Sprintf("key %s missing properties: %s", e.Key, strings.Join(e.Properties, ", "))))
+				t.AddRow(fullName, termcolor.ColorWarning(fmt.Sprintf("key %s missing properties: %s", e.Key, strings.Join(e.Properties, ", "))))
 			}
 		}
 	}
