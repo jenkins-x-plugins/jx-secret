@@ -78,7 +78,6 @@ func (o *Options) Run() error {
 	}
 	o.loadGenerators()
 
-	editors := map[string]editor.Interface{}
 	waited := map[string]bool{}
 
 	for _, r := range results {
@@ -94,13 +93,9 @@ func (o *Options) Run() error {
 			waited[backendType] = true
 		}
 
-		secEditor := editors[backendType]
-		if secEditor == nil {
-			secEditor, err = factory.NewEditor(&r.ExternalSecret, o.CommandRunner, o.KubeClient)
-			if err != nil {
-				return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
-			}
-			editors[backendType] = secEditor
+		secEditor, err := factory.NewEditor(o.EditorCache, &r.ExternalSecret, o.CommandRunner, o.KubeClient)
+		if err != nil {
+			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
 		}
 
 		data := r.ExternalSecret.Spec.Data

@@ -4,6 +4,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/kube"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,6 +12,9 @@ import (
 
 // Load loads the secret pairs
 func (o *Options) Load() ([]*SecretPair, error) {
+	if o.EditorCache == nil {
+		o.EditorCache = map[string]editor.Interface{}
+	}
 	var answer []*SecretPair
 	var err error
 
