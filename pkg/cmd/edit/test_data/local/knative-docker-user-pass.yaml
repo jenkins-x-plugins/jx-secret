@@ -1,0 +1,31 @@
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"kubernetes-client.io/v1","kind":"ExternalSecret","metadata":{"annotations":{},"labels":{"gitops.jenkins-x.io/pipeline":"environment"},"name":"knative-docker-user-pass","namespace":"jx"},"spec":{"backendType":"local","data":[{"key":"secret/data/knative/docker/user/pass","name":"password","property":"password"},{"key":"secret/data/knative/docker/user/pass","name":"username","property":"username"}],"template":{"metadata":{"annotations":{"tekton.dev/docker-0":"https://index.docker.io/v1/"}},"type":"kubernetes.io/basic-auth"}}}
+  creationTimestamp: "2020-06-18T15:04:47Z"
+  generation: 1
+  labels:
+    gitops.jenkins-x.io/pipeline: environment
+  name: knative-docker-user-pass
+  namespace: jx
+  resourceVersion: "2929070"
+  selfLink: /apis/kubernetes-client.io/v1/namespaces/jx/externalsecrets/knative-docker-user-pass
+  uid: 0d31a170-b175-11ea-8213-42010a840240
+spec:
+  backendType: local
+  data:
+  - name: password
+    property: password
+  - name: username
+    property: username
+  template:
+    metadata:
+      annotations:
+        tekton.dev/docker-0: https://index.docker.io/v1/
+    type: kubernetes.io/basic-auth
+status:
+  lastSync: "2020-06-22T15:27:19.201Z"
+  observedGeneration: 1
+  status: ERROR, Status 404

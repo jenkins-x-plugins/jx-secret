@@ -4,6 +4,7 @@ import (
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	schema "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/schemas"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -19,6 +20,9 @@ type Options struct {
 
 	// ExternalSecrets the loaded secrets
 	ExternalSecrets []*v1.ExternalSecret
+
+	// EditorCache the optional cache of editors
+	EditorCache map[string]editor.Interface
 }
 
 // SecretError returns an error for a secret

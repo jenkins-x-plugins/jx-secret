@@ -84,18 +84,14 @@ func (o *Options) Run() error {
 		o.Input = survey.NewInput()
 	}
 
-	editors := map[string]editor.Interface{}
-	for _, r := range results {
+	for i := range results {
+		r := results[i]
 		name := r.ExternalSecret.Name
-		backendType := r.ExternalSecret.Spec.BackendType
-		secEditor := editors[backendType]
-		if secEditor == nil {
-			secEditor, err = factory.NewEditor(&r.ExternalSecret, o.CommandRunner, o.KubeClient)
-			if err != nil {
-				return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
-			}
-			editors[backendType] = secEditor
+		secEditor, err := factory.NewEditor(o.EditorCache, &r.ExternalSecret, o.CommandRunner, o.KubeClient)
+		if err != nil {
+			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
 		}
+
 		// todo do we need to find any surveys that require a confirm?
 		// order them somehow?
 		// maybe skip any?

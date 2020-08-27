@@ -43,6 +43,9 @@ type Options struct {
 	FailOnUnknownKey bool
 	ExternalSecrets  []*v1.ExternalSecret
 	Handlers         map[string]*backendHandler
+
+	// EditorCache the optional cache of editors
+	EditorCache map[string]editor.Interface
 }
 
 // NewCmdImport creates a command object for the command
@@ -67,6 +70,9 @@ func NewCmdImport() (*cobra.Command, *Options) {
 
 // Run implements the command
 func (o *Options) Run() error {
+	if o.EditorCache == nil {
+		o.EditorCache = map[string]editor.Interface{}
+	}
 	fileName := o.File
 	if fileName == "" {
 		return options.MissingOption("file")
@@ -108,8 +114,6 @@ func (o *Options) Run() error {
 
 	log.Logger().Debugf("found %d ExternalSecret resources", len(resources))
 
-	editors := map[string]editor.Interface{}
-
 	for _, r := range resources {
 		name := r.Name
 		backendType := r.Spec.BackendType
@@ -122,13 +126,10 @@ func (o *Options) Run() error {
 			property := data.Property
 			handler := o.Handlers[key]
 			if handler == nil {
-				e := editors[backendType]
-				if e == nil {
-					e, err = factory.NewEditor(r, o.CommandRunner, o.KubeClient)
-					if err != nil {
-						return errors.Wrapf(err, "failed to create e for secret %s of type %s", name, backendType)
-					}
-					editors[backendType] = e
+				var e editor.Interface
+				e, err = factory.NewEditor(o.EditorCache, r, o.CommandRunner, o.KubeClient)
+				if err != nil {
+					return errors.Wrapf(err, "failed to create e for secret %s of type %s", name, backendType)
 				}
 				handler = &backendHandler{
 					Properties: map[string][]string{},
