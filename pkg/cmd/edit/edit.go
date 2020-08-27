@@ -188,6 +188,9 @@ func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1.Data) (str
 func (o *Options) propertyMessage(s *secretfacade.SecretPair, d *v1.Data) (string, string) {
 	name := s.ExternalSecret.Name
 	property := d.Property
+	if property == "" {
+		property = d.Name
+	}
 	return name + "." + property, ""
 }
 
