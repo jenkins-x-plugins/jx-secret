@@ -80,6 +80,8 @@ const (
 	BackendTypeVault BackendType = "vault"
 	// BackendTypeGSM Google Secrets Manager is the Backed service
 	BackendTypeGSM BackendType = "gcpSecretsManager"
+	// BackendTypeLocal local secrets - i.e. vanilla k8s Secrets
+	BackendTypeLocal BackendType = "local"
 	// BackendTypeNone if none is configured
 	BackendTypeNone BackendType = ""
 )
