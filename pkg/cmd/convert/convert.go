@@ -200,6 +200,9 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 
 				case v1alpha1.BackendTypeGSM:
 					err = o.modifyGSM(rNode, field, secretName, path)
+
+				case v1alpha1.BackendTypeLocal:
+					err = o.modifyLocal(rNode, field, secretName, path)
 				}
 
 				if err != nil {
@@ -260,6 +263,22 @@ func (o *Options) modifyVault(rNode *yaml.RNode, field, secretName, path string)
 		return err
 	}
 	err = kyamls.SetStringValue(rNode, path, property, "property")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (o *Options) modifyLocal(rNode *yaml.RNode, field, secretName, path string) error {
+	err := kyamls.SetStringValue(rNode, path, field, "name")
+	if err != nil {
+		return err
+	}
+	err = kyamls.SetStringValue(rNode, path, field, "key")
+	if err != nil {
+		return err
+	}
+	err = kyamls.SetStringValue(rNode, path, field, "property")
 	if err != nil {
 		return err
 	}
