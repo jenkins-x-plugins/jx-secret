@@ -269,7 +269,7 @@ func (o *Options) modifyVault(rNode *yaml.RNode, field, secretName, path string)
 	return nil
 }
 
-func (o *Options) modifyLocal(rNode *yaml.RNode, field, secretName, path string) error {
+func (o *Options) modifyLocal(rNode *yaml.RNode, field, _, path string) error {
 	err := kyamls.SetStringValue(rNode, path, field, "name")
 	if err != nil {
 		return err
