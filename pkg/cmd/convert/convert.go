@@ -269,16 +269,30 @@ func (o *Options) modifyVault(rNode *yaml.RNode, field, secretName, path string)
 	return nil
 }
 
-func (o *Options) modifyLocal(rNode *yaml.RNode, field, _, path string) error {
+func (o *Options) modifyLocal(rNode *yaml.RNode, field, secretName, path string) error {
+	key := field
+	property := field
+	if o.SecretMapping != nil {
+		mapping := o.SecretMapping.Find(secretName, field)
+		if mapping != nil {
+			if mapping.Key != "" {
+				key = mapping.Key
+			}
+			if mapping.Property != "" {
+				property = mapping.Property
+			}
+		}
+	}
+
 	err := kyamls.SetStringValue(rNode, path, field, "name")
 	if err != nil {
 		return err
 	}
-	err = kyamls.SetStringValue(rNode, path, field, "key")
+	err = kyamls.SetStringValue(rNode, path, key, "key")
 	if err != nil {
 		return err
 	}
-	err = kyamls.SetStringValue(rNode, path, field, "property")
+	err = kyamls.SetStringValue(rNode, path, property, "property")
 	if err != nil {
 		return err
 	}
