@@ -18,31 +18,20 @@ var (
 
 type client struct {
 	kubeClient kubernetes.Interface
-	namespace  string
-	name       string
-	typeName   string
+	extsec     *v1.ExternalSecret
 }
 
-func NewEditor(kubeClient kubernetes.Interface, secret *v1.ExternalSecret) (editor.Interface, error) {
-	name := secret.Name
-	namespace := secret.Namespace
-	if name == "" {
+func NewEditor(kubeClient kubernetes.Interface, extsec *v1.ExternalSecret) (editor.Interface, error) {
+	if extsec.Name == "" {
 		return nil, errors.Errorf("missing ExternalSecret.name")
 	}
-	if namespace == "" {
-		return nil, errors.Errorf("missing ExternalSecret.namespace for external secret %s", name)
-	}
-
-	typeName := secret.Spec.Template.Type
-	if typeName == "" {
-		typeName = string(corev1.SecretTypeOpaque)
+	if extsec.Namespace == "" {
+		return nil, errors.Errorf("missing ExternalSecret.namespace for external secret %s", extsec.Name)
 	}
 
 	c := &client{
 		kubeClient: kubeClient,
-		namespace:  namespace,
-		name:       name,
-		typeName:   typeName,
+		extsec:     extsec,
 	}
 	return c, nil
 }
@@ -50,10 +39,17 @@ func NewEditor(kubeClient kubernetes.Interface, secret *v1.ExternalSecret) (edit
 // Write writes the properties to the Secret
 func (c *client) Write(properties *editor.KeyProperties) error {
 	create := false
-	name := c.name
-	ns := c.namespace
+	extsec := c.extsec
+	name := extsec.Name
+	ns := extsec.Namespace
+	typeName := extsec.Spec.Template.Type
+	if typeName == "" {
+		typeName = string(corev1.SecretTypeOpaque)
+	}
+
 	secretInterface := c.kubeClient.CoreV1().Secrets(ns)
 	secret, err := secretInterface.Get(name, metav1.GetOptions{})
+
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(err, "failed to ")
@@ -67,13 +63,32 @@ func (c *client) Write(properties *editor.KeyProperties) error {
 			Type: corev1.SecretTypeOpaque,
 		}
 	}
-	secret.Type = corev1.SecretType(c.typeName)
+	secret.Type = corev1.SecretType(typeName)
 	if secret.Data == nil {
 		secret.Data = map[string][]byte{}
 	}
 
 	for _, pv := range properties.Properties {
 		secret.Data[pv.Property] = []byte(pv.Value)
+	}
+
+	// lets copy any annotations from the template
+	md := extsec.Spec.Template.Metadata
+	if md.Annotations != nil {
+		if secret.Annotations == nil {
+			secret.Annotations = map[string]string{}
+		}
+		for k, v := range md.Annotations {
+			secret.Annotations[k] = v
+		}
+	}
+	if md.Labels != nil {
+		if secret.Labels == nil {
+			secret.Labels = map[string]string{}
+		}
+		for k, v := range md.Labels {
+			secret.Labels[k] = v
+		}
 	}
 
 	if create {
