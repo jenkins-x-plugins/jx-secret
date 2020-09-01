@@ -151,7 +151,7 @@ func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1.Data) (str
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to find object schema for object %s property %s", name, property)
 	}
-	propertySpec := object.FindProperty(property)
+	propertySpec := object.FindProperty(d.Name)
 	if propertySpec == nil {
 		message, help := o.propertyMessage(s, d)
 		value, err = o.Input.PickPassword(message, help) //nolint:govet
