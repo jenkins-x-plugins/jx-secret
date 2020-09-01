@@ -27,7 +27,7 @@ func TestPopulate(t *testing.T) {
 	require.NoError(t, err, "failed to find vault binary plugin")
 
 	ns := "jx"
-	expectedMavenSettingsFile := filepath.Join("test_data", "expected", "jenkins-maven-settings", "settingsXml", "nexus.xml")
+	expectedMavenSettingsFile := filepath.Join("test_data", "expected", "jenkins-maven-settings", "settings.xml", "nexus.xml")
 	require.FileExists(t, expectedMavenSettingsFile)
 	expectedMaveSettingsData, err := ioutil.ReadFile(expectedMavenSettingsFile)
 	require.NoError(t, err, "failed to load file %s", expectedMavenSettingsFile)

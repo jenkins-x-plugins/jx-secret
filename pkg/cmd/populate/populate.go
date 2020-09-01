@@ -127,7 +127,7 @@ func (o *Options) Run() error {
 				currentValue = string(r.Secret.Data[d.Name])
 			}
 			var value string
-			value, err = o.generateSecretValue(r, name, property, currentValue)
+			value, err = o.generateSecretValue(r, name, d.Name, currentValue)
 			if err != nil {
 				return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, key, name)
 			}
