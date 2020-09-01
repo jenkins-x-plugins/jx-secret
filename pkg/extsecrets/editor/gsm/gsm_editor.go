@@ -89,6 +89,15 @@ func (c *client) Write(properties *editor.KeyProperties) error {
 }
 
 func (c *client) writeTemporarySecretPropertiesJSON(properties *editor.KeyProperties, file *os.File) error {
+	// if we only have one property and its got an empty property name lets just write the value
+	if len(properties.Properties) == 1 && properties.Properties[0].Property == "" {
+		_, err := file.Write([]byte(properties.Properties[0].Value))
+		if err != nil {
+			return errors.Wrap(err, "failed to write property value to temporary file")
+		}
+		return nil
+	}
+
 	// write properties as a key values ina  json file so we can upload to Google Secrets Manager
 	values := map[string]string{}
 	for _, p := range properties.Properties {
