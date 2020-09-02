@@ -26,7 +26,7 @@ require (
 	k8s.io/apimachinery v0.17.6
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	knative.dev/pkg v0.0.0-20200626182828-bce16cf78661
-	sigs.k8s.io/kustomize/kyaml v0.6.0
+	sigs.k8s.io/kustomize/kyaml v0.6.1
 	sigs.k8s.io/yaml v1.2.0
 )
 
