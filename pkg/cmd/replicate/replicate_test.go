@@ -28,12 +28,13 @@ func TestReplicate(t *testing.T) {
 	_, o := replicate.NewCmdReplicate()
 	o.Dir = tmpDir
 	o.Name = []string{"knative-docker-user-pass", "lighthouse-oauth-token"}
-	o.To = []string{"jx-staging", "jx-production"}
 
 	err = o.Run()
 	require.NoError(t, err, "failed to replicate to external secrets in dir %s", tmpDir)
 
 	t.Logf("replicated in test dir %s\n", tmpDir)
+
+	require.Equal(t, []string{"jx-staging", "jx-production"}, o.To, "should have found the environment namespaces")
 
 	for _, ns := range o.To {
 		files := []string{
