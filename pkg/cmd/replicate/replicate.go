@@ -132,34 +132,11 @@ func (o *Options) Run() error {
 			}
 			log.Logger().Infof("replicated ExternalSecret %s/%s to %s", ns, name, outFile)
 		}
-		backend, err := node.Pipe(yaml.Lookup("spec", "backendType"))
+		err := o.addReplciatedLocalBackendAnnotation(path)
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to find backendType for %s", path)
+			return false, errors.Wrapf(err, "failed to annotate replicated local backend")
 		}
-		if backend == nil {
-			return false, nil
-		}
-
-		backendType, err := backend.String()
-		if err != nil {
-			return false, errors.Wrapf(err, "failed to get backendType for %s", path)
-		}
-		backendType = strings.TrimSpace(backendType)
-		if backendType != "local" {
-			log.Logger().Infof("ignoring backend type %s", backendType)
-			return false, nil
-		}
-
-		// lets add an annotation
-		err = node.PipeE(yaml.SetAnnotation(extsecrets.ReplicateAnnotation, strings.Join(o.To, ",")))
-		if err != nil {
-			return false, errors.Wrapf(err, "failed to add replicate annotation for path %s", path)
-		}
-		err = yaml.WriteFile(node, path)
-		if err != nil {
-			return false, errors.Wrapf(err, "failed to save file %s", path)
-		}
-		return true, nil
+		return false, nil
 	}
 
 	err := kyamls.ModifyFiles(dir, modifyFn, filter)
@@ -171,6 +148,42 @@ func (o *Options) Run() error {
 		if !found[name] {
 			log.Logger().Warnf("could not find ExternalSecret %s in namespace %s", name, o.From)
 		}
+	}
+	return nil
+}
+
+func (o *Options) addReplciatedLocalBackendAnnotation(path string) error {
+	node, err := yaml.ReadFile(path)
+	if err != nil {
+		return errors.Wrapf(err, "failed to load %s", path)
+	}
+
+	backend, err := node.Pipe(yaml.Lookup("spec", "backendType"))
+	if err != nil {
+		return errors.Wrapf(err, "failed to find backendType for %s", path)
+	}
+	if backend == nil {
+		return nil
+	}
+
+	backendType, err := backend.String()
+	if err != nil {
+		return errors.Wrapf(err, "failed to get backendType for %s", path)
+	}
+	backendType = strings.TrimSpace(backendType)
+	if backendType != "local" {
+		log.Logger().Infof("ignoring backend type %s", backendType)
+		return nil
+	}
+
+	// lets add an annotation
+	err = node.PipeE(yaml.SetAnnotation(extsecrets.ReplicateAnnotation, strings.Join(o.To, ",")))
+	if err != nil {
+		return errors.Wrapf(err, "failed to add replicate annotation for path %s", path)
+	}
+	err = yaml.WriteFile(node, path)
+	if err != nil {
+		return errors.Wrapf(err, "failed to save file %s", path)
 	}
 	return nil
 }
