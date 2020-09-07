@@ -9,6 +9,7 @@ import (
 	importcmd "github.com/jenkins-x/jx-secret/pkg/cmd/import"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/plugins"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/replicate"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/verify"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/version"
@@ -34,6 +35,7 @@ func Main() *cobra.Command {
 	cmd.AddCommand(cobras.SplitCommand(export.NewCmdExport()))
 	cmd.AddCommand(cobras.SplitCommand(importcmd.NewCmdImport()))
 	cmd.AddCommand(cobras.SplitCommand(populate.NewCmdPopulate()))
+	cmd.AddCommand(cobras.SplitCommand(replicate.NewCmdReplicate()))
 	cmd.AddCommand(cobras.SplitCommand(verify.NewCmdVerify()))
 	cmd.AddCommand(cobras.SplitCommand(version.NewCmdVersion()))
 	cmd.AddCommand(cobras.SplitCommand(wait.NewCmdWait()))

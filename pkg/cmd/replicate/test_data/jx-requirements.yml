@@ -1,0 +1,14 @@
+cluster:
+  namespace: jx
+environments:
+  - key: dev
+    owner: ""
+    repository: ""
+  - key: staging
+    owner: ""
+    repository: ""
+  - key: production
+    owner: ""
+    repository: ""
+
+
