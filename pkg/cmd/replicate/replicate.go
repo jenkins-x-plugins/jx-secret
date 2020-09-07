@@ -20,6 +20,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -114,12 +115,17 @@ func (o *Options) Run() error {
 
 	filter := kyamls.Filter{
 		Kinds: []string{"ExternalSecret"},
+		Names: o.Name,
+	}
+	if o.Selector != "" {
+		selector, err := metav1.ParseToLabelSelector(o.Selector)
+		if err != nil {
+			return errors.Wrapf(err, "failed to parse selector %s", o.Selector)
+		}
+		filter.Selector = selector.MatchLabels
 	}
 	modifyFn := func(node *yaml.RNode, path string) (bool, error) {
 		name := kyamls.GetName(node, path)
-		if stringhelpers.StringArrayIndex(o.Name, name) < 0 {
-			return false, nil
-		}
 		found[name] = true
 
 		for _, ns := range o.To {
