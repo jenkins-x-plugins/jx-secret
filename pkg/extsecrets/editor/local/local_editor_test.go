@@ -32,9 +32,11 @@ func TestLocalEditor(t *testing.T) {
 
 	extSecret := &v1.ExternalSecret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        secretName,
-			Namespace:   ns,
-			Annotations: map[string]string{},
+			Name:      secretName,
+			Namespace: ns,
+			Annotations: map[string]string{
+				extsecrets.ReplicateAnnotation: "jx-staging,jx-production",
+			},
 		},
 		Spec: v1.ExternalSecretSpec{
 			Template: v1.Template{
@@ -72,4 +74,8 @@ func TestLocalEditor(t *testing.T) {
 	testhelpers.AssertLabel(t, labelName, expetedLabelValue, secret.ObjectMeta, message)
 	testhelpers.AssertAnnotation(t, annotationName, expectedAnnotationValue, secret.ObjectMeta, message)
 	testhelpers.AssertAnnotation(t, extsecrets.SchemaObjectAnnotation, expectedSchemaAnnotation, secret.ObjectMeta, message)
+
+	// replicated secrets
+	secret, message = testhelpers.RequireSecretExists(t, kubeClient, "jx-staging", secretName)
+	testhelpers.AssertSecretEntryEquals(t, secret, propertyName, expectedPropertyValue, message)
 }

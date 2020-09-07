@@ -1,9 +1,12 @@
 package local
 
 import (
+	"strings"
+
 	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -88,6 +91,84 @@ func (c *client) Write(properties *editor.KeyProperties) error {
 		}
 		for k, v := range md.Labels {
 			secret.Labels[k] = v
+		}
+	}
+
+	if create {
+		_, err = secretInterface.Create(secret)
+		if err != nil {
+			return errors.Wrapf(err, "failed to create Secret %s in namespace %s", name, ns)
+		}
+		log.Logger().Infof("created Secret %s in namespace %s", info(name), info(ns))
+	} else {
+		_, err = secretInterface.Update(secret)
+		if err != nil {
+			return errors.Wrapf(err, "failed to update Secret %s in namespace %s", name, ns)
+		}
+		log.Logger().Infof("updated Secret %s in namespace %s", info(name), info(ns))
+	}
+
+	// lets check for replicated secrets
+	if extsec.Annotations != nil {
+		namespaces := extsec.Annotations[extsecrets.ReplicateAnnotation]
+		if namespaces != "" {
+			nsList := strings.Split(namespaces, ",")
+			for _, tons := range nsList {
+				err = c.replicateSecretToNamespace(secret, tons)
+				if err != nil {
+					return errors.Wrapf(err, "failed to replicate Secret for local backend")
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (c *client) replicateSecretToNamespace(fromSecret *corev1.Secret, ns string) error {
+	secretInterface := c.kubeClient.CoreV1().Secrets(ns)
+	name := fromSecret.Name
+	secret, err := secretInterface.Get(name, metav1.GetOptions{})
+
+	create := false
+	if err != nil {
+		if !apierrors.IsNotFound(err) {
+			return errors.Wrapf(err, "failed to ")
+		}
+		create = true
+		secret = &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: ns,
+			},
+		}
+	}
+
+	if string(fromSecret.Type) != "" {
+		secret.Type = fromSecret.Type
+	}
+	if fromSecret.Annotations != nil {
+		if secret.Annotations == nil {
+			secret.Annotations = map[string]string{}
+		}
+		for k, v := range fromSecret.Annotations {
+			secret.Annotations[k] = v
+		}
+	}
+
+	if fromSecret.Labels != nil {
+		if secret.Labels == nil {
+			secret.Labels = map[string]string{}
+		}
+		for k, v := range fromSecret.Labels {
+			secret.Labels[k] = v
+		}
+	}
+	if fromSecret.Data != nil {
+		if secret.Data == nil {
+			secret.Data = map[string][]byte{}
+		}
+		for k, v := range fromSecret.Data {
+			secret.Data[k] = v
 		}
 	}
 
