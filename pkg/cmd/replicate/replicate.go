@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	jenkinsv1 "github.com/jenkins-x/jx-api/pkg/apis/jenkins.io/v1"
 	"github.com/jenkins-x/jx-api/pkg/config"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/pkg/cobras/templates"
@@ -13,6 +14,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/pkg/kyamls"
 	"github.com/jenkins-x/jx-helpers/pkg/options"
 	"github.com/jenkins-x/jx-helpers/pkg/stringhelpers"
+	"github.com/jenkins-x/jx-helpers/pkg/yamls"
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
@@ -27,6 +29,9 @@ var (
 `)
 
 	labelExample = templates.Examples(`
+		# replicates the labeled ExternalSecret resources to the local permanent Environment namespaces (e.g. Staging and Production)
+		%s replicate --label secret.jenkins-x.io/replica-source=true
+
 		# replicates the ExternalSecret resources to the local Environments
 		%s replicate --name=mysecretname --to jx-staging,jx-production
 	`)
@@ -39,6 +44,7 @@ type Options struct {
 	OutputDir     string
 	NamespacesDir string
 	From          string
+	Selector      string
 	Name          []string
 	To            []string
 }
@@ -58,10 +64,11 @@ func NewCmdReplicate() (*cobra.Command, *Options) {
 		},
 	}
 	cmd.Flags().StringVarP(&o.File, "file", "f", "t", "the ExternalSecret to replicate")
+	cmd.Flags().StringVarP(&o.Selector, "selector", "s", "", "defines the label selector to find the ExternalSecret resources to replicate")
+	cmd.Flags().StringArrayVarP(&o.Name, "name", "n", nil, "specifies the names of the ExternalSecrets to replicate if not using a selector")
 	cmd.Flags().StringVarP(&o.From, "from", "", "", "one or more Namespaces to replicate the ExternalSecret to")
 	cmd.Flags().StringArrayVarP(&o.To, "to", "t", nil, "one or more Namespaces to replicate the ExternalSecret to")
 	cmd.Flags().StringVarP(&o.OutputDir, "output-dir", "o", "", "the output directory which defaults to 'config-root' in the directory")
-	cmd.Flags().StringArrayVarP(&o.Name, "name", "n", nil, "one or more names of ExternalSecrets to replicate")
 	return cmd, o
 }
 
@@ -69,9 +76,6 @@ func (o *Options) Run() error {
 	path := o.File
 	if path == "" {
 		return options.MissingOption("file")
-	}
-	if len(o.To) == 0 {
-		return options.MissingOption("to")
 	}
 	if len(o.Name) == 0 {
 		return options.MissingOption("name")
@@ -93,8 +97,18 @@ func (o *Options) Run() error {
 	if o.NamespacesDir == "" {
 		o.NamespacesDir = filepath.Join(o.OutputDir, "namespaces")
 	}
-
 	dir := filepath.Join(o.NamespacesDir, o.From)
+
+	if len(o.To) == 0 {
+		err := o.discoverEnvironmentNamespaces(dir)
+		if err != nil {
+			return errors.Wrapf(err, "failed to discover the Environment namespaces in dir %s", dir)
+		}
+
+		if len(o.To) == 0 {
+			return options.MissingOption("to")
+		}
+	}
 
 	found := map[string]bool{}
 
@@ -184,6 +198,34 @@ func (o *Options) addReplciatedLocalBackendAnnotation(path string) error {
 	err = yaml.WriteFile(node, path)
 	if err != nil {
 		return errors.Wrapf(err, "failed to save file %s", path)
+	}
+	return nil
+}
+
+func (o *Options) discoverEnvironmentNamespaces(dir string) error {
+	// lets try find the environment namespaces by default
+	modifyFn := func(node *yaml.RNode, path string) (bool, error) {
+		env := &jenkinsv1.Environment{}
+		err := yamls.LoadFile(path, env)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to parse Environment: %s", path)
+		}
+		if env.Spec.Kind != jenkinsv1.EnvironmentKindTypePermanent {
+			return false, nil
+		}
+
+		ens := env.Spec.Namespace
+		if ens != "" && stringhelpers.StringArrayIndex(o.To, ens) < 0 {
+			o.To = append(o.To, ens)
+		}
+		return false, nil
+	}
+
+	err := kyamls.ModifyFiles(dir, modifyFn, kyamls.Filter{
+		Kinds: []string{"Environment"},
+	})
+	if err != nil {
+		return errors.Wrapf(err, "failed to find Environment namespaces in dir %s", dir)
 	}
 	return nil
 }
