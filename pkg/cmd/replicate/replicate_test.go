@@ -54,11 +54,11 @@ func AssertReplicate(t *testing.T, callback func(o *replicate.Options)) {
 	require.Equal(t, []string{"jx-staging", "jx-production"}, o.To, "should have found the environment namespaces")
 
 	for _, ns := range o.To {
-		files := []string{
+		fileNames := []string{
 			filepath.Join(o.NamespacesDir, ns, "lighthouse", "lighthouse-oauth-token.yaml"),
 			filepath.Join(o.NamespacesDir, ns, "tekton", "knative-docker-user-pass.yaml"),
 		}
-		for _, file := range files {
+		for _, file := range fileNames {
 			if assert.FileExists(t, file, "should have generated file") {
 				t.Logf("generated expected file %s", file)
 			}
