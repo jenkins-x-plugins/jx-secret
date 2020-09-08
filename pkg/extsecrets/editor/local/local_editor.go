@@ -110,7 +110,7 @@ func (c *client) Write(properties *editor.KeyProperties) error {
 
 	// lets check for replicated secrets
 	if extsec.Annotations != nil {
-		namespaces := extsec.Annotations[extsecrets.ReplicateAnnotation]
+		namespaces := extsec.Annotations[extsecrets.ReplicateToAnnotation]
 		if namespaces != "" {
 			nsList := strings.Split(namespaces, ",")
 			for _, tons := range nsList {
