@@ -21,6 +21,7 @@ External Secrets utility commands
 ### SEE ALSO
 
 * [jx-secret convert](jx-secret_convert.md)	 - Converts all Secret resources in the path to ExternalSecret resources so they can be checked into git
+* [jx-secret copy](jx-secret_copy.md)	 - Copies secrets with the given selector from a source namespace to a destination namespace
 * [jx-secret edit](jx-secret_edit.md)	 - Edits secret values in the underlying secret stores for ExternalSecrets
 * [jx-secret export](jx-secret_export.md)	 - Exports the current populated values to a YAML file
 * [jx-secret import](jx-secret_import.md)	 - Imports a YAML file of secret values
