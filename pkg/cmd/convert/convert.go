@@ -420,10 +420,6 @@ func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, e
 			if err != nil {
 				return false, errors.Wrapf(err, "failed to clear metadata annotations")
 			}
-			err = metadata.PipeE(yaml.Clear("labels"))
-			if err != nil {
-				return false, errors.Wrapf(err, "failed to clear metadata labels")
-			}
 		}
 	}
 
