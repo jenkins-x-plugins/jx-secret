@@ -139,6 +139,11 @@ func (o *Options) Run() error {
 				return false, errors.Wrapf(err, "failed to set metadata.namespace to %s", ns)
 			}
 
+			err = node.PipeE(yaml.SetAnnotation(extsecrets.ReplicaAnnotation, "true"))
+			if err != nil {
+				return false, errors.Wrapf(err, "failed to add replica annotation for path %s", path)
+			}
+
 			outFile := filepath.Join(o.NamespacesDir, ns, relPath)
 			outDir := filepath.Dir(outFile)
 			err = os.MkdirAll(outDir, files.DefaultDirWritePermissions)
@@ -152,7 +157,7 @@ func (o *Options) Run() error {
 			}
 			log.Logger().Infof("replicated ExternalSecret %s/%s to %s", ns, name, outFile)
 		}
-		err := o.addReplciatedLocalBackendAnnotation(path)
+		err := o.addReplicatedLocalBackendAnnotation(path)
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to annotate replicated local backend")
 		}
@@ -172,7 +177,7 @@ func (o *Options) Run() error {
 	return nil
 }
 
-func (o *Options) addReplciatedLocalBackendAnnotation(path string) error {
+func (o *Options) addReplicatedLocalBackendAnnotation(path string) error {
 	node, err := yaml.ReadFile(path)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load %s", path)
@@ -197,7 +202,7 @@ func (o *Options) addReplciatedLocalBackendAnnotation(path string) error {
 	}
 
 	// lets add an annotation
-	err = node.PipeE(yaml.SetAnnotation(extsecrets.ReplicateAnnotation, strings.Join(o.To, ",")))
+	err = node.PipeE(yaml.SetAnnotation(extsecrets.ReplicateToAnnotation, strings.Join(o.To, ",")))
 	if err != nil {
 		return errors.Wrapf(err, "failed to add replicate annotation for path %s", path)
 	}

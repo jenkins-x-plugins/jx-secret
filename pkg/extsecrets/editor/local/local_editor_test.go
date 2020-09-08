@@ -35,7 +35,7 @@ func TestLocalEditor(t *testing.T) {
 			Name:      secretName,
 			Namespace: ns,
 			Annotations: map[string]string{
-				extsecrets.ReplicateAnnotation: "jx-staging,jx-production",
+				extsecrets.ReplicateToAnnotation: "jx-staging,jx-production",
 			},
 		},
 		Spec: v1.ExternalSecretSpec{

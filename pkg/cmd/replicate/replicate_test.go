@@ -45,15 +45,22 @@ func TestReplicate(t *testing.T) {
 			if assert.FileExists(t, file, "should have generated file") {
 				t.Logf("generated expected file %s", file)
 			}
+
+			es := &v1.ExternalSecret{}
+			err = yamls.LoadFile(file, es)
+			require.NoError(t, err, "failed to load file %s", file)
+
+			testhelpers.AssertAnnotation(t, extsecrets.ReplicaAnnotation, "true", es.ObjectMeta, "replica tekton should be annotated")
+			t.Logf("added annotation to tekton source file %s of %s: %s", file, extsecrets.ReplicaAnnotation, es.Annotations[extsecrets.ReplicaAnnotation])
 		}
 	}
 
 	// lets verify we add a replication annotation to the source ExternalSecret to enable replication
-	extsec := &v1.ExternalSecret{}
+	es := &v1.ExternalSecret{}
 	tektonSourceFile := filepath.Join(o.NamespacesDir, "jx", "tekton", "knative-docker-user-pass.yaml")
-	err = yamls.LoadFile(tektonSourceFile, extsec)
+	err = yamls.LoadFile(tektonSourceFile, es)
 	require.NoError(t, err, "failed to load file %s", tektonSourceFile)
 
-	testhelpers.AssertAnnotation(t, extsecrets.ReplicateAnnotation, strings.Join(o.To, ","), extsec.ObjectMeta, "source tekton should be annotated")
-	t.Logf("added annotation to tekton source file %s of %s: %s", tektonSourceFile, extsecrets.ReplicateAnnotation, extsec.Annotations[extsecrets.ReplicateAnnotation])
+	testhelpers.AssertAnnotation(t, extsecrets.ReplicateToAnnotation, strings.Join(o.To, ","), es.ObjectMeta, "source tekton should be annotated")
+	t.Logf("added annotation to tekton source file %s of %s: %s", tektonSourceFile, extsecrets.ReplicateToAnnotation, es.Annotations[extsecrets.ReplicateToAnnotation])
 }

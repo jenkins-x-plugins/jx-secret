@@ -13,6 +13,7 @@ import (
 	"github.com/jenkins-x/jx-logging/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
@@ -84,6 +85,14 @@ func (o *Options) Run() error {
 	for _, r := range results {
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
+
+		// ignore local replicas
+		if backendType == "local" {
+			ann := r.ExternalSecret.Annotations
+			if ann != nil && ann[extsecrets.ReplicaAnnotation] == "true" {
+				continue
+			}
+		}
 
 		// lets wait until the backend is available
 		if !waited[backendType] {
