@@ -16,7 +16,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestReplicate(t *testing.T) {
+func TestReplicateByName(t *testing.T) {
+	callback := func(o *replicate.Options) {
+		o.Name = []string{"knative-docker-user-pass", "lighthouse-oauth-token"}
+	}
+
+	AssertReplicate(t, callback)
+}
+
+func TestReplicateBySelector(t *testing.T) {
+	callback := func(o *replicate.Options) {
+		o.Selector = "secret.jenkins-x.io/replica-source=true"
+	}
+
+	AssertReplicate(t, callback)
+}
+
+func AssertReplicate(t *testing.T, callback func(o *replicate.Options)) {
 	tmpDir, err := ioutil.TempDir("", "")
 	require.NoError(t, err, "could not create temp dir")
 
@@ -27,7 +43,8 @@ func TestReplicate(t *testing.T) {
 
 	_, o := replicate.NewCmdReplicate()
 	o.Dir = tmpDir
-	o.Name = []string{"knative-docker-user-pass", "lighthouse-oauth-token"}
+
+	callback(o)
 
 	err = o.Run()
 	require.NoError(t, err, "failed to replicate to external secrets in dir %s", tmpDir)
@@ -53,6 +70,8 @@ func TestReplicate(t *testing.T) {
 			testhelpers.AssertAnnotation(t, extsecrets.ReplicaAnnotation, "true", es.ObjectMeta, "replica tekton should be annotated")
 			t.Logf("added annotation to tekton source file %s of %s: %s", file, extsecrets.ReplicaAnnotation, es.Annotations[extsecrets.ReplicaAnnotation])
 		}
+
+		assert.NoFileExists(t, filepath.Join(o.NamespacesDir, ns, "lighthouse", "lighthouse-hmac-token.yaml"), "should not have replicated the hmac token")
 	}
 
 	// lets verify we add a replication annotation to the source ExternalSecret to enable replication

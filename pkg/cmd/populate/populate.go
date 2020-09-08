@@ -86,11 +86,17 @@ func (o *Options) Run() error {
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
 
-		// ignore local replicas
+		localReplica := false
 		if backendType == "local" {
 			ann := r.ExternalSecret.Annotations
-			if ann != nil && ann[extsecrets.ReplicaAnnotation] == "true" {
-				continue
+			if ann != nil {
+				// ignore local replicas
+				if ann[extsecrets.ReplicaAnnotation] == "true" {
+					continue
+				}
+				if ann[extsecrets.ReplicateToAnnotation] != "" {
+					localReplica = true
+				}
 			}
 		}
 
@@ -140,7 +146,9 @@ func (o *Options) Run() error {
 			if err != nil {
 				return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, key, name)
 			}
-			if value != "" && value != currentValue {
+
+			// lets always update values for local replicas so that replication triggers to other namespaces
+			if value != "" && (value != currentValue || localReplica) {
 				newValueMap[key] = true
 			}
 			if value == "" {

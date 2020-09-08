@@ -78,7 +78,7 @@ func (o *Options) Run() error {
 	if path == "" {
 		return options.MissingOption("file")
 	}
-	if len(o.Name) == 0 {
+	if len(o.Name) == 0 && o.Selector == "" {
 		return options.MissingOption("name")
 	}
 	if o.From == "" {
