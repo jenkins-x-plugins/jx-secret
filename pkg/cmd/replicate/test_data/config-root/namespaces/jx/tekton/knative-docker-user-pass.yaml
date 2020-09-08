@@ -8,6 +8,7 @@ metadata:
   generation: 1
   labels:
     gitops.jenkins-x.io/pipeline: environment
+    secret.jenkins-x.io/replica-source: true
   name: knative-docker-user-pass
   namespace: jx
   resourceVersion: "2929070"

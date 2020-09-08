@@ -8,6 +8,7 @@ metadata:
   generation: 1
   labels:
     gitops.jenkins-x.io/pipeline: environment
+    secret.jenkins-x.io/replica-source: true
   name: lighthouse-oauth-token
   namespace: jx
   resourceVersion: "2928764"
