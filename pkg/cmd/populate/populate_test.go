@@ -83,6 +83,7 @@ func TestPopulate(t *testing.T) {
 	o.Dir = "test_data"
 	o.NoWait = true
 	o.Namespace = ns
+	o.BootSecretNamespace = ns
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
 
 	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "secrets"))
