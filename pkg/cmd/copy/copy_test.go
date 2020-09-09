@@ -5,6 +5,7 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/pkg/testhelpers"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/copy"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,9 +58,15 @@ func TestCopy(t *testing.T) {
 
 	o.ToNamespace = "my-preview-env"
 	o.Selector = "beer=stella"
+	o.CreateNamespace = true
 	err := o.Run()
 	require.NoError(t, err, "failed to run export")
 
 	secret, message := testhelpers.RequireSecretExists(t, o.KubeClient, o.ToNamespace, "lighthouse-oauth-token")
 	testhelpers.AssertSecretEntryEquals(t, secret, "oauth", "dummyPipelineUserToken", message)
+
+	tons, err := o.KubeClient.CoreV1().Namespaces().Get(o.ToNamespace, metav1.GetOptions{})
+	require.NoError(t, err, "should have found to namespace %s", o.ToNamespace)
+	require.NotNil(t, tons, "should have to namespace %s", o.ToNamespace)
+	assert.Equal(t, o.ToNamespace, tons.Name, "toNamespace.Name")
 }
