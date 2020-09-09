@@ -54,7 +54,7 @@ func NewCmdCopy() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().StringVarP(&o.ToNamespace, "to", "t", "", "the namespace to copy the secrets to")
 	cmd.Flags().StringVarP(&o.Selector, "selector", "l", "", "the label selector to find the secrets to copy")
-	cmd.Flags().BoolVarP(&o.CreateNamespace, "create", "", false, "create the Namespace if it does not already exist")
+	cmd.Flags().BoolVarP(&o.CreateNamespace, "create-namespace", "", false, "create the to Namespace if it does not already exist")
 	return cmd, o
 }
 
