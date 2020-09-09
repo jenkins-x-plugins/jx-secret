@@ -36,12 +36,13 @@ var (
 // Options the options for the command
 type Options struct {
 	secretfacade.Options
-	WaitDuration  time.Duration
-	Results       []*secretfacade.SecretPair
-	CommandRunner cmdrunner.CommandRunner
-	NoWait        bool
-	Generators    map[string]generators.Generator
-	Requirements  *config.RequirementsConfig
+	WaitDuration        time.Duration
+	Results             []*secretfacade.SecretPair
+	CommandRunner       cmdrunner.CommandRunner
+	NoWait              bool
+	Generators          map[string]generators.Generator
+	Requirements        *config.RequirementsConfig
+	BootSecretNamespace string
 }
 
 // NewCmdPopulate creates a command object for the command
@@ -59,6 +60,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 		},
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
+	cmd.Flags().StringVarP(&o.BootSecretNamespace, "boot-secret-namespace", "", "", "the namespace to that contains the boot secret used to populate git secrets from")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/secret/mapping/secret-mappings.yaml file")
 	cmd.Flags().BoolVarP(&o.NoWait, "no-wait", "", false, "disables waiting for the secret store (e.g. vault) to be available")
 	cmd.Flags().DurationVarP(&o.WaitDuration, "wait", "w", 2*time.Hour, "the maximum time period to wait for the vault pod to be ready if using the vault backendType")
@@ -245,12 +247,12 @@ func (o *Options) loadGenerators() {
 	}
 	o.Generators["hmac"] = generators.Hmac
 	o.Generators["password"] = generators.Password
-	ns := o.Namespace
+	ns := o.BootSecretNamespace
 	if ns == "" {
 		var err error
 		ns, err = kubeclient.CurrentNamespace()
 		if err != nil {
-			log.Logger().Warnf("failed to get current namespace %s", err.Error())
+			log.Logger().Warnf("failed to get current namespace, defaulting to jx: %s", err.Error())
 		}
 		if ns == "" {
 			ns = "jx"
