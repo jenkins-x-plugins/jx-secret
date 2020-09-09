@@ -396,5 +396,5 @@ GcpSecretsManager
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>7861fc3</code>.
+on git commit <code>80d5b7f</code>.
 </em></p>
