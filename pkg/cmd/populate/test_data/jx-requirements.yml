@@ -27,8 +27,7 @@ ingress:
     production: false
 kaniko: true
 repository: nexus
-secretStorage:
-  provider: vault
+secretStorage: vault
 storage:
   logs:
     enabled: false
