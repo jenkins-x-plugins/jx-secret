@@ -130,7 +130,7 @@ darwin: ## Build for OSX
 .PHONY: release
 release: clean linux test
 
-release-all: release linux win darwin
+release-all: release win darwin
 
 .PHONY: goreleaser
 goreleaser:
