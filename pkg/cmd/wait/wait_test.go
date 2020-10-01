@@ -1,6 +1,7 @@
 package wait_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -57,7 +58,7 @@ func TestWait(t *testing.T) {
 			"oauth": []byte("dummyValue"),
 		},
 	}
-	_, err = o.KubeClient.CoreV1().Secrets(ns).Create(secret)
+	_, err = o.KubeClient.CoreV1().Secrets(ns).Create(context.TODO(), secret, metav1.CreateOptions{})
 	require.NoError(t, err, "failed to create Secret %#v")
 
 	valid, err = o.WaitCheck()

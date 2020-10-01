@@ -3,7 +3,7 @@ package secretfacade
 import (
 	"sort"
 
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/secretmapping"
 	"github.com/pkg/errors"
 )

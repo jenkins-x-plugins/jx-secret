@@ -1,13 +1,15 @@
 package extsecrets
 
 import (
+	"context"
+
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets/knative_pkg/duck"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
-	"knative.dev/pkg/apis/duck"
 )
 
 // Client an implementation of the interface
@@ -23,7 +25,7 @@ func (c *client) List(ns string, listOptions metav1.ListOptions) ([]*v1.External
 	} else {
 		client = c.dynamicClient.Resource(ExternalSecretsResource)
 	}
-	resources, err := client.List(listOptions)
+	resources, err := client.List(context.TODO(), listOptions)
 	if err != nil && apierrors.IsNotFound(err) {
 		err = nil
 	}

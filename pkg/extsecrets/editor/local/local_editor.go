@@ -1,10 +1,11 @@
 package local
 
 import (
+	"context"
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
@@ -51,7 +52,7 @@ func (c *client) Write(properties *editor.KeyProperties) error {
 	}
 
 	secretInterface := c.kubeClient.CoreV1().Secrets(ns)
-	secret, err := secretInterface.Get(name, metav1.GetOptions{})
+	secret, err := secretInterface.Get(context.TODO(), name, metav1.GetOptions{})
 
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
@@ -95,13 +96,13 @@ func (c *client) Write(properties *editor.KeyProperties) error {
 	}
 
 	if create {
-		_, err = secretInterface.Create(secret)
+		_, err = secretInterface.Create(context.TODO(), secret, metav1.CreateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "failed to create Secret %s in namespace %s", name, ns)
 		}
 		log.Logger().Infof("created Secret %s in namespace %s", info(name), info(ns))
 	} else {
-		_, err = secretInterface.Update(secret)
+		_, err = secretInterface.Update(context.TODO(), secret, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "failed to update Secret %s in namespace %s", name, ns)
 		}

@@ -1,8 +1,8 @@
 package vault
 
 import (
-	"github.com/jenkins-x/jx-helpers/pkg/cobras"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/portforward"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/shell"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"

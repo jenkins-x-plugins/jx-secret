@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/yamls"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jenkins-x/jx-helpers/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/convert"
 	"github.com/jenkins-x/jx-secret/pkg/secretmapping"
 	"github.com/stretchr/testify/assert"

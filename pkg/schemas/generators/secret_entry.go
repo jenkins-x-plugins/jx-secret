@@ -1,7 +1,9 @@
 package generators
 
 import (
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"context"
+
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,7 +15,7 @@ func GetSecretEntry(kubeClient kubernetes.Interface, namespace, secretName, entr
 	if namespace == "" {
 		log.Logger().Warnf("no namespace specified when trying to find secret %s entry %s", secretName, entry)
 	}
-	secret, err := kubeClient.CoreV1().Secrets(namespace).Get(secretName, metav1.GetOptions{})
+	secret, err := kubeClient.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("could not find secret %s with entry %s in namespace %s", secretName, entry, namespace)

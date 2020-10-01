@@ -1,11 +1,12 @@
 package extsecrets
 
 import (
+	"context"
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/pkg/kube"
-	"github.com/jenkins-x/jx-helpers/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -29,7 +30,6 @@ func NewClient(dynClient dynamic.Interface) (Interface, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a dynamic client")
 	}
-
 	return &client{dynamicClient: dynClient}, nil
 }
 
@@ -50,7 +50,7 @@ func SimplifyKey(backendType, key string) string {
 func CopySecretToNamespace(kubeClient kubernetes.Interface, ns string, fromSecret *corev1.Secret) error {
 	secretInterface := kubeClient.CoreV1().Secrets(ns)
 	name := fromSecret.Name
-	secret, err := secretInterface.Get(name, metav1.GetOptions{})
+	secret, err := secretInterface.Get(context.TODO(), name, metav1.GetOptions{})
 
 	create := false
 	if err != nil {
@@ -96,14 +96,14 @@ func CopySecretToNamespace(kubeClient kubernetes.Interface, ns string, fromSecre
 	}
 
 	if create {
-		_, err = secretInterface.Create(secret)
+		_, err = secretInterface.Create(context.TODO(), secret, metav1.CreateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "failed to create Secret %s in namespace %s", name, ns)
 		}
 		log.Logger().Infof("created Secret %s in namespace %s", info(name), info(ns))
 		return nil
 	}
-	_, err = secretInterface.Update(secret)
+	_, err = secretInterface.Update(context.TODO(), secret, metav1.UpdateOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "failed to update Secret %s in namespace %s", name, ns)
 	}
