@@ -1,8 +1,10 @@
 package secretfacade
 
 import (
-	"github.com/jenkins-x/jx-helpers/pkg/kube"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"context"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/pkg/errors"
@@ -51,7 +53,7 @@ func (o *Options) Load() ([]*SecretPair, error) {
 			continue
 		}
 
-		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(name, metav1.GetOptions{})
+		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), name, metav1.GetOptions{})
 		if err != nil && apierrors.IsNotFound(err) {
 			err = nil
 		}

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/yamls"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"

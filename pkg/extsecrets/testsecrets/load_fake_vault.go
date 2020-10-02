@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/stretchr/testify/assert"
 )
 

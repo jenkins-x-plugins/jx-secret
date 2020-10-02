@@ -1,9 +1,10 @@
 package copy_test
 
 import (
+	"context"
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/pkg/testhelpers"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/copy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -65,7 +66,7 @@ func TestCopy(t *testing.T) {
 	secret, message := testhelpers.RequireSecretExists(t, o.KubeClient, o.ToNamespace, "lighthouse-oauth-token")
 	testhelpers.AssertSecretEntryEquals(t, secret, "oauth", "dummyPipelineUserToken", message)
 
-	tons, err := o.KubeClient.CoreV1().Namespaces().Get(o.ToNamespace, metav1.GetOptions{})
+	tons, err := o.KubeClient.CoreV1().Namespaces().Get(context.TODO(), o.ToNamespace, metav1.GetOptions{})
 	require.NoError(t, err, "should have found to namespace %s", o.ToNamespace)
 	require.NotNil(t, tons, "should have to namespace %s", o.ToNamespace)
 	assert.Equal(t, o.ToNamespace, tons.Name, "toNamespace.Name")

@@ -1,13 +1,14 @@
 package vaultcli
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/jenkins-x/jx-helpers/pkg/cmdrunner"
-	"github.com/jenkins-x/jx-helpers/pkg/files"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/plugins"
 	"github.com/jenkins-x/jx-secret/pkg/vaults"
 	"github.com/pkg/errors"
@@ -87,7 +88,7 @@ func CreateVaultEnv(kubeClient kubernetes.Interface) (map[string]string, error) 
 }
 
 func getSecretKey(kubeClient kubernetes.Interface, ns, secretName, key string) (string, error) {
-	secret, err := kubeClient.CoreV1().Secrets(ns).Get(secretName, metav1.GetOptions{})
+	secret, err := kubeClient.CoreV1().Secrets(ns).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		err = nil
 	}

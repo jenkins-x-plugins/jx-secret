@@ -2,11 +2,12 @@ package populate
 
 import (
 	"bytes"
+	"context"
 	"text/template"
 
 	"github.com/Masterminds/sprig"
-	"github.com/jenkins-x/jx-api/pkg/config"
-	"github.com/jenkins-x/jx-logging/pkg/log"
+	"github.com/jenkins-x/jx-api/v3/pkg/config"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,7 +21,7 @@ func (o *Options) EvaluateTemplate(ns, secretName, property, templateText string
 	//
 	// use like this: `{{ secret "my-secret-name" "key-name" }}
 	funcMap["secret"] = func(lookupSecret, lookupKey string) string {
-		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(lookupSecret, metav1.GetOptions{})
+		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
 			return ""
@@ -36,7 +37,7 @@ func (o *Options) EvaluateTemplate(ns, secretName, property, templateText string
 	//
 	// use like this: `{{ auth "my-secret-name" "username-key" "password-key }}
 	funcMap["auth"] = func(lookupSecret, userKey, passwordKey string) string {
-		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(lookupSecret, metav1.GetOptions{})
+		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
 			return ""
