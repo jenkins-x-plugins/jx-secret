@@ -11,6 +11,7 @@ require (
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/google/go-cmp v0.5.2
 	github.com/huandu/xstrings v1.3.2 // indirect
+	github.com/jenkins-x/gen-crd-api-reference-docs v0.1.6 // indirect
 	github.com/jenkins-x/jx-api/v3 v3.0.0
 	github.com/jenkins-x/jx-helpers/v3 v3.0.0
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.0
