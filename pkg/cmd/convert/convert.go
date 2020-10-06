@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/convert/edit"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
@@ -80,6 +81,14 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 
 func (o *Options) Run() error {
 	dir := o.Dir
+
+	if o.SourceDir == "" {
+		o.SourceDir = filepath.Join(o.Dir, "config-root")
+	}
+	if o.VersionStreamDir == "" {
+		o.VersionStreamDir = filepath.Join(o.Dir, "versionStream")
+	}
+
 	if o.SecretMapping == nil {
 		var err error
 		o.SecretMapping, _, err = secretmapping.LoadSecretMapping(dir, false)
@@ -158,9 +167,6 @@ func (o *Options) Run() error {
 		return true, nil
 	}
 
-	if o.SourceDir == "" {
-		o.SourceDir = dir
-	}
 	err := kyamls.ModifyFiles(o.SourceDir, modifyFn, secretFilter)
 	if err != nil {
 		return errors.Wrapf(err, "failed to modify files")
@@ -458,15 +464,33 @@ func (o *Options) findSchemaSchemaObject(node *yaml.RNode, path string) (*schema
 	}
 	lastDir := paths[len(paths)-2]
 	g := filepath.Join(o.VersionStreamDir, "charts", "*", lastDir, "secret-schema.yaml")
-	files, err := filepath.Glob(g)
+	fileSlice, err := filepath.Glob(g)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find files at glob: %s", g)
+		return nil, errors.Wrapf(err, "failed to find files with glob: %s", g)
 	}
-	if len(files) == 0 {
+
+	// lets also look in the charts dir for secret schema files
+	chartsDir := filepath.Join(o.Dir, "charts")
+	exists, err := files.DirExists(chartsDir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to detect dir exists %s", chartsDir)
+	}
+	if exists {
+		g = filepath.Join(chartsDir, "*", lastDir, "secret-schema.yaml")
+		fileSlice2, err := filepath.Glob(g)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to find files with glob: %s", g)
+		}
+		if len(fileSlice2) > 0 {
+			fileSlice = append(fileSlice, fileSlice2...)
+		}
+	}
+
+	if len(fileSlice) == 0 {
 		return nil, nil
 	}
 	name := kyamls.GetName(node, path)
-	return schemas.LoadSchemaObjectFromFiles(name, files)
+	return schemas.LoadSchemaObjectFromFiles(name, fileSlice)
 }
 
 func (o *Options) findSchemaObjectAnnotation(node *yaml.RNode, path string) (string, error) {
