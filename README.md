@@ -22,7 +22,16 @@ See the [jx-secret command reference](https://github.com/jenkins-x/jx-secret/blo
 
 To improve the UX around editing Secrets via [jx secret edit](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret_edit.md) or populating initial or generated secrets on first install via [jx secret populate](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret_populate.md) we use a Schema definition (similar to JSON Schema) which allows you to provide better validation and configuration for default values and the generator to be used.
 
-For details of the schema configuration see [Schema](docs/schema.md#secret.jenkins-x.io/v1alpha1.Schema)
+For details of the schema configuration see [Schema](docs/schema.md#secret.jenkins-x.io/v1alpha1.Schema).
+
+
+### Secret Schema detection 
+
+The schema files are usually detected for charts via the version stream at `versionStream/charts/$repoName/$chartName/secret-schema.yaml`
+
+If you are adding your own charts and want your own secret schemas outside of the version stream then you can place them at: `charts/$repoName/$chartName/secret-schema.yaml`.
+
+Though we would welcome [contributions to the version stream](https://github.com/jenkins-x/jxr-versions/pulls) so that we can add common secret schemas for popular helm charts so that they just work OOTB with external secrets.
 
 
 ### Mappings

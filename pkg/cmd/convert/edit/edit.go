@@ -68,6 +68,12 @@ func NewCmdSecretMappingEdit() (*cobra.Command, *Options) {
 
 // Run runs the command
 func (o *Options) Run() error {
+	var err error
+	o.requirements, _, err = config.LoadRequirementsConfig(o.Dir, false)
+	if err != nil {
+		return errors.Wrapf(err, "failed to load requirements in dir %s", o.Dir)
+	}
+
 	if o.Dir == "" {
 		o.Dir = filepath.Join(".jx", "gitops")
 	}
@@ -80,11 +86,6 @@ func (o *Options) Run() error {
 		fileName = filepath.Join(o.Dir, v1alpha1.SecretMappingFileName)
 	}
 	o.SecretMapping = *secretMapping
-
-	o.requirements, _, err = config.LoadRequirementsConfig(o.Dir, false)
-	if err != nil {
-		return errors.Wrapf(err, "failed to load requirements in dir %s", o.Dir)
-	}
 
 	// lets re-parse the CLI arguments to re-populate the loaded requirements
 	err = o.Cmd.Flags().Parse(os.Args)

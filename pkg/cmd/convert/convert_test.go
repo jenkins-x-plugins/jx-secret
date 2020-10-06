@@ -61,6 +61,7 @@ func TestToExtSecrets(t *testing.T) {
 
 	_, eo := convert.NewCmdSecretConvert()
 	eo.Dir = tmpDir
+	eo.SourceDir = tmpDir
 
 	eo.SecretMapping, _, err = secretmapping.LoadSecretMapping(sourceData, true)
 	require.NoError(t, err, "failed to load secret mapping")
@@ -125,6 +126,7 @@ func TestMultipleBackendTypes(t *testing.T) {
 
 	_, eo := convert.NewCmdSecretConvert()
 	eo.Dir = tmpDir
+	eo.SourceDir = tmpDir
 
 	eo.SecretMapping, _, err = secretmapping.LoadSecretMapping(sourceData, true)
 	require.NoError(t, err, "failed to load secret mapping")
@@ -168,8 +170,7 @@ func TestConvertAndSchemaEnrich(t *testing.T) {
 	require.NoError(t, err, "failed to copy %s to %s", sourceData, tmpDir)
 
 	_, eo := convert.NewCmdSecretConvert()
-	eo.VersionStreamDir = filepath.Join(tmpDir, "versionStream")
-	eo.Dir = filepath.Join(tmpDir, "somedir")
+	eo.Dir = tmpDir
 
 	err = eo.Run()
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
@@ -200,7 +201,61 @@ func TestConvertAndSchemaEnrich(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		file := filepath.Join(eo.Dir, "namespaces", "jx", tc.path)
+		file := filepath.Join(eo.SourceDir, "namespaces", "jx", tc.path)
+		require.FileExists(t, file)
+
+		// lets load it and assert its got the schema
+		es := v1.ExternalSecret{}
+		err := yamls.LoadFile(file, &es)
+		require.NoError(t, err, "failed to load ExternalSecret %s", file)
+
+		sp := &secretfacade.SecretPair{
+			ExternalSecret: es,
+		}
+		object, err := sp.SchemaObject()
+		require.NoError(t, err, "failed to not find Object schema for file %s", file)
+		require.NotNil(t, object, "no Object schema for file %s", file)
+
+		for _, propertyName := range tc.properties {
+			property := object.FindProperty(propertyName)
+			assert.NotNil(t, property, "could not find property %s for object schema on file %s", propertyName, file)
+		}
+		t.Logf("ExternalSecret %s has object schema annotation with properties %#v\n", es.Name, tc.properties)
+	}
+}
+
+func TestConvertAndSchemaEnrichWithLocalSchemas(t *testing.T) {
+	sourceData := filepath.Join("test_data", "local-schema")
+	require.DirExists(t, sourceData)
+
+	tmpDir, err := ioutil.TempDir("", "")
+	require.NoError(t, err, "could not create temp dir")
+
+	err = files.CopyDir(sourceData, tmpDir, true)
+	require.NoError(t, err, "failed to copy %s to %s", sourceData, tmpDir)
+
+	_, eo := convert.NewCmdSecretConvert()
+	eo.VersionStreamDir = filepath.Join(tmpDir, "versionStream")
+	eo.Dir = tmpDir
+
+	err = eo.Run()
+	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
+
+	t.Logf("converted the Secrets to ExternalSecrets in dir %s", eo.Dir)
+
+	// now lets verify a number of schema properties
+	testCases := []struct {
+		path       string
+		properties []string
+	}{
+		{
+			path:       filepath.Join("chartmuseum", "secret.yaml"),
+			properties: []string{"username", "password"},
+		},
+	}
+
+	for _, tc := range testCases {
+		file := filepath.Join(eo.SourceDir, "namespaces", "jx", tc.path)
 		require.FileExists(t, file)
 
 		// lets load it and assert its got the schema

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/convert/edit"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
@@ -32,7 +33,7 @@ var (
 
 	labelExample = templates.Examples(`
 		# converts all the Secret resources into ExternalSecret resources so they can be checked into git
-		%s convert --dir=.
+		%s convert --source-dir=config-root
 	`)
 
 	secretFilter = kyamls.Filter{
@@ -68,9 +69,9 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 			helper.CheckErr(err)
 		},
 	}
-	cmd.Flags().StringVarP(&o.Dir, "dir", "d", "config-root", "the directory to look for the version stream and requirements")
-	cmd.Flags().StringVarP(&o.SourceDir, "source-dir", "", "", "the source directory to recursively look for the *.yaml or *.yml files")
-	cmd.Flags().StringVarP(&o.VersionStreamDir, "version-stream-dir", "", "versionStream", "the directory containing the version stream")
+	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the secret mapping files and version stream")
+	cmd.Flags().StringVarP(&o.SourceDir, "source-dir", "", "", "the source directory to recursively look for the *.yaml or *.yml files to convert. If not specified defaults to 'config-root' in the dir")
+	cmd.Flags().StringVarP(&o.VersionStreamDir, "version-stream-dir", "", "", "the directory containing the version stream. If not specified defaults to the 'versionStream' folder in the dir")
 	cmd.Flags().StringVarP(&o.VaultMountPoint, "vault-mount-point", "m", "kubernetes", "the vault authentication mount point")
 	cmd.Flags().StringVarP(&o.VaultRole, "vault-role", "r", vaults.DefaultVaultNamespace, "the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html")
 
@@ -80,6 +81,14 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 
 func (o *Options) Run() error {
 	dir := o.Dir
+
+	if o.SourceDir == "" {
+		o.SourceDir = filepath.Join(o.Dir, "config-root")
+	}
+	if o.VersionStreamDir == "" {
+		o.VersionStreamDir = filepath.Join(o.Dir, "versionStream")
+	}
+
 	if o.SecretMapping == nil {
 		var err error
 		o.SecretMapping, _, err = secretmapping.LoadSecretMapping(dir, false)
@@ -158,9 +167,6 @@ func (o *Options) Run() error {
 		return true, nil
 	}
 
-	if o.SourceDir == "" {
-		o.SourceDir = dir
-	}
 	err := kyamls.ModifyFiles(o.SourceDir, modifyFn, secretFilter)
 	if err != nil {
 		return errors.Wrapf(err, "failed to modify files")
@@ -458,15 +464,33 @@ func (o *Options) findSchemaSchemaObject(node *yaml.RNode, path string) (*schema
 	}
 	lastDir := paths[len(paths)-2]
 	g := filepath.Join(o.VersionStreamDir, "charts", "*", lastDir, "secret-schema.yaml")
-	files, err := filepath.Glob(g)
+	fileSlice, err := filepath.Glob(g)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find files at glob: %s", g)
+		return nil, errors.Wrapf(err, "failed to find files with glob: %s", g)
 	}
-	if len(files) == 0 {
+
+	// lets also look in the charts dir for secret schema files
+	chartsDir := filepath.Join(o.Dir, "charts")
+	exists, err := files.DirExists(chartsDir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to detect dir exists %s", chartsDir)
+	}
+	if exists {
+		g = filepath.Join(chartsDir, "*", lastDir, "secret-schema.yaml")
+		fileSlice2, err := filepath.Glob(g)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to find files with glob: %s", g)
+		}
+		if len(fileSlice2) > 0 {
+			fileSlice = append(fileSlice, fileSlice2...)
+		}
+	}
+
+	if len(fileSlice) == 0 {
 		return nil, nil
 	}
 	name := kyamls.GetName(node, path)
-	return schemas.LoadSchemaObjectFromFiles(name, files)
+	return schemas.LoadSchemaObjectFromFiles(name, fileSlice)
 }
 
 func (o *Options) findSchemaObjectAnnotation(node *yaml.RNode, path string) (string, error) {
