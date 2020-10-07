@@ -1,6 +1,8 @@
 package templatertesting
 
 import (
+	"testing"
+
 	"github.com/jenkins-x/jx-api/v3/pkg/config"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -45,4 +47,7 @@ type TestCase struct {
 
 	// Requirements the jx-requirements.yml used to parameterize the template
 	Requirements *config.RequirementsConfig
+
+	// VerifyFn performs a custom verify of the generated value
+	VerifyFn func(*testing.T, string)
 }

@@ -3,12 +3,15 @@ package populate
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/jenkins-x/jx-api/v3/pkg/config"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -31,6 +34,38 @@ func (o *Options) EvaluateTemplate(ns, secretName, property, templateText string
 			return string(secret.Data[lookupKey])
 		}
 		return answer
+	}
+
+	// template function to lookup username + password in a Secret and then use that to make a htpasswd value
+	//
+	// use like this: `{{ htpasswdSecret "my-secret-name" "username" "password" }}
+	funcMap["htpasswdSecret"] = func(lookupSecret, usernameKey, passwordKey string) string {
+		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
+			return ""
+		}
+		if secret == nil || secret.Data == nil {
+			return fmt.Sprintf("failed to create htpasswd: no secret %s", lookupSecret)
+		}
+		username := string(secret.Data[usernameKey])
+		if username == "" {
+			return fmt.Sprintf("failed to create htpasswd: secret %s does not have username entry %s", lookupSecret, usernameKey)
+		}
+		if strings.Contains(username, ":") {
+			return fmt.Sprintf("invalid username: %s", username)
+		}
+
+		password := string(secret.Data[passwordKey])
+		if password == "" {
+			return fmt.Sprintf("failed to create htpasswd: secret %s does not have password entry %s", lookupSecret, passwordKey)
+		}
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			return fmt.Sprintf("failed to create htpasswd: %s", err)
+		}
+		return fmt.Sprintf("%s:%s", username, hash)
 	}
 
 	// template function to lookup a user + password in a secret and concatenate in a string like `"username:password"`.

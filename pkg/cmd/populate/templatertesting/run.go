@@ -80,7 +80,9 @@ func (r *Runner) Run(t *testing.T) {
 		expected, err := ioutil.ReadFile(expectedFile)
 		require.NoError(t, err, "failed to load %s", expectedFile)
 
-		if assert.Equal(t, string(expected), text, "generated template for %s", message) {
+		if tc.VerifyFn != nil {
+			tc.VerifyFn(t, text)
+		} else if assert.Equal(t, string(expected), text, "generated template for %s", message) {
 			t.Logf("got expected file %s for %s\n", expectedFile, message)
 		} else {
 			t.Logf("generated for %s:\n%s\n", message, text)
