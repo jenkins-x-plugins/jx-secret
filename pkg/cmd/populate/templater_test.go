@@ -6,6 +6,7 @@ import (
 
 	"github.com/jenkins-x/jx-api/v3/pkg/config"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/templatertesting"
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -27,6 +28,16 @@ func TestTemplater(t *testing.T) {
 		},
 
 		// some other secrets used for templating the jenkins-maven-settings Secret
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "jx-basic-auth-user-password",
+				Namespace: ns,
+			},
+			Data: map[string][]byte{
+				"username": []byte("my-basic-auth-user"),
+				"password": []byte("my-basic-auth-password"),
+			},
+		},
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "nexus",
@@ -59,6 +70,23 @@ func TestTemplater(t *testing.T) {
 
 	runner := templatertesting.Runner{
 		TestCases: []templatertesting.TestCase{
+			{
+				TestName:   "jx-basic-auth-htpasswd",
+				ObjectName: "jx-basic-auth-htpasswd",
+				Property:   "auth",
+				VerifyFn: func(t *testing.T, text string) {
+					assert.NotEmpty(t, text, "should have created a valid htpasswd value from the Secret")
+					t.Logf("generated jx-basic-auth-htpasswd auth value: %s\n", text)
+				},
+				Requirements: &config.RequirementsConfig{
+					Repository: "nexus",
+					Cluster: config.ClusterConfig{
+						Provider:    "gke",
+						ProjectID:   "myproject",
+						ClusterName: "mycluster",
+					},
+				},
+			},
 			{
 				TestName:   "docker-gke",
 				ObjectName: "jenkins-docker-cfg",
