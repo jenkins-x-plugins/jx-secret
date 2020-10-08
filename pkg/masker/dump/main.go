@@ -25,7 +25,7 @@ func main() {
 	}
 
 	var words []string
-	for w, _ := range m.ReplaceWords {
+	for w := range m.ReplaceWords {
 		words = append(words, w)
 	}
 	sort.Strings(words)
