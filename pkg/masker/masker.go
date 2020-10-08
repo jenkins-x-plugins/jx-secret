@@ -57,9 +57,12 @@ func NewMasker(kubeClient kubernetes.Interface, ns string) (*Client, error) {
 	if err != nil {
 		return masker, err
 	}
-	for _, s := range resourceList.Items {
-		secret := s
-		masker.LoadSecret(&secret)
+	for i := range resourceList.Items {
+		secret := &resourceList.Items[i]
+		err = masker.LoadSecret(secret)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to load secret %s", secret.Name)
+		}
 	}
 	return masker, nil
 }
@@ -71,11 +74,11 @@ func (m *Client) LoadSecrets(kubeClient kubernetes.Interface, ns string) error {
 	if err != nil {
 		return err
 	}
-	for _, s := range resourceList.Items {
-		secret := s
-		err = m.LoadSecret(&secret)
+	for i := range resourceList.Items {
+		secret := &resourceList.Items[i]
+		err = m.LoadSecret(secret)
 		if err != nil {
-			return errors.Wrapf(err, "failed to load secret %s in namespace %s", s.Name, ns)
+			return errors.Wrapf(err, "failed to load secret %s in namespace %s", secret.Name, ns)
 		}
 	}
 	return nil
@@ -154,21 +157,6 @@ func (m *Client) Mask(text string) string {
 func (m *Client) MaskData(logData []byte) []byte {
 	text := m.Mask(string(logData))
 	return []byte(text)
-}
-
-// replaceMapValues adds all the string values in the given map to the replacer words
-func (m *Client) replaceMapValues(values map[string]interface{}) {
-	for _, value := range values {
-		childMap, ok := value.(map[string]interface{})
-		if ok {
-			m.replaceMapValues(childMap)
-			continue
-		}
-		text, ok := value.(string)
-		if ok {
-			m.ReplaceWords[text] = m.replaceValue(text)
-		}
-	}
 }
 
 func (m *Client) replaceValue(_ string) string {
