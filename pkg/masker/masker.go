@@ -50,21 +50,33 @@ type Client struct {
 }
 
 // NewMasker creates a new Client loading secrets from the given namespace
-func NewMasker(kubeClient kubernetes.Interface, ns string) (*Client, error) {
+func NewMasker(kubeClient kubernetes.Interface, namespaces ...string) (*Client, error) {
 	masker := &Client{}
 	ctx := context.Background()
-	resourceList, err := kubeClient.CoreV1().Secrets(ns).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return masker, err
-	}
-	for i := range resourceList.Items {
-		secret := &resourceList.Items[i]
-		err = masker.LoadSecret(secret)
+
+	for _, ns := range namespaces {
+		resourceList, err := kubeClient.CoreV1().Secrets(ns).List(ctx, metav1.ListOptions{})
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to load secret %s", secret.Name)
+			return masker, err
+		}
+		for i := range resourceList.Items {
+			secret := &resourceList.Items[i]
+			err = masker.LoadSecret(secret)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to load secret %s", secret.Name)
+			}
 		}
 	}
 	return masker, nil
+}
+
+// GetReplacedWords returns all the words that will be replaced
+func (m *Client) GetReplacedWords() []string {
+	var words []string
+	for k := range m.ReplaceWords {
+		words = append(words, k)
+	}
+	return words
 }
 
 // LoadSecrets loads the secrets into the log masker
@@ -108,20 +120,19 @@ func (m *Client) LoadSecret(secret *corev1.Secret) error {
 		return nil
 	}
 
-	count := 0
-	for i := range schemaObject.Properties {
-		prop := schemaObject.Properties[i]
-		if prop.Template != "" {
-			return nil
-		}
-		count++
+	ignoredProperties := map[string]bool{}
+	for k, v := range ignoreSecretProperties[secretName] {
+		ignoredProperties[k] = v
 	}
-
-	if count > 0 {
-		ignoredProperties := ignoreSecretProperties[secretName]
-
+	for i := range schemaObject.Properties {
+		p := &schemaObject.Properties[i]
+		if p.NoMask {
+			ignoredProperties[p.Name] = true
+		}
+	}
+	if len(schemaObject.Properties) > 0 {
 		for name, d := range secret.Data {
-			if ignoredProperties != nil && ignoredProperties[name] {
+			if ignoredProperties[name] {
 				log.Logger().Infof("ignoring secret %s entry %s", info(secretName), info(name))
 				continue
 			}

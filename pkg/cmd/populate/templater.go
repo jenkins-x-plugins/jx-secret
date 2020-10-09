@@ -46,24 +46,24 @@ func (o *Options) EvaluateTemplate(ns, secretName, property, templateText string
 			return ""
 		}
 		if secret == nil || secret.Data == nil {
-			return fmt.Sprintf("failed to create htpasswd: no secret %s", lookupSecret)
+			return fmt.Sprintf("failed to create htpasswd: no secret %s for namespace %s", lookupSecret, ns)
 		}
 		username := string(secret.Data[usernameKey])
 		if username == "" {
-			return fmt.Sprintf("failed to create htpasswd: secret %s does not have username entry %s", lookupSecret, usernameKey)
+			return fmt.Sprintf("failed to create htpasswd: secret %s does not have username entry %s in namespace %s", lookupSecret, usernameKey, ns)
 		}
 		if strings.Contains(username, ":") {
-			return fmt.Sprintf("invalid username: %s", username)
+			return fmt.Sprintf("invalid username: %s from secret %s in namespace %s", username, lookupSecret, ns)
 		}
 
 		password := string(secret.Data[passwordKey])
 		if password == "" {
-			return fmt.Sprintf("failed to create htpasswd: secret %s does not have password entry %s", lookupSecret, passwordKey)
+			return fmt.Sprintf("failed to create htpasswd: secret %s does not have password entry %s in namespace %s", lookupSecret, passwordKey, ns)
 		}
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
-			return fmt.Sprintf("failed to create htpasswd: %s", err)
+			return fmt.Sprintf("failed to create htpasswd: %s from secret %s in namespace %s", err.Error(), lookupSecret, ns)
 		}
 		return fmt.Sprintf("%s:%s", username, hash)
 	}
