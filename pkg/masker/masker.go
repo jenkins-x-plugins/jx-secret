@@ -2,11 +2,13 @@ package masker
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+	"github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/schemas"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -42,11 +44,31 @@ var (
 			"BASIC_AUTH_USER": true,
 		},
 	}
+
+	// customSchemaObjects additional schemas if they are missing from Secrets
+	customSchemaObjects = map[string]*v1alpha1.Object{
+		"jx-boot": {
+			Properties: []v1alpha1.Property{
+				{
+					Name: "password",
+				},
+				{
+					Name:   "url",
+					NoMask: true,
+				},
+				{
+					Name:   "username",
+					NoMask: true,
+				},
+			},
+		},
+	}
 )
 
 // Client replaces words in a log from a set of secrets
 type Client struct {
 	ReplaceWords map[string]string
+	LogFn        func(string)
 }
 
 // NewMasker creates a new Client loading secrets from the given namespace
@@ -102,9 +124,14 @@ func (m *Client) LoadSecret(secret *corev1.Secret) error {
 		m.ReplaceWords = map[string]string{}
 	}
 
+	if m.LogFn == nil {
+		m.LogFn = func(text string) {
+			log.Logger().Info(text)
+		}
+	}
 	secretName := secret.Name
 	if stringhelpers.StringArrayIndex(ignoreSecrets, secretName) >= 0 {
-		log.Logger().Infof("ignoring secret %s", info(secretName))
+		m.LogFn(fmt.Sprintf("ignoring secret %s", info(secretName)))
 		return nil
 	}
 	if len(secret.Data) == 0 {
@@ -116,6 +143,9 @@ func (m *Client) LoadSecret(secret *corev1.Secret) error {
 	}
 
 	// lets ignore secrets without schemas
+	if schemaObject == nil {
+		schemaObject = customSchemaObjects[secretName]
+	}
 	if schemaObject == nil {
 		return nil
 	}
@@ -133,7 +163,7 @@ func (m *Client) LoadSecret(secret *corev1.Secret) error {
 	if len(schemaObject.Properties) > 0 {
 		for name, d := range secret.Data {
 			if ignoredProperties[name] {
-				log.Logger().Infof("ignoring secret %s entry %s", info(secretName), info(name))
+				m.LogFn(fmt.Sprintf("ignoring secret %s entry %s", info(secretName), info(name)))
 				continue
 			}
 			value := string(d)
@@ -147,7 +177,7 @@ func (m *Client) LoadSecret(secret *corev1.Secret) error {
 				if ShowMaskedPasswords {
 					password = " => " + value
 				}
-				log.Logger().Infof("adding mask of secret %s entry %s %s", info(secretName), info(name), password)
+				m.LogFn(fmt.Sprintf("adding mask of secret %s entry %s %s", info(secretName), info(name), password))
 				m.ReplaceWords[value] = m.replaceValue(value)
 			}
 		}
