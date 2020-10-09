@@ -112,7 +112,7 @@ func (o *Options) UpsertSecret(ns string, secret *corev1.Secret) {
 	if secret != nil {
 		client := &masker.Client{
 			LogFn: func(text string) {
-				if o.loggedMessages[text] == false {
+				if !o.loggedMessages[text] {
 					o.loggedMessages[text] = true
 					log.Logger().Info(text)
 				}
