@@ -124,7 +124,8 @@ func (m *Client) LoadSecret(secret *corev1.Secret) error {
 	for k, v := range ignoreSecretProperties[secretName] {
 		ignoredProperties[k] = v
 	}
-	for _, p := range schemaObject.Properties {
+	for i := range schemaObject.Properties {
+		p := &schemaObject.Properties[i]
 		if p.NoMask {
 			ignoredProperties[p.Name] = true
 		}

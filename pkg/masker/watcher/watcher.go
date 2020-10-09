@@ -22,7 +22,6 @@ type Options struct {
 	Namespaces []string
 	KubeClient kubernetes.Interface
 
-	client             *masker.Client
 	replaceWordMap     map[string]map[string]string
 	replaceWordMapLock sync.Mutex
 }
@@ -85,7 +84,6 @@ func (o *Options) Run() error {
 
 	// Wait forever
 	select {}
-	return nil
 }
 
 func (o *Options) onSecret(ns string, obj interface{}) {
