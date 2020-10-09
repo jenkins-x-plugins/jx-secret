@@ -24,12 +24,16 @@ type Options struct {
 
 	replaceWordMap     map[string]map[string]string
 	replaceWordMapLock sync.Mutex
+	loggedMessages     map[string]bool
 }
 
 // Validate verifies things are setup correctly
 func (o *Options) Validate() error {
 	if o.replaceWordMap == nil {
 		o.replaceWordMap = map[string]map[string]string{}
+	}
+	if o.loggedMessages == nil {
+		o.loggedMessages = map[string]bool{}
 	}
 	var err error
 	o.KubeClient, err = kube.LazyCreateKubeClient(o.KubeClient)
@@ -51,7 +55,13 @@ func (o *Options) Validate() error {
 // Run runs the watching masker
 func (o *Options) Run() error {
 	stop := make(chan struct{})
-	return o.RunWithChannel(stop)
+	err := o.RunWithChannel(stop)
+	if err != nil {
+		return errors.Wrapf(err, "failed to ")
+	}
+
+	// Wait forever
+	select {}
 }
 
 // RunWithChannel runs with the given channel
@@ -85,9 +95,7 @@ func (o *Options) RunWithChannel(stop chan struct{}) error {
 		)
 		go ctrl.Run(stop)
 	}
-
-	// Wait forever
-	select {}
+	return nil
 }
 
 func (o *Options) onSecret(ns string, obj interface{}) {
@@ -102,7 +110,14 @@ func (o *Options) onSecret(ns string, obj interface{}) {
 // UpsertSecret upserts the secret in the replace words
 func (o *Options) UpsertSecret(ns string, secret *corev1.Secret) {
 	if secret != nil {
-		client := &masker.Client{}
+		client := &masker.Client{
+			LogFn: func(text string) {
+				if o.loggedMessages[text] == false {
+					o.loggedMessages[text] = true
+					log.Logger().Info(text)
+				}
+			},
+		}
 		err := client.LoadSecret(secret)
 		if err != nil {
 			log.Logger().Warnf("failed to load Secret %s namespace %s: %s", secret.Name, ns, err.Error())
