@@ -50,14 +50,18 @@ func (o *Options) Validate() error {
 
 // Run runs the watching masker
 func (o *Options) Run() error {
+	stop := make(chan struct{})
+	return o.RunWithChannel(stop)
+}
+
+// RunWithChannel runs with the given channel
+func (o *Options) RunWithChannel(stop chan struct{}) error {
 	err := o.Validate()
 	if err != nil {
 		return errors.Wrapf(err, "failed to validate options")
 	}
 
 	log.Logger().Info("starting secret watching masker")
-
-	stop := make(chan struct{})
 
 	for _, ns := range o.Namespaces {
 		secret := &corev1.Secret{}
