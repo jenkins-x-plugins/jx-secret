@@ -119,6 +119,6 @@ type Property struct {
 	// MaxLength the maximum number of characters in the value
 	MaxLength int `json:"maxLength,omitempty" yaml:"maxLength,omitempty"`
 
-	// Mask whether a mask is used on input
-	Mask bool `json:"mask,omitempty" yaml:"mask,omitempty"`
+	// NoMask whether to exclude from Secret masking in logs
+	NoMask bool `json:"noMask,omitempty" yaml:"mask,omitempty"`
 }
