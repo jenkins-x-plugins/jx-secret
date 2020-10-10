@@ -84,6 +84,29 @@ func (o *Options) Run() error {
 
 	waited := map[string]bool{}
 
+	err = o.populateLoop(results, waited)
+	if err != nil {
+		return errors.Wrapf(err, "failed to populate secrets")
+	}
+
+	// lets run the loop again for any template / generators which need mandatory secrets as inputs
+	results, err = o.VerifyAndFilter()
+	if err != nil {
+		return errors.Wrap(err, "failed to verify secrets on second pass")
+	}
+	o.Results = results
+	if len(results) == 0 {
+		log.Logger().Infof("the %d ExternalSecrets on second pass are %s", len(o.ExternalSecrets), termcolor.ColorInfo("populated"))
+		return nil
+	}
+	err = o.populateLoop(results, waited)
+	if err != nil {
+		return errors.Wrapf(err, "failed to populate secrets on second pass")
+	}
+	return nil
+}
+
+func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[string]bool) error {
 	for _, r := range results {
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
@@ -104,7 +127,7 @@ func (o *Options) Run() error {
 
 		// lets wait until the backend is available
 		if !waited[backendType] {
-			err = o.waitForBackend(backendType)
+			err := o.waitForBackend(backendType)
 			if err != nil {
 				return errors.Wrapf(err, "failed to wait for backend type %s", backendType)
 			}
