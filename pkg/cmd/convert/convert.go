@@ -8,6 +8,7 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/convert/edit"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
@@ -27,6 +28,8 @@ import (
 )
 
 var (
+	info = termcolor.ColorInfo
+
 	labelLong = templates.LongDesc(`
 		Converts all Secret resources in the path to ExternalSecret resources so they can be checked into git
 `)
@@ -101,8 +104,17 @@ func (o *Options) Run() error {
 		namespace := kyamls.GetNamespace(node, path)
 		name := kyamls.GetName(node, path)
 
+		hasData, err := hasSecretData(node, path)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to check if file has Secret data %s", path)
+		}
+		if !hasData {
+			log.Logger().Infof("not converting Secret %s in namespace %s to an ExternalSecret as it has no data", info(name), info(namespace))
+			return false, nil
+		}
+
 		secret := o.SecretMapping.FindRule(namespace, name)
-		err := kyamls.SetStringValue(node, path, "kubernetes-client.io/v1", "apiVersion")
+		err = kyamls.SetStringValue(node, path, "kubernetes-client.io/v1", "apiVersion")
 		if err != nil {
 			return false, err
 		}
@@ -172,6 +184,28 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to modify files")
 	}
 	return nil
+}
+
+// hasSecretData returns true if the node has secret data fields
+func hasSecretData(node *yaml.RNode, path string) (bool, error) {
+	for _, dataPath := range []string{"data", "stringData"} {
+		data, err := node.Pipe(yaml.Lookup(dataPath))
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to get data for path %s", path)
+		}
+
+		var fields []string
+		if data != nil {
+			fields, err = data.Fields()
+			if err != nil {
+				return false, errors.Wrapf(err, "failed to find data fields for path %s", path)
+			}
+			if len(fields) > 0 {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha1.BackendType) (bool, error) {

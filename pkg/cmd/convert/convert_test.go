@@ -6,18 +6,18 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
-
-	"github.com/google/go-cmp/cmp"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/convert"
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-secret/pkg/secretmapping"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 func TestToExtSecrets(t *testing.T) {
@@ -176,6 +176,14 @@ func TestConvertAndSchemaEnrich(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	t.Logf("converted the Secrets to ExternalSecrets in dir %s", eo.Dir)
+
+	// lets verify that we did not convert the empty tekton webhook certs secret
+	webhookSecretFile := filepath.Join(tmpDir, "config-root", "namespaces", "jx", "tekton", "webhook-certs-secret.yaml")
+	require.FileExists(t, webhookSecretFile, "should have empty tekton secret file")
+	webhookSecret := &unstructured.Unstructured{}
+	err = yamls.LoadFile(webhookSecretFile, webhookSecret)
+	require.NoError(t, err, "failed to parse tekton webhook secret %s", webhookSecretFile)
+	assert.Equal(t, "Secret", webhookSecret.GetKind(), "kind of resource in file %s", webhookSecretFile)
 
 	// now lets verify a number of schema properties
 	testCases := []struct {
