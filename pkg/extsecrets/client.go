@@ -3,8 +3,9 @@ package extsecrets
 import (
 	"context"
 
+	"github.com/jenkins-x/jx-helpers/v3/pkg/knative_pkg/duck"
+
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/knative_pkg/duck"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
