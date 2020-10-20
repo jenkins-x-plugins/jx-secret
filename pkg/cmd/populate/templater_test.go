@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/jenkins-x/jx-api/v3/pkg/config"
+	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/templatertesting"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -149,4 +150,37 @@ func TestTemplater(t *testing.T) {
 		KubeObjects: testSecrets,
 	}
 	runner.Run(t)
+}
+
+
+func TestResolveNames(t *testing.T) {
+	testCases := []struct {
+		input []string
+		expected []string
+
+	} {
+		{
+		 	input: []string{
+		 		"jx-boot", "jx",
+			},
+		 	expected: []string{
+		 		"jx-boot", "jx",
+			},
+		},
+		{
+		 	input: []string{
+		 		"jx-git-operator.jx-boot", "jx",
+			},
+		 	expected: []string{
+		 		"jx-boot", "jx-git-operator",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		name, ns := populate.ResolveResourceNames(tc.input[0], tc.input[1])
+
+		assert.Equal(t, tc.expected[0], name, "name for input %v", tc.input)
+		assert.Equal(t, tc.expected[1], ns, "namespace for input %v", tc.input)
+	}
 }

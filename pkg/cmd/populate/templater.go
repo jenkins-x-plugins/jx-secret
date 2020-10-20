@@ -17,13 +17,14 @@ import (
 )
 
 // EvaluateTemplate evaluates the go template to create the value
-func (o *Options) EvaluateTemplate(ns, secretName, property, templateText string) (string, error) {
+func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText string) (string, error) {
 	funcMap := sprig.TxtFuncMap()
 
 	// template function to lookup a value in a secret:
 	//
 	// use like this: `{{ secret "my-secret-name" "key-name" }}
-	funcMap["secret"] = func(lookupSecret, lookupKey string) string {
+	funcMap["secret"] = func(lookupSecretName, lookupKey string) string {
+		lookupSecret, ns := ResolveResourceNames(lookupSecretName, namespace)
 		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
@@ -39,7 +40,8 @@ func (o *Options) EvaluateTemplate(ns, secretName, property, templateText string
 	// template function to lookup username + password in a Secret and then use that to make a htpasswd value
 	//
 	// use like this: `{{ htpasswdSecret "my-secret-name" "username" "password" }}
-	funcMap["htpasswdSecret"] = func(lookupSecret, usernameKey, passwordKey string) string {
+	funcMap["htpasswdSecret"] = func(lookupSecretName, usernameKey, passwordKey string) string {
+		lookupSecret, ns := ResolveResourceNames(lookupSecretName, namespace)
 		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
@@ -76,7 +78,8 @@ func (o *Options) EvaluateTemplate(ns, secretName, property, templateText string
 	// template function to lookup a user + password in a secret and concatenate in a string like `"username:password"`.
 	//
 	// use like this: `{{ auth "my-secret-name" "username-key" "password-key }}
-	funcMap["auth"] = func(lookupSecret, userKey, passwordKey string) string {
+	funcMap["auth"] = func(lookupSecretName, userKey, passwordKey string) string {
+		lookupSecret, ns := ResolveResourceNames(lookupSecretName, namespace)
 		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
@@ -115,4 +118,13 @@ func (o *Options) EvaluateTemplate(ns, secretName, property, templateText string
 		return "", errors.Wrapf(err, "failed to evaluate template to create value of Secret %s property %s", secretName, property)
 	}
 	return buf.String(), nil
+}
+
+// ResolveResourceNames if the secret name contains a dot then assume its namespace.name otherwise return the name in the current namespace
+func ResolveResourceNames(name string, currentNamespace string) (string, string) {
+	idx := strings.Index(name, ".")
+	if idx < 0 {
+		return name, currentNamespace
+	}
+	return name[idx+1:], name[:idx]
 }
