@@ -173,7 +173,7 @@ func (m *Client) LoadSecret(secret *corev1.Secret) error {
 			}
 
 			if m.ReplaceWords[value] == "" {
-				password := ""
+				password := "" //NOSONAR
 				if ShowMaskedPasswords {
 					password = " => " + value
 				}
