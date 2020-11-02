@@ -75,7 +75,7 @@ func TestEditVault(t *testing.T) {
 			CLI: vaultBin + " kv put secret/jx/pipelineUser token=dummyPipelineToken",
 		},
 		fakerunner.FakeResult{
-			CLI: vaultBin + " kv put secret/knative/docker/user/pass password=dummyDockerPwd",
+			CLI: vaultBin + " kv put secret/knative/docker/user/pass password=dummyDockerPwd", //NOSONAR
 			Env: map[string]string{
 				"VAULT_ADDR":  "https://127.0.0.1:8200",
 				"VAULT_TOKEN": "dummyVaultToken",
@@ -121,7 +121,7 @@ func TestEditLocal(t *testing.T) {
 	o.CommandRunner = runner.Run
 
 	/* #nosec */
-	const expectedDockerPwd = "dummyDockerPwd"
+	const expectedDockerPwd = "dummyDockerPwd" //NOSONAR
 	const expectedPipelineToken = "dummyPipelineToken"
 	input := &fakeinput.FakeInput{
 		Values: map[string]string{
