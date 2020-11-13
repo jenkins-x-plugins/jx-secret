@@ -8,7 +8,7 @@ require (
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/repr v0.0.0-20201103221029-55c485bd663f // indirect
 	github.com/cpuguy83/go-md2man v1.0.10
-	github.com/google/go-cmp v0.5.2
+	github.com/google/go-cmp v0.5.3
 	github.com/jenkins-x/jx-api/v3 v3.0.3
 	github.com/jenkins-x/jx-helpers/v3 v3.0.9
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
