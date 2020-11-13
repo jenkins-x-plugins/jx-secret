@@ -6,11 +6,10 @@ require (
 	github.com/Masterminds/sprig/v3 v3.1.0
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/colour v0.1.0 // indirect
-	github.com/alecthomas/repr v0.0.0-20200325044227-4184120f674c // indirect
+	github.com/alecthomas/repr v0.0.0-20201103221029-55c485bd663f // indirect
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/google/go-cmp v0.5.2
-	github.com/huandu/xstrings v1.3.2 // indirect
-	github.com/jenkins-x/jx-api/v3 v3.0.1
+	github.com/jenkins-x/jx-api/v3 v3.0.3
 	github.com/jenkins-x/jx-helpers/v3 v3.0.9
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
 	github.com/jenkins-x/jx-logging/v3 v3.0.2
