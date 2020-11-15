@@ -2,6 +2,7 @@ package populate
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/jenkins-x/jx-api/v3/pkg/config"
@@ -134,7 +135,12 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 			waited[backendType] = true
 		}
 
-		secEditor, err := factory.NewEditor(o.EditorCache, &r.ExternalSecret, o.CommandRunner, o.KubeClient)
+		runner, err := o.secretCommandRunner(backendType)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get command runner")
+		}
+
+		secEditor, err := factory.NewEditor(o.EditorCache, &r.ExternalSecret, runner, o.KubeClient)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
 		}
@@ -283,4 +289,25 @@ func (o *Options) loadGenerators() {
 	}
 	o.Generators["gitOperator.username"] = generators.SecretEntry(o.KubeClient, ns, "jx-boot", "username")
 	o.Generators["gitOperator.password"] = generators.SecretEntry(o.KubeClient, ns, "jx-boot", "password")
+}
+
+// secretCommandRunner should we use `kubectl exec` into a side car to execute the commands?
+// if we are in the boot job we should
+func (o *Options) secretCommandRunner(backendType string) (cmdrunner.CommandRunner, error) {
+	podName := os.Getenv("POD_NAME")
+	if podName == "" {
+		podName = os.Getenv("HOSTNAME")
+	}
+	sidecar := os.Getenv("JX_SECRET_SIDECAR")
+	runner := o.CommandRunner
+	if sidecar == "" || podName == "" {
+		return runner, nil
+	}
+	return func(c *cmdrunner.Command) (string, error) {
+		kc := *c
+		kc.Name = "kubectl"
+		kc.Args = append([]string{"exec", podName, "-t", "--", "-c", sidecar, c.Name}, c.Args...)
+		return runner(&kc)
+
+	}, nil
 }

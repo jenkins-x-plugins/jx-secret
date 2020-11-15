@@ -117,9 +117,7 @@ func (c *client) writeTemporarySecretPropertiesJSON(properties *editor.KeyProper
 }
 
 func (c *client) ensureSecretExists(key, projectID string) error {
-
 	args := []string{"secrets", "describe", key, "--project", projectID}
-
 	cmd := &cmdrunner.Command{
 		Name: gcloud,
 		Args: args,
