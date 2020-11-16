@@ -309,7 +309,7 @@ func (o *Options) secretCommandRunner(backendType string) (cmdrunner.CommandRunn
 	return func(c *cmdrunner.Command) (string, error) {
 		kc := *c
 		kc.Name = "kubectl"
-		kc.Args = append([]string{"exec", podName, "-t", "--", "-c", sidecar, c.Name}, c.Args...)
+		kc.Args = append([]string{"exec", podName, "-t", "-c", sidecar, "--", c.Name}, c.Args...)
 		return runner(&kc)
 	}, nil
 }
