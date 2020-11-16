@@ -299,6 +299,9 @@ func (o *Options) secretCommandRunner(backendType string) (cmdrunner.CommandRunn
 		podName = os.Getenv("HOSTNAME")
 	}
 	sidecar := os.Getenv("JX_SECRET_SIDECAR")
+	if o.CommandRunner == nil {
+		o.CommandRunner = cmdrunner.DefaultCommandRunner
+	}
 	runner := o.CommandRunner
 	if sidecar == "" || podName == "" {
 		return runner, nil
@@ -308,6 +311,5 @@ func (o *Options) secretCommandRunner(backendType string) (cmdrunner.CommandRunn
 		kc.Name = "kubectl"
 		kc.Args = append([]string{"exec", podName, "-t", "--", "-c", sidecar, c.Name}, c.Args...)
 		return runner(&kc)
-
 	}, nil
 }
