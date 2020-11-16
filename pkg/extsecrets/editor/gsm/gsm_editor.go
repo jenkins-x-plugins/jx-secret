@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 
 	"k8s.io/apimachinery/pkg/util/json"
@@ -26,6 +27,7 @@ type client struct {
 	quietCommandRunner cmdrunner.CommandRunner
 	kubeClient         kubernetes.Interface
 	env                map[string]string
+	tmpDir             string
 }
 
 func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Interface) (editor.Interface, error) {
@@ -33,10 +35,23 @@ func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Inte
 		commandRunner = cmdrunner.DefaultCommandRunner
 	}
 
+	tmpDir := os.Getenv("JX_SECRET_TMP_DIR")
+	if tmpDir != "" {
+		err := os.MkdirAll(tmpDir, files.DefaultDirWritePermissions)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to create jx secret temp dir %s", tmpDir)
+		}
+	}
+
+	log.Logger().Infof("using secret temp dir %s", tmpDir)
+
 	c := &client{
-		commandRunner:      commandRunner,
-		kubeClient:         kubeClient,
-		quietCommandRunner: cmdrunner.QuietCommandRunner,
+		commandRunner: commandRunner,
+		kubeClient:    kubeClient,
+		// TODO temporary until we've the multi container working
+		// quietCommandRunner: cmdrunner.QuietCommandRunner,
+		quietCommandRunner: commandRunner,
+		tmpDir:             tmpDir,
 	}
 	err := c.initialise()
 	if err != nil {
@@ -61,7 +76,7 @@ func (c *client) Write(properties *editor.KeyProperties) error {
 	editor.SortPropertyValues(properties.Properties)
 
 	// create a temporary file used to upload secret values to Google Secrets Manager
-	file, err := ioutil.TempFile("", "jx")
+	file, err := ioutil.TempFile(c.tmpDir, "jx")
 	if err != nil {
 		return errors.Wrap(err, "failed to create temporary directory used to write secrets to then upload to google secrets manager")
 	}
