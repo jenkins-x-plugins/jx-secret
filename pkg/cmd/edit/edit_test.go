@@ -52,6 +52,7 @@ func TestEditVault(t *testing.T) {
 
 	runner := &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run
+	o.QuietCommandRunner = runner.Run
 
 	input := &fakeinput.FakeInput{
 		Values: map[string]string{

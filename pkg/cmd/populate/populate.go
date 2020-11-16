@@ -40,6 +40,7 @@ type Options struct {
 	WaitDuration        time.Duration
 	Results             []*secretfacade.SecretPair
 	CommandRunner       cmdrunner.CommandRunner
+	QuietCommandRunner  cmdrunner.CommandRunner
 	NoWait              bool
 	Generators          map[string]generators.Generator
 	Requirements        *config.RequirementsConfig
@@ -135,12 +136,12 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 			waited[backendType] = true
 		}
 
-		runner, err := o.secretCommandRunner(backendType)
+		runner, quietRunner, err := o.secretCommandRunner(backendType)
 		if err != nil {
 			return errors.Wrapf(err, "failed to get command runner")
 		}
 
-		secEditor, err := factory.NewEditor(o.EditorCache, &r.ExternalSecret, runner, o.KubeClient)
+		secEditor, err := factory.NewEditor(o.EditorCache, &r.ExternalSecret, runner, quietRunner, o.KubeClient)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
 		}
@@ -293,21 +294,29 @@ func (o *Options) loadGenerators() {
 
 // secretCommandRunner should we use `kubectl exec` into a side car to execute the commands?
 // if we are in the boot job we should
-func (o *Options) secretCommandRunner(backendType string) (cmdrunner.CommandRunner, error) {
+func (o *Options) secretCommandRunner(_ string) (cmdrunner.CommandRunner, cmdrunner.CommandRunner, error) {
 	podName := os.Getenv("POD_NAME")
 	if podName == "" {
 		podName = os.Getenv("HOSTNAME")
 	}
 	sidecar := os.Getenv("JX_SECRET_SIDECAR")
-	runner := o.CommandRunner
-	if sidecar == "" || podName == "" {
-		return runner, nil
+	if o.CommandRunner == nil {
+		o.CommandRunner = cmdrunner.DefaultCommandRunner
 	}
+	if o.QuietCommandRunner == nil {
+		o.QuietCommandRunner = cmdrunner.QuietCommandRunner
+	}
+	if sidecar == "" || podName == "" {
+		return o.CommandRunner, o.QuietCommandRunner, nil
+	}
+	return KubectlExecRunner(podName, sidecar, o.CommandRunner), KubectlExecRunner(podName, sidecar, o.QuietCommandRunner), nil
+}
+
+func KubectlExecRunner(podName string, sidecar string, runner cmdrunner.CommandRunner) func(c *cmdrunner.Command) (string, error) {
 	return func(c *cmdrunner.Command) (string, error) {
 		kc := *c
 		kc.Name = "kubectl"
-		kc.Args = append([]string{"exec", podName, "-t", "--", "-c", sidecar, c.Name}, c.Args...)
+		kc.Args = append([]string{"exec", podName, "-t", "-c", sidecar, "--", c.Name}, c.Args...)
 		return runner(&kc)
-
-	}, nil
+	}
 }

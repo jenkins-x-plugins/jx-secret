@@ -40,10 +40,11 @@ var (
 // Options the options for the command
 type Options struct {
 	secretfacade.Options
-	Filter        string
-	Input         input.Interface
-	Results       []*secretfacade.SecretPair
-	CommandRunner cmdrunner.CommandRunner
+	Filter             string
+	Input              input.Interface
+	Results            []*secretfacade.SecretPair
+	CommandRunner      cmdrunner.CommandRunner
+	QuietCommandRunner cmdrunner.CommandRunner
 }
 
 // NewCmdEdit creates a command object for the command
@@ -87,7 +88,7 @@ func (o *Options) Run() error {
 	for i := range results {
 		r := results[i]
 		name := r.ExternalSecret.Name
-		secEditor, err := factory.NewEditor(o.EditorCache, &r.ExternalSecret, o.CommandRunner, o.KubeClient)
+		secEditor, err := factory.NewEditor(o.EditorCache, &r.ExternalSecret, o.CommandRunner, o.QuietCommandRunner, o.KubeClient)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
 		}

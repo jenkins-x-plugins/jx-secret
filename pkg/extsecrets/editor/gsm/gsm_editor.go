@@ -30,9 +30,12 @@ type client struct {
 	tmpDir             string
 }
 
-func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Interface) (editor.Interface, error) {
+func NewEditor(commandRunner cmdrunner.CommandRunner, quietCommandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Interface) (editor.Interface, error) {
 	if commandRunner == nil {
 		commandRunner = cmdrunner.DefaultCommandRunner
+	}
+	if quietCommandRunner == nil {
+		quietCommandRunner = commandRunner
 	}
 
 	tmpDir := os.Getenv("JX_SECRET_TMP_DIR")
@@ -42,15 +45,12 @@ func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Inte
 			return nil, errors.Wrapf(err, "failed to create jx secret temp dir %s", tmpDir)
 		}
 	}
-
-	log.Logger().Infof("using secret temp dir %s", tmpDir)
+	log.Logger().Debugf("using secret temp dir %s", tmpDir)
 
 	c := &client{
-		commandRunner: commandRunner,
-		kubeClient:    kubeClient,
-		// TODO temporary until we've the multi container working
-		// quietCommandRunner: cmdrunner.QuietCommandRunner,
-		quietCommandRunner: commandRunner,
+		commandRunner:      commandRunner,
+		quietCommandRunner: quietCommandRunner,
+		kubeClient:         kubeClient,
 		tmpDir:             tmpDir,
 	}
 	err := c.initialise()

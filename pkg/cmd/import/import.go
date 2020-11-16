@@ -35,14 +35,15 @@ var (
 
 // Options the options for the command
 type Options struct {
-	File             string
-	Namespace        string
-	SecretClient     extsecrets.Interface
-	KubeClient       kubernetes.Interface
-	CommandRunner    cmdrunner.CommandRunner
-	FailOnUnknownKey bool
-	ExternalSecrets  []*v1.ExternalSecret
-	Handlers         map[string]*backendHandler
+	File               string
+	Namespace          string
+	SecretClient       extsecrets.Interface
+	KubeClient         kubernetes.Interface
+	CommandRunner      cmdrunner.CommandRunner
+	QuietCommandRunner cmdrunner.CommandRunner
+	FailOnUnknownKey   bool
+	ExternalSecrets    []*v1.ExternalSecret
+	Handlers           map[string]*backendHandler
 
 	// EditorCache the optional cache of editors
 	EditorCache map[string]editor.Interface
@@ -127,7 +128,7 @@ func (o *Options) Run() error {
 			handler := o.Handlers[key]
 			if handler == nil {
 				var e editor.Interface
-				e, err = factory.NewEditor(o.EditorCache, r, o.CommandRunner, o.KubeClient)
+				e, err = factory.NewEditor(o.EditorCache, r, o.CommandRunner, o.QuietCommandRunner, o.KubeClient)
 				if err != nil {
 					return errors.Wrapf(err, "failed to create e for secret %s of type %s", name, backendType)
 				}

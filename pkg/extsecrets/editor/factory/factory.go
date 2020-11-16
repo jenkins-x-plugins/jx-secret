@@ -11,7 +11,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewEditor(cache map[string]editor.Interface, secret *v1.ExternalSecret, commandRunner cmdrunner.CommandRunner, client kubernetes.Interface) (editor.Interface, error) {
+func NewEditor(cache map[string]editor.Interface, secret *v1.ExternalSecret, commandRunner cmdrunner.CommandRunner, quietCommandRunner cmdrunner.CommandRunner, client kubernetes.Interface) (editor.Interface, error) {
 	backendType := secret.Spec.BackendType
 	switch backendType {
 	case "local":
@@ -21,7 +21,7 @@ func NewEditor(cache map[string]editor.Interface, secret *v1.ExternalSecret, com
 		cached := cache["vault"]
 		var err error
 		if cached == nil {
-			cached, err = vault.NewEditor(commandRunner, client)
+			cached, err = vault.NewEditor(commandRunner, quietCommandRunner, client)
 			if err != nil {
 				return cached, errors.Wrapf(err, "failed to create vault editor")
 			}
@@ -29,7 +29,7 @@ func NewEditor(cache map[string]editor.Interface, secret *v1.ExternalSecret, com
 		}
 		return cached, nil
 	case "gcpSecretsManager":
-		return gsm.NewEditor(commandRunner, client)
+		return gsm.NewEditor(commandRunner, quietCommandRunner, client)
 	default:
 		return nil, errors.Errorf("unsupported ExternalSecret back end %s", backendType)
 	}
