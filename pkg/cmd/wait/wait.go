@@ -116,7 +116,7 @@ func (o *Options) WaitCheck() (bool, error) {
 			o.loggedMissing = true
 			log.Logger().Infof("no mandatory ExternalSecrets found")
 		}
-		return false, nil
+		return true, nil
 	}
 	if valid {
 		log.Logger().Infof("%d mandatory secrets are valid", count)
