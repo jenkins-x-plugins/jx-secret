@@ -288,13 +288,13 @@ int
 </tr>
 <tr>
 <td>
-<code>mask</code></br>
+<code>noMask</code></br>
 <em>
 bool
 </em>
 </td>
 <td>
-<p>Mask whether a mask is used on input</p>
+<p>NoMask whether to exclude from Secret masking in logs</p>
 </td>
 </tr>
 </tbody>
@@ -334,5 +334,5 @@ bool
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>dfc8c73</code>.
+on git commit <code>ccb2dc3</code>.
 </em></p>
