@@ -15,19 +15,24 @@ import (
 )
 
 type client struct {
-	commandRunner cmdrunner.CommandRunner
-	kubeClient    kubernetes.Interface
-	env           map[string]string
-	vaultBin      string
+	commandRunner      cmdrunner.CommandRunner
+	quietCommandRunner cmdrunner.CommandRunner
+	kubeClient         kubernetes.Interface
+	env                map[string]string
+	vaultBin           string
 }
 
-func NewEditor(commandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Interface) (editor.Interface, error) {
+func NewEditor(commandRunner cmdrunner.CommandRunner, quietCommandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Interface) (editor.Interface, error) {
 	if commandRunner == nil {
 		commandRunner = MaskedCommandRunner
 	}
+	if quietCommandRunner == nil {
+		quietCommandRunner = commandRunner
+	}
 	c := &client{
-		commandRunner: commandRunner,
-		kubeClient:    kubeClient,
+		commandRunner:      commandRunner,
+		quietCommandRunner: quietCommandRunner,
+		kubeClient:         kubeClient,
 	}
 	err := c.initialise()
 	if err != nil {

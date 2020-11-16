@@ -31,14 +31,15 @@ var (
 
 // Options the options for the command
 type Options struct {
-	PodName       string
-	Namespace     string
-	WaitDuration  time.Duration
-	PollPeriod    time.Duration
-	NoEditorWait  bool
-	CommandRunner cmdrunner.CommandRunner
-	KubeClient    kubernetes.Interface
-	Start         time.Time
+	PodName            string
+	Namespace          string
+	WaitDuration       time.Duration
+	PollPeriod         time.Duration
+	NoEditorWait       bool
+	CommandRunner      cmdrunner.CommandRunner
+	QuietCommandRunner cmdrunner.CommandRunner
+	KubeClient         kubernetes.Interface
+	Start              time.Time
 }
 
 // NewCmdWait creates a command object for the command
@@ -112,7 +113,7 @@ func (o *Options) waitForEditor() error {
 	endTime := o.Start.Add(o.WaitDuration)
 
 	for {
-		_, err := vault.NewEditor(o.CommandRunner, o.KubeClient)
+		_, err := vault.NewEditor(o.CommandRunner, o.QuietCommandRunner, o.KubeClient)
 		if err == nil {
 			log.Logger().Infof("managed to verify we can connect to vault")
 			return nil

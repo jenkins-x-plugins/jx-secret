@@ -36,6 +36,7 @@ func TestImport(t *testing.T) {
 
 	runner := &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run
+	o.QuietCommandRunner = runner.Run
 
 	o.File = filepath.Join("test_data", "import-file.yaml")
 

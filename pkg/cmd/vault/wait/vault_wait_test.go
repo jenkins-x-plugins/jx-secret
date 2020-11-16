@@ -76,6 +76,7 @@ func TestVaultWait(t *testing.T) {
 		},
 	}
 	o.CommandRunner = runner.Run
+	o.QuietCommandRunner = runner.Run
 
 	err = o.Run()
 	require.NoError(t, err, "failed to run")
