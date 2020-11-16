@@ -58,7 +58,7 @@ func NewCmdReplicate() (*cobra.Command, *Options) {
 		Use:     "replicate",
 		Short:   "Replicates the given ExternalSecret resources into other Environments or Namespaces",
 		Long:    labelLong,
-		Example: fmt.Sprintf(labelExample, rootcmd.BinaryName),
+		Example: fmt.Sprintf(labelExample, rootcmd.BinaryName, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)
@@ -107,7 +107,8 @@ func (o *Options) Run() error {
 		}
 
 		if len(o.To) == 0 {
-			return options.MissingOption("to")
+			log.Logger().Warnf("no --to specified and no remote Environments found")
+			return nil
 		}
 	}
 
