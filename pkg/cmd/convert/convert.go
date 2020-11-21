@@ -236,7 +236,7 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 
 				switch backendType {
 				case v1alpha1.BackendTypeVault:
-					err = o.modifyVault(rNode, field, secretName, path)
+					err = o.modifyVault(node, rNode, field, secretName, path)
 
 				case v1alpha1.BackendTypeGSM:
 					err = o.modifyGSM(rNode, field, secretName, path)
@@ -272,7 +272,13 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	return true, nil
 }
 
-func (o *Options) modifyVault(rNode *yaml.RNode, field, secretName, path string) error {
+func (o *Options) modifyVault(node *yaml.RNode, rNode *yaml.RNode, field, secretName, path string) error {
+	prefix := kyamls.GetStringField(node, path, "metadata", "annotations", "secret.jenkins-x.io/prefix")
+	if prefix != "" {
+		prefix = prefix + "/"
+	} else {
+		prefix = ""
+	}
 	// trim the suffix from the name and use it on the property?
 	property := field
 	secretPath := strings.ReplaceAll(secretName, "-", "/")
@@ -280,7 +286,7 @@ func (o *Options) modifyVault(rNode *yaml.RNode, field, secretName, path string)
 	if len(names) > 1 && names[len(names)-1] == property {
 		secretPath = strings.Join(names[0:len(names)-1], "/")
 	}
-	key := "secret/data/" + secretPath
+	key := "secret/data/" + prefix + secretPath
 
 	if o.SecretMapping != nil {
 		mapping := o.SecretMapping.Find(secretName, field)
