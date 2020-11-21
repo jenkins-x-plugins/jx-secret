@@ -274,7 +274,7 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 
 func (o *Options) modifyVault(node *yaml.RNode, rNode *yaml.RNode, field, secretName, path string) error {
 	prefix := kyamls.GetStringField(node, path, "metadata", "annotations", "secret.jenkins-x.io/prefix")
-	if prefix != nil {
+	if prefix != "" {
 		prefix = prefix + "/"
 	} else {
 		prefix = ""
