@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jenkins-x/jx-api/v3/pkg/config"
+	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 
 	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/secretmapping"
@@ -27,7 +27,7 @@ type Options struct {
 	SecretMapping v1alpha1.SecretMapping
 	Cmd           *cobra.Command
 	Args          []string
-	requirements  *config.RequirementsConfig
+	requirements  *jxcore.RequirementsConfig
 }
 
 var (
@@ -69,10 +69,13 @@ func NewCmdSecretMappingEdit() (*cobra.Command, *Options) {
 // Run runs the command
 func (o *Options) Run() error {
 	var err error
-	o.requirements, _, err = config.LoadRequirementsConfig(o.Dir, false)
+	var requirementsResource *jxcore.Requirements
+	requirementsResource, _, err = jxcore.LoadRequirementsConfig(o.Dir, false)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load requirements in dir %s", o.Dir)
 	}
+
+	o.requirements = &requirementsResource.Spec
 
 	if o.Dir == "" {
 		o.Dir = filepath.Join(".jx", "gitops")

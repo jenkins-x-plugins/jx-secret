@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/jenkins-x/jx-api/v3/pkg/config"
+	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
@@ -43,7 +43,7 @@ type Options struct {
 	QuietCommandRunner  cmdrunner.CommandRunner
 	NoWait              bool
 	Generators          map[string]generators.Generator
-	Requirements        *config.RequirementsConfig
+	Requirements        *jxcore.RequirementsConfig
 	BootSecretNamespace string
 }
 
