@@ -1,3 +1,14 @@
-cluster:
-  clusterName: bar
-  project: foo
+apiVersion: core.jenkins-x.io/v4beta1
+kind: Requirements
+spec:
+  autoUpdate:
+    enabled: false
+    schedule: ""
+  cluster:
+    clusterName: bar
+    project: foo
+  ingress:
+    domain: ""
+    externalDNS: false
+    namespaceSubDomain: ""
+  vault: {}

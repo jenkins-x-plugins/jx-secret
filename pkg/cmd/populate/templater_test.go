@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-api/v3/pkg/config"
+	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/templatertesting"
 	"github.com/stretchr/testify/assert"
@@ -79,9 +79,9 @@ func TestTemplater(t *testing.T) {
 					assert.NotEmpty(t, text, "should have created a valid htpasswd value from the Secret")
 					t.Logf("generated jx-basic-auth-htpasswd auth value: %s\n", text)
 				},
-				Requirements: &config.RequirementsConfig{
+				Requirements: &jxcore.RequirementsConfig{
 					Repository: "nexus",
-					Cluster: config.ClusterConfig{
+					Cluster: jxcore.ClusterConfig{
 						Provider:    "gke",
 						ProjectID:   "myproject",
 						ClusterName: "mycluster",
@@ -93,9 +93,9 @@ func TestTemplater(t *testing.T) {
 				ObjectName: "jenkins-docker-cfg",
 				Property:   "config.json",
 				Format:     "json",
-				Requirements: &config.RequirementsConfig{
+				Requirements: &jxcore.RequirementsConfig{
 					Repository: "nexus",
-					Cluster: config.ClusterConfig{
+					Cluster: jxcore.ClusterConfig{
 						Provider:    "gke",
 						ProjectID:   "myproject",
 						ClusterName: "mycluster",
@@ -107,9 +107,9 @@ func TestTemplater(t *testing.T) {
 				ObjectName: "jenkins-maven-settings",
 				Property:   "settings.xml",
 				Format:     "xml",
-				Requirements: &config.RequirementsConfig{
+				Requirements: &jxcore.RequirementsConfig{
 					Repository: "nexus",
-					Cluster: config.ClusterConfig{
+					Cluster: jxcore.ClusterConfig{
 						Provider:    "gke",
 						ProjectID:   "myproject",
 						ClusterName: "mycluster",
@@ -121,9 +121,9 @@ func TestTemplater(t *testing.T) {
 				ObjectName: "jenkins-maven-settings",
 				Property:   "settings.xml",
 				Format:     "xml",
-				Requirements: &config.RequirementsConfig{
+				Requirements: &jxcore.RequirementsConfig{
 					Repository: "nexus",
-					Cluster: config.ClusterConfig{
+					Cluster: jxcore.ClusterConfig{
 						Provider:    "minikube",
 						ProjectID:   "myproject",
 						ClusterName: "mycluster",
@@ -135,9 +135,9 @@ func TestTemplater(t *testing.T) {
 				ObjectName: "jenkins-maven-settings",
 				Property:   "settings.xml",
 				Format:     "xml",
-				Requirements: &config.RequirementsConfig{
+				Requirements: &jxcore.RequirementsConfig{
 					Repository: "nexus",
-					Cluster: config.ClusterConfig{
+					Cluster: jxcore.ClusterConfig{
 						Provider:    "docker",
 						ProjectID:   "myproject",
 						ClusterName: "mycluster",
@@ -152,27 +152,25 @@ func TestTemplater(t *testing.T) {
 	runner.Run(t)
 }
 
-
 func TestResolveNames(t *testing.T) {
 	testCases := []struct {
-		input []string
+		input    []string
 		expected []string
-
-	} {
+	}{
 		{
-		 	input: []string{
-		 		"jx-boot", "jx",
+			input: []string{
+				"jx-boot", "jx",
 			},
-		 	expected: []string{
-		 		"jx-boot", "jx",
+			expected: []string{
+				"jx-boot", "jx",
 			},
 		},
 		{
-		 	input: []string{
-		 		"jx-git-operator.jx-boot", "jx",
+			input: []string{
+				"jx-git-operator.jx-boot", "jx",
 			},
-		 	expected: []string{
-		 		"jx-boot", "jx-git-operator",
+			expected: []string{
+				"jx-boot", "jx-git-operator",
 			},
 		},
 	}

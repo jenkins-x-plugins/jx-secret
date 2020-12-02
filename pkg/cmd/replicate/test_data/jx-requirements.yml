@@ -1,14 +1,16 @@
-cluster:
-  namespace: jx
-environments:
+apiVersion: core.jenkins-x.io/v4beta1
+kind: Requirements
+spec:
+  autoUpdate:
+    enabled: false
+    schedule: ""
+  cluster: {}
+  environments:
   - key: dev
-    owner: ""
-    repository: ""
   - key: staging
-    owner: ""
-    repository: ""
   - key: production
-    owner: ""
-    repository: ""
-
-
+  ingress:
+    domain: ""
+    externalDNS: false
+    namespaceSubDomain: ""
+  vault: {}

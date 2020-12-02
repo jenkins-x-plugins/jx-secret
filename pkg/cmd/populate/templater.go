@@ -8,7 +8,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/jenkins-x/jx-api/v3/pkg/config"
+	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -98,10 +98,12 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 	}
 
 	if o.Requirements == nil {
-		o.Requirements, _, err = config.LoadRequirementsConfig(o.Dir, false)
+		var requirementsResource *jxcore.Requirements
+		requirementsResource, _, err = jxcore.LoadRequirementsConfig(o.Dir, false)
 		if err != nil {
 			return "", errors.Wrapf(err, "failed to load jx-requirements.yml in dir %s", o.Dir)
 		}
+		o.Requirements = &requirementsResource.Spec
 	}
 	requirementsMap, err := o.Requirements.ToMap()
 	if err != nil {

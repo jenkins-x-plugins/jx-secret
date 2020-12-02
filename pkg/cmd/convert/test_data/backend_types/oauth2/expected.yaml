@@ -12,10 +12,10 @@ spec:
   backendType: gcpSecretsManager
   projectId: foo
   data:
-  - name: oauth
-    key: bar-my-gsm-secret-name
-    property: gsm-secret-property
-    version: 1
+    - name: oauth
+      key: bar-my-gsm-secret-name
+      property: gsm-secret-property
+      version: 1
   template:
     metadata:
       labels:
