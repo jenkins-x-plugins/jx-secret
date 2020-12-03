@@ -109,7 +109,9 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 	if err != nil {
 		return "", errors.Wrapf(err, "failed turn requirements into a map: %v", o.Requirements)
 	}
-
+	if requirementsMap["storage"] == nil {
+		requirementsMap["storage"] = map[string]string{}
+	}
 	templateData := map[string]interface{}{
 		"Requirements": requirementsMap,
 	}
