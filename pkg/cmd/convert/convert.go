@@ -243,6 +243,10 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 
 				case v1alpha1.BackendTypeLocal:
 					err = o.modifyLocal(rNode, field, secretName, path)
+
+				case v1alpha1.BackendTypeAzure:
+					err = o.modifyAzure(rNode, field, secretName, path)
+
 				}
 
 				if err != nil {
@@ -298,6 +302,42 @@ func (o *Options) modifyVault(node *yaml.RNode, rNode *yaml.RNode, field, secret
 				property = mapping.Property
 			}
 		}
+	}
+
+	err := kyamls.SetStringValue(rNode, path, field, "name")
+	if err != nil {
+		return err
+	}
+	err = kyamls.SetStringValue(rNode, path, key, "key")
+	if err != nil {
+		return err
+	}
+	err = kyamls.SetStringValue(rNode, path, property, "property")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string) error {
+
+	property := field
+	key := ""
+
+	if o.SecretMapping != nil {
+		mapping := o.SecretMapping.Find(secretName, field)
+		if mapping != nil {
+			if mapping.Key != "" {
+				key = mapping.Key
+			}
+			if mapping.Property != "" {
+				property = mapping.Property
+			}
+		}
+	}
+
+	if key == "" {
+		return fmt.Errorf("no key found when mapping secret %s", secretName)
 	}
 
 	err := kyamls.SetStringValue(rNode, path, field, "name")

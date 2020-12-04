@@ -133,6 +133,7 @@ func TestMultipleBackendTypes(t *testing.T) {
 
 	assert.Equal(t, v1alpha1.BackendTypeVault, eo.SecretMapping.Spec.Secrets[0].BackendType)
 	assert.Equal(t, v1alpha1.BackendTypeGSM, eo.SecretMapping.Spec.Secrets[1].BackendType)
+	assert.Equal(t, v1alpha1.BackendTypeAzure, eo.SecretMapping.Spec.Secrets[2].BackendType)
 
 	err = eo.Run()
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
