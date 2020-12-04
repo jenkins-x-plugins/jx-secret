@@ -53,6 +53,7 @@ type ExternalSecretSpec struct {
 	VaultMountPoint string `json:"vaultMountPoint,omitempty"`
 	VaultRole       string `json:"vaultRole,omitempty"`
 	ProjectID       string `json:"projectId,omitempty"`
+	KeyVaultName    string `json:"keyVaultName,omitempty"`
 
 	// Data the data for each entry in the Secret
 	Data []Data `json:"data,omitempty"`
