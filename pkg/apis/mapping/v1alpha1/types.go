@@ -82,6 +82,8 @@ const (
 	BackendTypeGSM BackendType = "gcpSecretsManager"
 	// BackendTypeLocal local secrets - i.e. vanilla k8s Secrets
 	BackendTypeLocal BackendType = "local"
+	// BackendTypeAzure Azure Key Vault as the Backed service
+	BackendTypeAzure BackendType = "azureKeyVault"
 	// BackendTypeNone if none is configured
 	BackendTypeNone BackendType = ""
 )
