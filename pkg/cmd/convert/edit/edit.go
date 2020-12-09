@@ -130,6 +130,23 @@ func (o *Options) applyDefaults() error {
 			}
 		}
 	}
+
+	if s.Spec.Defaults.BackendType == v1alpha1.BackendTypeAzure {
+		s.Spec.Defaults.AzureKeyVaultConfig, err = o.applyAzureKeyVaultDefaults(s.Spec.Defaults.AzureKeyVaultConfig)
+		if err != nil {
+			return errors.Wrapf(err, "failed to apply defaults to Azure Key Vault")
+		}
+	}
+
+	for k := range s.Spec.Secrets {
+		secret := &s.Spec.Secrets[k]
+		if secret.BackendType == v1alpha1.BackendTypeAzure {
+			secret.AzureKeyVaultConfig, err = o.applyAzureKeyVaultDefaults(secret.AzureKeyVaultConfig)
+			if err != nil {
+				return errors.Wrapf(err, "failed to apply defaults to Azure Key Vault for secret %s", secret.Name)
+			}
+		}
+	}
 	return nil
 }
 
@@ -153,4 +170,17 @@ func (o *Options) applyGSMDefaults(gsmConfig *v1alpha1.GcpSecretsManager) (*v1al
 		gsmConfig.Version = "latest"
 	}
 	return gsmConfig, nil
+}
+
+func (o *Options) applyAzureKeyVaultDefaults(akvConfig *v1alpha1.AzureKeyVaultConfig) (*v1alpha1.AzureKeyVaultConfig, error) {
+	if akvConfig == nil {
+		akvConfig = &v1alpha1.AzureKeyVaultConfig{}
+	}
+	if akvConfig.KeyVaultName == "" {
+		if o.requirements.Cluster.AzureConfig == nil || o.requirements.Cluster.AzureConfig.AzureSecretStorageConfig == nil || o.requirements.Cluster.AzureConfig.AzureSecretStorageConfig.KeyVaultName == "" {
+			return akvConfig, errors.New("found an empty Azure Key Vault name and one is required to store secrets in Azure Key Vault")
+		}
+		akvConfig.KeyVaultName = o.requirements.Cluster.AzureConfig.AzureSecretStorageConfig.KeyVaultName
+	}
+	return akvConfig, nil
 }

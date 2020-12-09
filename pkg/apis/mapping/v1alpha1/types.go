@@ -46,6 +46,9 @@ type Defaults struct {
 
 	// GcpSecretsManager config
 	GcpSecretsManager *GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
+
+	// AzureKeyVault config
+	AzureKeyVaultConfig *AzureKeyVaultConfig `json:"azureKeyVault,omitempty"`
 }
 
 // SecretMappingList contains a list of SecretMapping
@@ -70,6 +73,8 @@ type SecretRule struct {
 	Mappings []Mapping `json:"mappings,omitempty"`
 	// GcpSecretsManager config
 	GcpSecretsManager *GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
+	// GcpSecretsManager config
+	AzureKeyVaultConfig *AzureKeyVaultConfig `json:"azureKeyVault,omitempty"`
 }
 
 // BackendType describes a secrets backend
@@ -88,7 +93,7 @@ const (
 	BackendTypeNone BackendType = ""
 )
 
-// GcpSecretsManager the predicates which must be true to invoke the associated tasks/pipelines
+// GcpSecretsManager stores default config when using GSM for secret storage
 type GcpSecretsManager struct {
 	// Version of the referenced secret
 	Version string `json:"version,omitempty"`
@@ -96,6 +101,11 @@ type GcpSecretsManager struct {
 	ProjectID string `json:"projectId,omitempty"`
 	// UniquePrefix needs to be a unique prefix in the GCP project where the secret resides, defaults to cluster name
 	UniquePrefix string `json:"uniquePrefix,omitempty"`
+}
+
+// AzureKeyVaultConfig stores default config when using Azure Key Vault for secret storage
+type AzureKeyVaultConfig struct {
+	KeyVaultName string `json:"keyVaultName,omitempty"`
 }
 
 // Mapping the predicates which must be true to invoke the associated tasks/pipelines

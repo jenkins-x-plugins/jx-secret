@@ -168,6 +168,28 @@ func (o *Options) Run() error {
 			}
 		}
 
+		if secret.BackendType == v1alpha1.BackendTypeAzure {
+			if secret.AzureKeyVaultConfig == nil {
+				secret.AzureKeyVaultConfig = &v1alpha1.AzureKeyVaultConfig{}
+			}
+			if secret.AzureKeyVaultConfig.KeyVaultName != "" {
+				err = kyamls.SetStringValue(node, path, secret.AzureKeyVaultConfig.KeyVaultName, "spec", "keyVaultName")
+				if err != nil {
+					return false, err
+				}
+			} else if o.SecretMapping.Spec.Defaults.AzureKeyVaultConfig != nil && o.SecretMapping.Spec.Defaults.AzureKeyVaultConfig.KeyVaultName != "" {
+				err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.Defaults.AzureKeyVaultConfig.KeyVaultName, "spec", "keyVaultName")
+				if err != nil {
+					return false, err
+				}
+			} else {
+				return false, errors.New("missing secret mapping secret.AzureKeyVaultConfig.KeyVaultName")
+			}
+			if err != nil {
+				return false, err
+			}
+		}
+
 		flag, err := o.convertData(node, path, secret.BackendType)
 		if err != nil {
 			return flag, err
