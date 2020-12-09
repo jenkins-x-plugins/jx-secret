@@ -10,6 +10,7 @@ metadata:
     heritage: "Helm"
 spec:
   backendType: azureKeyVault
+  keyVaultName: appleTree
   data:
     - name: azure.json
       key: azure-secret-name
