@@ -42,10 +42,10 @@ func (k KeyVaultClient) SetSecret(vaultBaseURL string, secretName string, secret
 	return nil
 }
 
-func NewEditor(keyVaultUrl string, keyVaultClient KeyVault) (editor.Interface, error) {
+func NewEditor(keyVaultName string, keyVaultClient KeyVault) (editor.Interface, error) {
 	c := &client{
 		keyVaultClient: keyVaultClient,
-		keyVaultUrl:    keyVaultUrl,
+		keyVaultUrl:    fmt.Sprintf("https://%s.vault.azure.net/", keyVaultName),
 	}
 	return c, nil
 }
