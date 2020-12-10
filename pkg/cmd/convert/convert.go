@@ -343,8 +343,8 @@ func (o *Options) modifyVault(node *yaml.RNode, rNode *yaml.RNode, field, secret
 
 func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string) error {
 
-	property := field
-	key := ""
+	var property string
+	var key string
 
 	if o.SecretMapping != nil {
 		mapping := o.SecretMapping.Find(secretName, field)
