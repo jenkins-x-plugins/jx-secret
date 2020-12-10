@@ -56,10 +56,6 @@ func (c *client) Write(properties *editor.KeyProperties) error {
 		return fmt.Errorf("more than one secret value specified which is not currently supported")
 	}
 
-	if properties.Properties[0].Property != "" {
-		return fmt.Errorf("property name is specified which implies complex structure which is not currently supported")
-	}
-
 	if properties.Properties[0].Value == "" {
 		return fmt.Errorf("property value is empty")
 	}
