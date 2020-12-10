@@ -60,5 +60,5 @@ func TestAzureKeyVaultSettingPropertyName(t *testing.T) {
 			},
 		},
 	})
-	assert.Error(t, err)
+	assert.NoError(t, err)
 }
