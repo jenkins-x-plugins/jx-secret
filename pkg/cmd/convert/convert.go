@@ -346,6 +346,12 @@ func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string)
 	var property string
 	var key string
 
+	if o.Prefix != "" {
+		key = o.Prefix + "-" + secretName
+	} else {
+		key = secretName
+	}
+
 	if o.SecretMapping != nil {
 		mapping := o.SecretMapping.Find(secretName, field)
 		if mapping != nil {
