@@ -248,6 +248,7 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 			if err != nil {
 				return false, errors.Wrapf(err, "failed to find data fields for path %s", path)
 			}
+			complexSecretType := len(fields) > 1
 			for _, field := range fields {
 				newNode := &yaml.Node{
 					Kind:  yaml.MappingNode,
@@ -267,7 +268,7 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 					err = o.modifyLocal(rNode, field, secretName, path)
 
 				case v1alpha1.BackendTypeAzure:
-					err = o.modifyAzure(rNode, field, secretName, path)
+					err = o.modifyAzure(rNode, field, secretName, path, complexSecretType)
 
 				}
 
@@ -341,10 +342,13 @@ func (o *Options) modifyVault(node *yaml.RNode, rNode *yaml.RNode, field, secret
 	return nil
 }
 
-func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string) error {
+func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string, complexType bool) error {
 
-	var property string
 	var key string
+	property := ""
+	if complexType {
+		property = field
+	}
 
 	if o.Prefix != "" {
 		key = o.Prefix + "-" + secretName
@@ -376,7 +380,13 @@ func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string)
 	if err != nil {
 		return err
 	}
-	err = kyamls.SetStringValue(rNode, path, property, "property")
+	if property != "" {
+		err = kyamls.SetStringValue(rNode, path, property, "property")
+		if err != nil {
+			return err
+		}
+	}
+
 	if err != nil {
 		return err
 	}

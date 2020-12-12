@@ -1,0 +1,24 @@
+# Source: lighthouse/templates/oauthsecret.yaml
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: unspecified-simple-type
+  labels:
+    app: lighthouse-lighthouse
+    chart: "lighthouse-0.0.633"
+    release: "lighthouse"
+    heritage: "Helm"
+spec:
+  backendType: azureKeyVault
+  keyVaultName: twilightSparkle
+  data:
+    - name: password
+      key: unspecified-simple-type
+  template:
+    metadata:
+      labels:
+        app: lighthouse-lighthouse
+        chart: "lighthouse-0.0.633"
+        release: "lighthouse"
+        heritage: "Helm"
+    type: Opaque

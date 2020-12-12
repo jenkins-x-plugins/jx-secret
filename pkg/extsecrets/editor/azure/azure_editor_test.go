@@ -29,20 +29,13 @@ func TestAzureKeyVaultSingleValue(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestAzureKeyVaultMultipleValues(t *testing.T) {
+func TestAzureKeyVaultNoValues(t *testing.T) {
 	m := Mock{}
 	editor, err := azure.NewEditor("vaultUrl", m)
 	assert.NoError(t, err)
 	err = editor.Write(&editor2.KeyProperties{
-		Key: "keyName",
-		Properties: []editor2.PropertyValue{
-			{
-				Value: "rollerdisco",
-			},
-			{
-				Value: "sparkle",
-			},
-		},
+		Key:        "keyName",
+		Properties: []editor2.PropertyValue{},
 	})
 	assert.Error(t, err)
 }

@@ -2,6 +2,7 @@ package azure
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault"
@@ -52,18 +53,39 @@ func NewEditor(keyVaultName string, keyVaultClient KeyVault) (editor.Interface, 
 
 func (c *client) Write(properties *editor.KeyProperties) error {
 
-	if len(properties.Properties) != 1 {
-		return fmt.Errorf("more than one secret value specified which is not currently supported")
+	secretValue, err := formatSecretValue(properties.Properties)
+	if err != nil {
+		return errors.Wrap(err, "error formatting secret value for Azure Key Vault")
 	}
 
-	if properties.Properties[0].Value == "" {
-		return fmt.Errorf("property value is empty")
-	}
-
-	err := c.keyVaultClient.SetSecret(c.keyVaultUrl, properties.Key, properties.Properties[0].Value)
+	err = c.keyVaultClient.SetSecret(c.keyVaultUrl, properties.Key, secretValue)
 	if err != nil {
 		return errors.Wrapf(err, "error setting azure key vault secret")
 	}
 
 	return nil
+}
+
+func formatSecretValue(propertyValues []editor.PropertyValue) (string, error) {
+
+	if len(propertyValues) == 0 {
+		return "", fmt.Errorf("no values found for secret")
+	} else if len(propertyValues) == 1 {
+		return propertyValues[0].Value, nil
+	}
+
+	propVals := map[string]string{}
+
+	for _, prop := range propertyValues {
+		propVals[prop.Property] = prop.Value
+	}
+
+	propValString, err := json.Marshal(propVals)
+
+	if err != nil {
+		return "", errors.Wrap(err, "error serializing complex secret type to json")
+	}
+
+	return string(propValString), nil
+
 }
