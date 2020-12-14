@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/convert"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/copy"
@@ -18,6 +19,10 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/spf13/cobra"
 )
+
+var secretRetriableErrors = []string{
+	"dial tcp \\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d+: i/o timeout",
+}
 
 // Main creates the new command
 func Main() *cobra.Command {
@@ -36,7 +41,7 @@ func Main() *cobra.Command {
 	cmd.AddCommand(cobras.SplitCommand(edit.NewCmdEdit()))
 	cmd.AddCommand(cobras.SplitCommand(export.NewCmdExport()))
 	cmd.AddCommand(cobras.SplitCommand(importcmd.NewCmdImport()))
-	cmd.AddCommand(cobras.SplitCommand(populate.NewCmdPopulate()))
+	cmd.AddCommand(helper.RetryOnErrorCommand(cobras.SplitCommand(populate.NewCmdPopulate()), helper.RegexRetryFunction(secretRetriableErrors)))
 	cmd.AddCommand(cobras.SplitCommand(replicate.NewCmdReplicate()))
 	cmd.AddCommand(cobras.SplitCommand(verify.NewCmdVerify()))
 	cmd.AddCommand(cobras.SplitCommand(version.NewCmdVersion()))
