@@ -3,7 +3,7 @@ module github.com/jenkins-x/jx-secret
 go 1.15
 
 require (
-	github.com/Azure/azure-sdk-for-go v48.2.0+incompatible
+	github.com/Azure/azure-sdk-for-go v48.2.2+incompatible
 	github.com/Azure/go-autorest/autorest v0.11.12 // indirect
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.3
 	github.com/Azure/go-autorest/autorest/to v0.4.0 // indirect
