@@ -12,8 +12,10 @@ import (
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/util/retry"
 )
 
 // EvaluateTemplate evaluates the go template to create the value
@@ -41,8 +43,20 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 	//
 	// use like this: `{{ htpasswdSecret "my-secret-name" "username" "password" }}
 	funcMap["htpasswdSecret"] = func(lookupSecretName, usernameKey, passwordKey string) string {
+
+		var secret *v1.Secret
 		lookupSecret, ns := ResolveResourceNames(lookupSecretName, namespace)
-		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
+
+		getSecretFunc := func() error {
+			var err error
+			secret, err = o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
+			return err
+		}
+
+		err := retry.OnError(retry.DefaultBackoff, func(err error) bool {
+			return apierrors.IsNotFound(err)
+		}, getSecretFunc)
+
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
 			return ""
