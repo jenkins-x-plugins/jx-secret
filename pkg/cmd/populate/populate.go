@@ -7,7 +7,6 @@ import (
 
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
@@ -56,9 +55,8 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 		Short:   "Populates any missing secret values which can be automatically generated, generated using a template or that have default values",
 		Long:    cmdLong,
 		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
-		Run: func(cmd *cobra.Command, args []string) {
-			err := o.Run()
-			helper.CheckErr(err)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return o.Run()
 		},
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
