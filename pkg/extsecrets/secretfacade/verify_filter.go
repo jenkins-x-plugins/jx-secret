@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+	"github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/secretmapping"
 	"github.com/pkg/errors"
 )
@@ -30,12 +31,6 @@ func (o *Options) VerifyAndFilter() ([]*SecretPair, error) {
 	destinations := map[string][]*SecretPair{}
 
 	if secretMapping != nil {
-		for _, sm := range secretMapping.Spec.Secrets {
-			if sm.Name == "foo" {
-				return nil, errors.Errorf("TODO")
-			}
-		}
-
 		// lets iterate through all objects + keep track of the properties and locations
 
 		for _, s := range secrets {
@@ -75,6 +70,8 @@ func (o *Options) VerifyAndFilter() ([]*SecretPair, error) {
 		}
 	}
 
+	// Sort schemas so those with templates appear last as they potentially operate on non templated secrets
+	SortSecretsInSchemaTemplateOrder(secrets)
 	var answer []*SecretPair
 	for _, s := range secrets {
 		key := s.Key()
@@ -116,4 +113,54 @@ func (a SchemaOrder) Less(i, j int) bool {
 // SortSecretsInSchemaOrder sorts the secrets in schema order with the entry with a schema with the most properties being first
 func SortSecretsInSchemaOrder(resources []*SecretPair) {
 	sort.Sort(SchemaOrder(resources))
+}
+
+type SchemaTemplateOrder []*SecretPair
+
+func (a SchemaTemplateOrder) Len() int      { return len(a) }
+func (a SchemaTemplateOrder) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a SchemaTemplateOrder) Less(i, j int) bool {
+	s1 := a[i]
+	s2 := a[j]
+
+	o1, _ := s1.SchemaObject()
+	o2, _ := s2.SchemaObject()
+
+	if o1 != nil && o2 == nil {
+		return true
+	}
+	if o2 != nil && o1 == nil {
+		return false
+	}
+	if o1 != nil && o2 != nil {
+		o1ContainsTemplate := containsTemplate(o1.Properties)
+		o2ContainsTemplate := containsTemplate(o2.Properties)
+		if !o1ContainsTemplate && o2ContainsTemplate {
+			return true
+		}
+		if o1ContainsTemplate && !o2ContainsTemplate {
+			return false
+		}
+		if len(o1.Properties) > len(o2.Properties) {
+			return true
+		}
+	}
+	if len(s1.ExternalSecret.Spec.Data) > len(s2.ExternalSecret.Spec.Data) {
+		return true
+	}
+	return s1.ExternalSecret.Name < s2.ExternalSecret.Name
+}
+
+func containsTemplate(properties []v1alpha1.Property) bool {
+	for _, p := range properties {
+		if p.Template != "" {
+			return true
+		}
+	}
+	return false
+}
+
+// SortSecretsInSchemaTemplateOrder sorts the secrets in schema order with the entry without template functions being first
+func SortSecretsInSchemaTemplateOrder(resources []*SecretPair) {
+	sort.Sort(SchemaTemplateOrder(resources))
 }
