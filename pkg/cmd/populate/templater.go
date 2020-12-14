@@ -26,8 +26,18 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 	//
 	// use like this: `{{ secret "my-secret-name" "key-name" }}
 	funcMap["secret"] = func(lookupSecretName, lookupKey string) string {
+		var secret *v1.Secret
 		lookupSecret, ns := ResolveResourceNames(lookupSecretName, namespace)
-		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
+
+		getSecretFunc := func() error {
+			var err error
+			secret, err = o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
+			return err
+		}
+
+		err := retry.OnError(retry.DefaultBackoff, func(err error) bool {
+			return apierrors.IsNotFound(err)
+		}, getSecretFunc)
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
 			return ""
@@ -43,7 +53,6 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 	//
 	// use like this: `{{ htpasswdSecret "my-secret-name" "username" "password" }}
 	funcMap["htpasswdSecret"] = func(lookupSecretName, usernameKey, passwordKey string) string {
-
 		var secret *v1.Secret
 		lookupSecret, ns := ResolveResourceNames(lookupSecretName, namespace)
 
@@ -93,8 +102,19 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 	//
 	// use like this: `{{ auth "my-secret-name" "username-key" "password-key }}
 	funcMap["auth"] = func(lookupSecretName, userKey, passwordKey string) string {
+		var secret *v1.Secret
 		lookupSecret, ns := ResolveResourceNames(lookupSecretName, namespace)
-		secret, err := o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
+
+		getSecretFunc := func() error {
+			var err error
+			secret, err = o.KubeClient.CoreV1().Secrets(ns).Get(context.TODO(), lookupSecret, metav1.GetOptions{})
+			return err
+		}
+
+		err := retry.OnError(retry.DefaultBackoff, func(err error) bool {
+			return apierrors.IsNotFound(err)
+		}, getSecretFunc)
+
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
 			return ""
