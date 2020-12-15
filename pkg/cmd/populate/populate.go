@@ -64,6 +64,8 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/secret/mapping/secret-mappings.yaml file")
 	cmd.Flags().BoolVarP(&o.NoWait, "no-wait", "", false, "disables waiting for the secret store (e.g. vault) to be available")
 	cmd.Flags().DurationVarP(&o.WaitDuration, "wait", "w", 2*time.Hour, "the maximum time period to wait for the vault pod to be ready if using the vault backendType")
+
+	o.Options.AddFlags(cmd)
 	return cmd, o
 }
 
@@ -151,6 +153,9 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 			d := &data[i]
 			key := d.Key
 			property := d.Property
+			if property == "" {
+				property = d.Name
+			}
 			keyProperties := m[key]
 			if keyProperties == nil {
 				keyProperties = &editor.KeyProperties{

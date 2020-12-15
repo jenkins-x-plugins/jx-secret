@@ -472,6 +472,9 @@ func (o *Options) modifyGSM(rNode *yaml.RNode, field, secretName, path string) e
 	if err != nil {
 		return err
 	}
+	if property == "" {
+		property = field
+	}
 	if property != "" {
 		err = kyamls.SetStringValue(rNode, path, property, "property")
 		if err != nil {
