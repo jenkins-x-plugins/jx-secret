@@ -1,6 +1,8 @@
 package secretfacade
 
 import (
+	"strings"
+
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 )
@@ -17,6 +19,9 @@ func (o *Options) Verify() ([]*SecretPair, error) {
 		r := p.ExternalSecret
 		secret := p.Secret
 		name := r.Name
+		if o.Filter != "" && !strings.Contains(name, o.Filter) {
+			continue
+		}
 		ns := r.Namespace
 		result, err := VerifySecret(&r, secret)
 		if err != nil {

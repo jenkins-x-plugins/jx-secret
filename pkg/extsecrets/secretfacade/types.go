@@ -7,6 +7,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-secret/pkg/schemas"
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -15,6 +16,7 @@ import (
 type Options struct {
 	Dir          string
 	Namespace    string
+	Filter       string
 	SecretClient extsecrets.Interface
 	KubeClient   kubernetes.Interface
 
@@ -23,6 +25,10 @@ type Options struct {
 
 	// EditorCache the optional cache of editors
 	EditorCache map[string]editor.Interface
+}
+
+func (o *Options) AddFlags(cmd *cobra.Command) {
+	cmd.Flags().StringVarP(&o.Filter, "filter", "f", "", "the filter to filter on ExternalSecret names")
 }
 
 // SecretError returns an error for a secret

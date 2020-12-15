@@ -48,6 +48,7 @@ func NewCmdVerify() (*cobra.Command, *Options) {
 		},
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "namespace", "n", "", "the namespace to filter the ExternalSecret resources")
+	o.Options.AddFlags(cmd)
 	return cmd, o
 }
 
