@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
@@ -18,6 +19,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	dynfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/fake"
 )
@@ -97,6 +99,12 @@ func TestPopulate(t *testing.T) {
 
 	runner := &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run
+	o.Backoff = &wait.Backoff{
+		Steps:    5,
+		Duration: 2 * time.Millisecond,
+		Factor:   2.0,
+		Jitter:   0.1,
+	}
 
 	err = o.Run()
 	require.NoError(t, err, "failed to invoke Run()")
@@ -164,6 +172,12 @@ func TestPopulate(t *testing.T) {
 
 	runner = &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run
+	o.Backoff = &wait.Backoff{
+		Steps:    5,
+		Duration: 2 * time.Millisecond,
+		Factor:   2.0,
+		Jitter:   0.1,
+	}
 
 	err = o.Run()
 	require.NoError(t, err, "failed to invoke Run()")
