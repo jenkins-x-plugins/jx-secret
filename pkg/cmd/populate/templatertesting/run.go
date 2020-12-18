@@ -57,7 +57,7 @@ func (r *Runner) Run(t *testing.T) {
 		templateText := property.Template
 		require.NotEmpty(t, templateText, "no template defined for object %s property name %s", objName, propName)
 
-		text, err := o.EvaluateTemplate(r.Namespace, objName, propName, templateText)
+		text, err := o.EvaluateTemplate(r.Namespace, objName, propName, templateText, false)
 		require.NoError(t, err, "failed to evaluate template for object %s property name %s", objName, propName)
 
 		message := fmt.Sprintf("test %s for object %s property name %s", tc.TestName, objName, propName)

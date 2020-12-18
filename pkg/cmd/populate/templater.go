@@ -19,7 +19,7 @@ import (
 )
 
 // EvaluateTemplate evaluates the go template to create the value
-func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText string) (string, error) {
+func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText string, retryTemplate bool) (string, error) {
 	funcMap := sprig.TxtFuncMap()
 	backOff := o.Backoff
 	if backOff == nil {
@@ -39,13 +39,18 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 			return err
 		}
 
-		err := retry.OnError(*backOff, func(err error) bool {
-			retry := apierrors.IsNotFound(err)
-			if retry {
-				log.Logger().Warnf("secret %s in namespace %s cannot be found - retry backoff loop", lookupSecret, ns)
-			}
-			return retry
-		}, getSecretFunc)
+		var err error
+		if retryTemplate {
+			err = retry.OnError(*backOff, func(err error) bool {
+				f := apierrors.IsNotFound(err)
+				if f {
+					log.Logger().Warnf("secret %s in namespace %s cannot be found - f backoff loop", lookupSecret, ns)
+				}
+				return f
+			}, getSecretFunc)
+		} else {
+			err = getSecretFunc()
+		}
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
 			return ""
@@ -70,14 +75,18 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 			return err
 		}
 
-		err := retry.OnError(*backOff, func(err error) bool {
-			retry := apierrors.IsNotFound(err)
-			if retry {
-				log.Logger().Warnf("secret %s in namespace %s cannot be found - retry backoff loop", lookupSecret, ns)
-			}
-			return retry
-		}, getSecretFunc)
-
+		var err error
+		if retryTemplate {
+			err = retry.OnError(*backOff, func(err error) bool {
+				retry := apierrors.IsNotFound(err)
+				if retry {
+					log.Logger().Warnf("secret %s in namespace %s cannot be found - retry backoff loop", lookupSecret, ns)
+				}
+				return retry
+			}, getSecretFunc)
+		} else {
+			err = getSecretFunc()
+		}
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
 			return ""
@@ -123,14 +132,18 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 			return err
 		}
 
-		err := retry.OnError(*backOff, func(err error) bool {
-			retry := apierrors.IsNotFound(err)
-			if retry {
-				log.Logger().Warnf("secret %s in namespace %s cannot be found - retry backoff loop", lookupSecret, ns)
-			}
-			return retry
-		}, getSecretFunc)
-
+		var err error
+		if retryTemplate {
+			err = retry.OnError(*backOff, func(err error) bool {
+				f := apierrors.IsNotFound(err)
+				if f {
+					log.Logger().Warnf("secret %s in namespace %s cannot be found - f backoff loop", lookupSecret, ns)
+				}
+				return f
+			}, getSecretFunc)
+		} else {
+			err = getSecretFunc()
+		}
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
 			return ""

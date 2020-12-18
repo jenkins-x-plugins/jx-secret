@@ -110,6 +110,9 @@ type Property struct {
 	// define the template in the schema
 	Template string `json:"template,omitempty" yaml:"template,omitempty"`
 
+	// Retry enable a retry loop if a template does not evaluate correctly first time
+	Retry bool `json:"retry,omitempty" yaml:"retry,omitempty"`
+
 	// Labels allows arbitrary metadata labels to be associated with the property
 	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 
