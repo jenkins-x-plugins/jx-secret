@@ -21,6 +21,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/schemas/generators"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	k8swait "k8s.io/apimachinery/pkg/util/wait"
 )
 
 var (
@@ -31,12 +32,20 @@ var (
 	cmdExample = templates.Examples(`
 		%s populate
 	`)
+
+	DefaultBackoff = k8swait.Backoff{
+		Steps:    5,
+		Duration: 2 * time.Second,
+		Factor:   2.0,
+		Jitter:   0.1,
+	}
 )
 
 // Options the options for the command
 type Options struct {
 	secretfacade.Options
 	WaitDuration        time.Duration
+	Backoff             *k8swait.Backoff
 	Results             []*secretfacade.SecretPair
 	CommandRunner       cmdrunner.CommandRunner
 	QuietCommandRunner  cmdrunner.CommandRunner
@@ -69,8 +78,16 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 	return cmd, o
 }
 
+func (o *Options) Validate() {
+	if o.Backoff == nil {
+		o.Backoff = &DefaultBackoff
+	}
+}
+
 // Run implements the command
 func (o *Options) Run() error {
+	o.Validate()
+
 	// get a list of external secrets which do not have corresponding k8s secret data populated
 	results, err := o.VerifyAndFilter()
 	if err != nil {

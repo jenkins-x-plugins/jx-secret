@@ -21,6 +21,10 @@ import (
 // EvaluateTemplate evaluates the go template to create the value
 func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText string) (string, error) {
 	funcMap := sprig.TxtFuncMap()
+	backOff := o.Backoff
+	if backOff == nil {
+		backOff = &retry.DefaultBackoff
+	}
 
 	// template function to lookup a value in a secret:
 	//
@@ -35,8 +39,12 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 			return err
 		}
 
-		err := retry.OnError(retry.DefaultBackoff, func(err error) bool {
-			return apierrors.IsNotFound(err)
+		err := retry.OnError(*backOff, func(err error) bool {
+			retry := apierrors.IsNotFound(err)
+			if retry {
+				log.Logger().Warnf("secret %s in namespace %s cannot be found - retry backoff loop", lookupSecret, ns)
+			}
+			return retry
 		}, getSecretFunc)
 		if err != nil && !apierrors.IsNotFound(err) {
 			log.Logger().Warnf("failed to find secret %s in namespace %s so cannot resolve secret %s property %s from template", lookupSecret, ns, secretName, property)
@@ -62,8 +70,12 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 			return err
 		}
 
-		err := retry.OnError(retry.DefaultBackoff, func(err error) bool {
-			return apierrors.IsNotFound(err)
+		err := retry.OnError(*backOff, func(err error) bool {
+			retry := apierrors.IsNotFound(err)
+			if retry {
+				log.Logger().Warnf("secret %s in namespace %s cannot be found - retry backoff loop", lookupSecret, ns)
+			}
+			return retry
 		}, getSecretFunc)
 
 		if err != nil && !apierrors.IsNotFound(err) {
@@ -111,8 +123,12 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 			return err
 		}
 
-		err := retry.OnError(retry.DefaultBackoff, func(err error) bool {
-			return apierrors.IsNotFound(err)
+		err := retry.OnError(*backOff, func(err error) bool {
+			retry := apierrors.IsNotFound(err)
+			if retry {
+				log.Logger().Warnf("secret %s in namespace %s cannot be found - retry backoff loop", lookupSecret, ns)
+			}
+			return retry
 		}, getSecretFunc)
 
 		if err != nil && !apierrors.IsNotFound(err) {
