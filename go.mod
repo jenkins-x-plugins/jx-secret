@@ -16,7 +16,7 @@ require (
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.2
 	github.com/jenkins-x/jx-api/v4 v4.0.14
-	github.com/jenkins-x/jx-helpers/v3 v3.0.39
+	github.com/jenkins-x/jx-helpers/v3 v3.0.45
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
 	github.com/jenkins-x/jx-logging/v3 v3.0.2
 	github.com/pkg/errors v0.9.1
@@ -31,6 +31,6 @@ require (
 	k8s.io/api v0.19.2
 	k8s.io/apimachinery v0.19.2
 	k8s.io/client-go v0.19.2
-	sigs.k8s.io/kustomize/kyaml v0.6.1
+	sigs.k8s.io/kustomize/kyaml v0.10.5
 	sigs.k8s.io/yaml v1.2.0
 )
