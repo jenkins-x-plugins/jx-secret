@@ -71,6 +71,8 @@ type SecretRule struct {
 	BackendType BackendType `json:"backendType"`
 	// Mappings one more mappings
 	Mappings []Mapping `json:"mappings,omitempty"`
+	// Unsecured represent a list of a secret's keys that will remain as plain secrets rather than undergoing conversion
+	Unsecured []string `json:"unsecured,omitempty"`
 	// GcpSecretsManager config
 	GcpSecretsManager *GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
 	// GcpSecretsManager config
@@ -155,6 +157,19 @@ func (c *SecretMapping) FindSecret(secretName string) *SecretRule {
 		}
 	}
 	return nil
+}
+
+func (c *SecretMapping) IsSecretKeyUnsecured(secretName string, keyName string) bool {
+	secret := c.FindSecret(secretName)
+	if secret == nil {
+		return false
+	}
+	for _, u := range secret.Unsecured {
+		if u == keyName {
+			return true
+		}
+	}
+	return false
 }
 
 // Find finds a mapping for the given data name
