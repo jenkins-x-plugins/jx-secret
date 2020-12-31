@@ -311,19 +311,16 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 
 	}
 
-	if len(contents) != 0 {
-
-		data, err := node.Pipe(yaml.LookupCreate(yaml.SequenceNode, "spec", "data"))
-		if err != nil {
-			return false, errors.Wrapf(err, "failed to replace data for path %s", path)
-		}
-		data.SetYNode(&yaml.Node{
-			Kind:    yaml.SequenceNode,
-			Content: contents,
-			Style:   style,
-		})
-
+	data, err := node.Pipe(yaml.LookupCreate(yaml.SequenceNode, "spec", "data"))
+	if err != nil {
+		return false, errors.Wrapf(err, "failed to replace data for path %s", path)
 	}
+	data.SetYNode(&yaml.Node{
+		Kind:    yaml.SequenceNode,
+		Content: contents,
+		Style:   style,
+	})
+
 	return true, nil
 }
 

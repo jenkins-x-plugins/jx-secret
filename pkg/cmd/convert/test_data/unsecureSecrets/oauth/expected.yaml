@@ -22,3 +22,4 @@ spec:
         release: "lighthouse"
         heritage: "Helm"
     type: Opaque
+  data: []
