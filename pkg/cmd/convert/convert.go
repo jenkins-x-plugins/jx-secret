@@ -185,9 +185,6 @@ func (o *Options) Run() error {
 			} else {
 				return false, errors.New("missing secret mapping secret.AzureKeyVaultConfig.KeyVaultName")
 			}
-			if err != nil {
-				return false, err
-			}
 		}
 
 		flag, err := o.convertData(node, path, secret.BackendType)
@@ -249,7 +246,24 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 				return false, errors.Wrapf(err, "failed to find data fields for path %s", path)
 			}
 			complexSecretType := len(fields) > 1
+
+			templateNode := &yaml.Node{
+				Kind:  yaml.MappingNode,
+				Style: style,
+			}
+			rTemplateNode := yaml.NewRNode(templateNode)
 			for _, field := range fields {
+
+				if o.SecretMapping.IsSecretKeyUnsecured(secretName, field) {
+					secretValue := kyamls.GetStringField(data, "", field)
+
+					err = kyamls.SetStringValue(rTemplateNode, path, secretValue, field)
+					if err != nil {
+						return false, errors.Wrapf(err, "failed to set string value for secret %s and key %s", secretName, field)
+					}
+					continue
+				}
+
 				newNode := &yaml.Node{
 					Kind:  yaml.MappingNode,
 					Style: style,
@@ -277,25 +291,39 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 				}
 				contents = append(contents, newNode)
 			}
+
+			if len(templateNode.Content) != 0 {
+				template, err := node.Pipe(yaml.LookupCreate(yaml.ScalarNode, "spec", "template", dataPath))
+				if err != nil {
+					return false, errors.Wrapf(err, "failed to lookup/create template for path %s", path)
+				}
+				template.SetYNode(&yaml.Node{
+					Kind:    yaml.MappingNode,
+					Content: templateNode.Content,
+					Style:   style,
+				})
+			}
 		}
 		err = node.PipeE(yaml.Clear(dataPath))
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to remove %s", dataPath)
 		}
+
 	}
 
-	data, err := node.Pipe(yaml.LookupCreate(yaml.SequenceNode, "spec", "data"))
-	if err != nil {
-		return false, errors.Wrapf(err, "failed to replace data for path %s", path)
+	if len(contents) != 0 {
+
+		data, err := node.Pipe(yaml.LookupCreate(yaml.SequenceNode, "spec", "data"))
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to replace data for path %s", path)
+		}
+		data.SetYNode(&yaml.Node{
+			Kind:    yaml.SequenceNode,
+			Content: contents,
+			Style:   style,
+		})
+
 	}
-	if data == nil {
-		return false, errors.Errorf("no data node for path %s", path)
-	}
-	data.SetYNode(&yaml.Node{
-		Kind:    yaml.SequenceNode,
-		Content: contents,
-		Style:   style,
-	})
 	return true, nil
 }
 
@@ -387,9 +415,6 @@ func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string,
 		}
 	}
 
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
