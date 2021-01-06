@@ -14,7 +14,7 @@ require (
 	github.com/alecthomas/repr v0.0.0-20201103221029-55c485bd663f // indirect
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/dimchansky/utfbom v1.1.1 // indirect
-	github.com/google/go-cmp v0.5.2
+	github.com/google/go-cmp v0.5.4
 	github.com/jenkins-x/jx-api/v4 v4.0.16
 	github.com/jenkins-x/jx-helpers/v3 v3.0.48
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
