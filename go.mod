@@ -16,7 +16,7 @@ require (
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.2
 	github.com/jenkins-x/jx-api/v4 v4.0.16
-	github.com/jenkins-x/jx-helpers/v3 v3.0.48
+	github.com/jenkins-x/jx-helpers/v3 v3.0.49
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.1
 	github.com/jenkins-x/jx-logging/v3 v3.0.2
 	github.com/pkg/errors v0.9.1
@@ -25,12 +25,11 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
-	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
 	gopkg.in/validator.v2 v2.0.0-20200605151824-2b28d334fa05
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
-	k8s.io/api v0.19.2
-	k8s.io/apimachinery v0.19.2
-	k8s.io/client-go v0.19.2
+	k8s.io/api v0.20.1
+	k8s.io/apimachinery v0.20.1
+	k8s.io/client-go v0.20.1
 	sigs.k8s.io/kustomize/kyaml v0.10.5
 	sigs.k8s.io/yaml v1.2.0
 )
