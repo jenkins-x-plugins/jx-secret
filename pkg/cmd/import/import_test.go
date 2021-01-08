@@ -13,6 +13,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/plugins"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/fake"
 )
@@ -26,8 +27,10 @@ func TestImport(t *testing.T) {
 
 	ns := "jx"
 	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "secrets"))
-
-	fakeDynClient := dynfake.NewSimpleDynamicClient(scheme, dynObjects...)
+	gvrToListKind := map[schema.GroupVersionResource]string{
+		{Group: "kubernetes-client.io", Version: "v1", Resource: "externalsecrets"}: "ExternalSecretList",
+	}
+	fakeDynClient := dynfake.NewSimpleDynamicClientWithCustomListKinds(scheme, gvrToListKind, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	o.Namespace = ns
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets()...)
