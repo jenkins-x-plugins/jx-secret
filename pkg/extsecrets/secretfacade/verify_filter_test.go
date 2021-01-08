@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynfake "k8s.io/client-go/dynamic/fake"
 
 	"k8s.io/client-go/kubernetes/fake"
@@ -49,7 +50,10 @@ func TestVerifyFilter(t *testing.T) {
 	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
 
 	dynObjects := testsecrets.LoadExtSecretDir(t, ns, "test_data")
-	fakeDynClient := dynfake.NewSimpleDynamicClient(scheme, dynObjects...)
+	gvrToListKind := map[schema.GroupVersionResource]string{
+		{Group: "kubernetes-client.io", Version: "v1", Resource: "externalsecrets"}: "ExternalSecretList",
+	}
+	fakeDynClient := dynfake.NewSimpleDynamicClientWithCustomListKinds(scheme, gvrToListKind, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
 
