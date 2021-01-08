@@ -18,7 +18,6 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/yaml"
 )
@@ -107,7 +106,7 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to create kube Client")
 	}
 
-	resources, err := o.SecretClient.List(o.Namespace, metav1.ListOptions{})
+	resources, err := o.SecretClient.List(o.Namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to find external secrets")
 	}

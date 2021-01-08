@@ -123,7 +123,7 @@ func TestPopulate(t *testing.T) {
 
 	secretMaps.AssertValueEquals(t, "secret/jx/mavenSettings", "settingsXml", string(expectedMaveSettingsData))
 
-	esList, err := o.SecretClient.List(ns, metav1.ListOptions{})
+	esList, err := o.SecretClient.List(ns)
 	require.NoError(t, err, "failed to list the ExternalSecrets")
 
 	for _, es := range esList {
@@ -198,4 +198,39 @@ func TestPopulate(t *testing.T) {
 			t.Logf("should not have populated secret %s with values %#v\n", k, values)
 		}
 	}
+}
+
+func TestPopulateFromFileSystem(t *testing.T) {
+	ns := "jx"
+	vaultBin, err := plugins.GetVaultBinary(plugins.VaultVersion)
+
+	kubeObjects := []runtime.Object{
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "jx-boot",
+				Namespace: ns,
+			},
+			Data: map[string][]byte{
+				"username": []byte("gitoperatorUsername"),
+				"password": []byte("gitoperatorpassword"),
+			},
+		},
+	}
+
+	_, o := populate.NewCmdPopulate()
+	o.Dir = "test_data/filesystem"
+	o.NoWait = true
+	o.Namespace = ns
+	o.BootSecretNamespace = ns
+	o.Source = "filesystem"
+	runner := &fakerunner.FakeRunner{}
+	o.CommandRunner = runner.Run
+	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
+
+	err = o.Run()
+	require.NoError(t, err, "failed to invoke Run()")
+
+	secretMaps := testsecrets.LoadFakeVaultSecrets(t, runner.OrderedCommands, vaultBin)
+	assert.NotNil(t, secretMaps)
+	secretMaps.AssertHasValue(t, "secret/jx/pipelineUser", "token")
 }

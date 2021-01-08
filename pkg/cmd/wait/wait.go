@@ -58,6 +58,11 @@ func NewCmdWait() (*cobra.Command, *Options) {
 
 // Run implements the command
 func (o *Options) Run() error {
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrap(err, "error validating options")
+	}
+
 	endTime := time.Now().Add(o.Timeout)
 	log.Logger().Infof("waiting for the mandatory Secrets to be populated from ExternalSecrets...")
 	for {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -20,18 +19,12 @@ func (o *Options) Load() ([]*SecretPair, error) {
 	var answer []*SecretPair
 	var err error
 
-	if o.SecretClient == nil {
-		o.SecretClient, err = extsecrets.NewClient(nil)
-		if err != nil {
-			return answer, errors.Wrapf(err, "failed to create an extsecret Client")
-		}
-	}
 	o.KubeClient, err = kube.LazyCreateKubeClient(o.KubeClient)
 	if err != nil {
 		return answer, errors.Wrapf(err, "failed to create kube Client")
 	}
 
-	resources, err := o.SecretClient.List(o.Namespace, metav1.ListOptions{})
+	resources, err := o.SecretClient.List(o.Namespace)
 	if err != nil {
 		return answer, errors.Wrap(err, "failed to find external secrets")
 	}

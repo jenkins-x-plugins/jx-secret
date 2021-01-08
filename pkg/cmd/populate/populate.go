@@ -78,15 +78,24 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 	return cmd, o
 }
 
-func (o *Options) Validate() {
+func (o *Options) Validate() error {
+	err := o.Options.Validate()
+	if err != nil {
+		return errors.Wrap(err, "error validating options")
+	}
+
 	if o.Backoff == nil {
 		o.Backoff = &DefaultBackoff
 	}
+	return nil
 }
 
 // Run implements the command
 func (o *Options) Run() error {
-	o.Validate()
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrap(err, "error validating options")
+	}
 
 	// get a list of external secrets which do not have corresponding k8s secret data populated
 	results, err := o.VerifyAndFilter()

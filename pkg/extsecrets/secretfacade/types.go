@@ -19,6 +19,7 @@ type Options struct {
 	Filter       string
 	SecretClient extsecrets.Interface
 	KubeClient   kubernetes.Interface
+	Source       string
 
 	// ExternalSecrets the loaded secrets
 	ExternalSecrets []*v1.ExternalSecret
@@ -27,8 +28,30 @@ type Options struct {
 	EditorCache map[string]editor.Interface
 }
 
+type ExternalSecretLocation string
+
+const FileSystem string = "filesystem"
+const Kubernetes string = "kubernetes"
+
 func (o *Options) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&o.Filter, "filter", "f", "", "the filter to filter on ExternalSecret names")
+	cmd.Flags().StringVarP(&o.Source, "source", "s", "kubernetes", "the source location for the ExternalSecrets, valid values include filesystem or kubernetes")
+}
+
+func (o *Options) Validate() error {
+	var err error
+	if o.SecretClient != nil {
+		return nil
+	}
+	if o.Source == Kubernetes || o.Source == "" {
+		o.SecretClient, err = extsecrets.NewClient(nil)
+		if err != nil {
+			return errors.Wrap(err, "error initialising kubernetes external secrets client")
+		}
+	} else if o.Source == FileSystem {
+		o.SecretClient = extsecrets.NewFileClient(o.Dir)
+	}
+	return nil
 }
 
 // SecretError returns an error for a secret

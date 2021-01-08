@@ -61,6 +61,11 @@ func NewCmdExport() (*cobra.Command, *Options) {
 
 // Run implements the command
 func (o *Options) Run() error {
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrap(err, "error validating options")
+	}
+
 	pairs, err := o.Load()
 	if err != nil {
 		return errors.Wrapf(err, "failed to load ExternalSecret/Secret pairs")
