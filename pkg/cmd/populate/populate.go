@@ -78,10 +78,11 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 	return cmd, o
 }
 
-func (o *Options) Validate() {
+func (o *Options) Validate() error {
 	if o.Backoff == nil {
 		o.Backoff = &DefaultBackoff
 	}
+	return nil
 }
 
 // Run implements the command

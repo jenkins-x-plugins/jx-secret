@@ -14,7 +14,7 @@ import (
 type ExternalSecret struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional
-	metav1.ObjectMeta `json:"metadata"`
+	metav1.ObjectMeta `json:"metadata" yaml:"metadata"`
 
 	// Spec holds the desired state of the ExternalSecret from the client
 	// +optional
@@ -49,7 +49,7 @@ func (s *ExternalSecret) KeyAndNames() []string {
 
 // ExternalSecretSpec defines the desired state of ExternalSecret.
 type ExternalSecretSpec struct {
-	BackendType     string `json:"backendType,omitempty"`
+	BackendType     string `json:"backendType,omitempty" yaml:"backendType,omitempty"`
 	VaultMountPoint string `json:"vaultMountPoint,omitempty"`
 	VaultRole       string `json:"vaultRole,omitempty"`
 	ProjectID       string `json:"projectId,omitempty"`
