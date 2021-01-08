@@ -54,6 +54,11 @@ func NewCmdVerify() (*cobra.Command, *Options) {
 
 // Run implements the command
 func (o *Options) Run() error {
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrap(err, "error validating options")
+	}
+
 	pairs, err := o.Verify()
 	if err != nil {
 		return errors.Wrap(err, "failed to verify secrets")

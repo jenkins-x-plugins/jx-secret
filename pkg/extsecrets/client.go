@@ -19,14 +19,14 @@ type client struct {
 }
 
 //nolint:gocritic
-func (c *client) List(ns string, listOptions metav1.ListOptions) ([]*v1.ExternalSecret, error) {
+func (c *client) List(ns string) ([]*v1.ExternalSecret, error) {
 	var client dynamic.ResourceInterface
 	if ns != "" {
 		client = c.dynamicClient.Resource(ExternalSecretsResource).Namespace(ns)
 	} else {
 		client = c.dynamicClient.Resource(ExternalSecretsResource)
 	}
-	resources, err := client.List(context.TODO(), listOptions)
+	resources, err := client.List(context.TODO(), metav1.ListOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		err = nil
 	}
