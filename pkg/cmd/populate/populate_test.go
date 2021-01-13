@@ -19,9 +19,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	apischema "k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
-	dynfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -94,10 +92,8 @@ func TestPopulate(t *testing.T) {
 	require.NoError(t, err, "failed to add the schema annotations")
 
 	scheme := runtime.NewScheme()
-	gvrToListKind := map[apischema.GroupVersionResource]string{
-		{Group: "kubernetes-client.io", Version: "v1", Resource: "externalsecrets"}: "ExternalSecretList",
-	}
-	fakeDynClient := dynfake.NewSimpleDynamicClientWithCustomListKinds(scheme, gvrToListKind, dynObjects...)
+	fakeDynClient := testsecrets.NewFakeDynClient(scheme, dynObjects...)
+
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
 
@@ -169,7 +165,7 @@ func TestPopulate(t *testing.T) {
 	dynObjects = testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "secrets"))
 	err = templatertesting.AddSchemaAnnotations(t, schema, dynObjects)
 	require.NoError(t, err, "failed to add the schema annotations")
-	fakeDynClient = dynfake.NewSimpleDynamicClientWithCustomListKinds(scheme, gvrToListKind, dynObjects...)
+	fakeDynClient = testsecrets.NewFakeDynClient(scheme, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
 
