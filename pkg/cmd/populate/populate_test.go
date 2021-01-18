@@ -3,16 +3,14 @@ package populate_test
 import (
 	"io/ioutil"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
+	secretstorefake "github.com/chrismellard/secretfacade/testing/fake"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/templatertesting"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
-	"github.com/jenkins-x/jx-secret/pkg/plugins"
 	"github.com/jenkins-x/jx-secret/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,8 +22,6 @@ import (
 )
 
 func TestPopulate(t *testing.T) {
-	vaultBin, err := plugins.GetVaultBinary(plugins.VaultVersion)
-	require.NoError(t, err, "failed to find vault binary plugin")
 
 	ns := "jx"
 	expectedMavenSettingsFile := filepath.Join("test_data", "expected", "jenkins-maven-settings", "settings.xml", "nexus.xml")
@@ -86,6 +82,8 @@ func TestPopulate(t *testing.T) {
 	o.Namespace = ns
 	o.BootSecretNamespace = ns
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
+	fakeFactory := secretstorefake.FakeSecretManagerFactory{}
+	o.SecretStoreManagerFactory = &fakeFactory
 
 	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "secrets"))
 	err = templatertesting.AddSchemaAnnotations(t, schema, dynObjects)
@@ -97,8 +95,6 @@ func TestPopulate(t *testing.T) {
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
 
-	runner := &fakerunner.FakeRunner{}
-	o.CommandRunner = runner.Run
 	o.Backoff = &wait.Backoff{
 		Steps:    5,
 		Duration: 2 * time.Millisecond,
@@ -109,15 +105,18 @@ func TestPopulate(t *testing.T) {
 	err = o.Run()
 	require.NoError(t, err, "failed to invoke Run()")
 
-	secretMaps := testsecrets.LoadFakeVaultSecrets(t, runner.OrderedCommands, vaultBin)
+	fakeStore := fakeFactory.GetSecretStore()
+	fakeStore.AssertValueEquals(t, "", "secret/data/jx/adminUser", "username", "admin")
+	fakeStore.AssertHasValue(t, "", "secret/data/jx/adminUser", "password")
+	fakeStore.AssertHasValue(t, "", "secret/data/lighthouse/hmac", "token")
+	fakeStore.AssertValueEquals(t, "", "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
+	fakeStore.AssertHasValue(t, "", "secret/data/knative/docker/user/pass", "password")
+	fakeStore.AssertValueEquals(t, "", "secret/data/jx/mavenSettings", "settingsXml", string(expectedMaveSettingsData))
 
-	secretMaps.AssertHasValue(t, "secret/jx/adminUser", "username")
-	secretMaps.AssertHasValue(t, "secret/jx/adminUser", "password")
-	secretMaps.AssertHasValue(t, "secret/lighthouse/hmac", "token")
-	secretMaps.AssertHasValue(t, "secret/jx/pipelineUser", "token")
-	secretMaps.AssertHasValue(t, "secret/knative/docker/user/pass", "password")
-
-	secretMaps.AssertValueEquals(t, "secret/jx/mavenSettings", "settingsXml", string(expectedMaveSettingsData))
+	// Store Maven secret so we can detect diff after running populate a second time
+	firstMavenSettingsSecret, err := fakeStore.GetSecret("", "secret/data/jx/mavenSettings", "settingsXml")
+	assert.NoError(t, err)
+	assert.NotEmpty(t, firstMavenSettingsSecret)
 
 	esList, err := o.SecretClient.List(ns)
 	require.NoError(t, err, "failed to list the ExternalSecrets")
@@ -132,23 +131,16 @@ func TestPopulate(t *testing.T) {
 		}
 
 		for _, d := range es.Spec.Data {
-			keyValues := secretMaps.Objects[d.Key]
-			if keyValues == nil {
-				// handle different key encodings for vault
-				key2 := "secret" + strings.TrimPrefix(d.Key, "secret/data")
-				keyValues = secretMaps.Objects[key2]
+			// Populate secret key value combination
+
+			secretValue, _ := fakeStore.GetSecret("", d.Key, d.Property)
+			if secretValue != "" {
+				t.Logf("found value for ExternalSecret %s %s of %s", es.Name, d.Name, secretValue)
+				s.Data[d.Property] = []byte(secretValue)
+				s.Data[d.Name] = []byte(secretValue)
+
 			}
-			if keyValues != nil {
-				value := keyValues[d.Name]
-				if value == "" {
-					value = keyValues[d.Property]
-				}
-				if value != "" {
-					t.Logf("found value for ExternalSecret %s %s of %s", es.Name, d.Name, value)
-					s.Data[d.Name] = []byte(value)
-					s.Data[d.Property] = []byte(value)
-				}
-			}
+
 		}
 		if len(s.Data) > 0 {
 			kubeObjects = append(kubeObjects, s)
@@ -161,6 +153,7 @@ func TestPopulate(t *testing.T) {
 	o.NoWait = true
 	o.Namespace = ns
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
+	o.SecretStoreManagerFactory = &fakeFactory
 
 	dynObjects = testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "secrets"))
 	err = templatertesting.AddSchemaAnnotations(t, schema, dynObjects)
@@ -169,8 +162,6 @@ func TestPopulate(t *testing.T) {
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
 
-	runner = &fakerunner.FakeRunner{}
-	o.CommandRunner = runner.Run
 	o.Backoff = &wait.Backoff{
 		Steps:    5,
 		Duration: 2 * time.Millisecond,
@@ -181,24 +172,16 @@ func TestPopulate(t *testing.T) {
 	err = o.Run()
 	require.NoError(t, err, "failed to invoke Run()")
 
-	secretMaps2 := testsecrets.LoadFakeVaultSecrets(t, runner.OrderedCommands, vaultBin)
+	// Assert re-retrieve Maven settings secret has been modified due to presence of new secrets
+	secondMavenSettingsSecret, err := fakeStore.GetSecret("", "secret/data/jx/mavenSettings", "settingsXml")
+	assert.NoError(t, err)
+	assert.NotEmpty(t, secondMavenSettingsSecret)
+	assert.NotEqual(t, firstMavenSettingsSecret, secondMavenSettingsSecret)
 
-	// we should only have populated the maven settings as the underlying secrets have changed
-	// so new values appear in the template output
-	require.Len(t, secretMaps2.Objects, 1, "incorrect number of secrets populated")
-
-	for k, values := range secretMaps2.Objects {
-		if assert.Equal(t, "secret/jx/mavenSettings", k) {
-			t.Logf("generated expected %d secret values", len(values))
-		} else {
-			t.Logf("should not have populated secret %s with values %#v\n", k, values)
-		}
-	}
 }
 
 func TestPopulateFromFileSystem(t *testing.T) {
 	ns := "jx"
-	vaultBin, err := plugins.GetVaultBinary(plugins.VaultVersion)
 
 	kubeObjects := []runtime.Object{
 		&corev1.Secret{
@@ -219,14 +202,16 @@ func TestPopulateFromFileSystem(t *testing.T) {
 	o.Namespace = ns
 	o.BootSecretNamespace = ns
 	o.Source = "filesystem"
-	runner := &fakerunner.FakeRunner{}
-	o.CommandRunner = runner.Run
+	fakeFactory := secretstorefake.FakeSecretManagerFactory{}
+	o.SecretStoreManagerFactory = &fakeFactory
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
 
-	err = o.Run()
+	err := o.Run()
 	require.NoError(t, err, "failed to invoke Run()")
 
-	secretMaps := testsecrets.LoadFakeVaultSecrets(t, runner.OrderedCommands, vaultBin)
-	assert.NotNil(t, secretMaps)
-	secretMaps.AssertHasValue(t, "secret/jx/pipelineUser", "token")
+	secretStore := fakeFactory.GetSecretStore()
+	secret, err := secretStore.GetSecret("", "secret/data/jx/pipelineUser", "token")
+	secretStore.AssertHasValue(t, "", "secret/data/jx/pipelineUser", "token")
+	secretStore.AssertValueEquals(t, "", "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
+	assert.Equal(t, "gitoperatorpassword", secret)
 }

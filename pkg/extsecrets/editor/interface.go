@@ -19,6 +19,7 @@ type KeyProperties struct {
 type PropertyValue struct {
 	Property string
 	Value    string
+	Name     string
 }
 
 // String returns a string representation

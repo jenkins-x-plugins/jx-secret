@@ -1,6 +1,10 @@
 package secretfacade
 
 import (
+	"fmt"
+
+	"github.com/chrismellard/secretfacade/pkg/secretstore"
+	"github.com/chrismellard/secretfacade/pkg/secretstore/factory"
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	schema "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
@@ -14,12 +18,13 @@ import (
 
 // Options options for verifying secrets
 type Options struct {
-	Dir          string
-	Namespace    string
-	Filter       string
-	SecretClient extsecrets.Interface
-	KubeClient   kubernetes.Interface
-	Source       string
+	Dir                       string
+	Namespace                 string
+	Filter                    string
+	SecretClient              extsecrets.Interface
+	KubeClient                kubernetes.Interface
+	Source                    string
+	SecretStoreManagerFactory secretstore.FactoryInterface
 
 	// ExternalSecrets the loaded secrets
 	ExternalSecrets []*v1.ExternalSecret
@@ -40,16 +45,19 @@ func (o *Options) AddFlags(cmd *cobra.Command) {
 
 func (o *Options) Validate() error {
 	var err error
-	if o.SecretClient != nil {
-		return nil
-	}
-	if o.Source == Kubernetes || o.Source == "" {
+	if o.SecretClient == nil && (o.Source == Kubernetes || o.Source == "") {
 		o.SecretClient, err = extsecrets.NewClient(nil)
 		if err != nil {
 			return errors.Wrap(err, "error initialising kubernetes external secrets client")
 		}
-	} else if o.Source == FileSystem {
+	} else if o.SecretClient == nil && o.Source == FileSystem {
 		o.SecretClient = extsecrets.NewFileClient(o.Dir)
+	}
+	if o.SecretClient == nil {
+		return fmt.Errorf("secret client required to read external secrets")
+	}
+	if o.SecretStoreManagerFactory == nil {
+		o.SecretStoreManagerFactory = &factory.SecretManagerFactory{}
 	}
 	return nil
 }

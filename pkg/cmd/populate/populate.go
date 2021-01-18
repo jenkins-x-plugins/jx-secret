@@ -5,17 +5,18 @@ import (
 	"os"
 	"time"
 
+	"github.com/chrismellard/secretfacade/pkg/secretstore"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-secret/pkg/schemas/generators"
@@ -162,12 +163,7 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 			waited[backendType] = true
 		}
 
-		runner, quietRunner, err := o.secretCommandRunner(backendType)
-		if err != nil {
-			return errors.Wrapf(err, "failed to get command runner")
-		}
-
-		secEditor, err := factory.NewEditor(o.EditorCache, &r.ExternalSecret, runner, quietRunner, o.KubeClient)
+		secretManager, err := o.SecretStoreManagerFactory.NewSecretManager(getSecretStore(v1alpha1.BackendType(backendType)))
 		if err != nil {
 			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
 		}
@@ -179,9 +175,7 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 			d := &data[i]
 			key := d.Key
 			property := d.Property
-			if property == "" {
-				property = d.Name
-			}
+			entryName := d.Name
 			keyProperties := m[key]
 			if keyProperties == nil {
 				keyProperties = &editor.KeyProperties{
@@ -221,11 +215,13 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 			keyProperties.Properties = append(keyProperties.Properties, editor.PropertyValue{
 				Property: property,
 				Value:    value,
+				Name:     entryName,
 			})
 		}
 		for key, keyProperties := range m {
 			if newValueMap[key] && len(keyProperties.Properties) > 0 {
-				err = secEditor.Write(keyProperties)
+				sv := createSecretValue(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), keyProperties.Properties, r.ExternalSecret.Labels)
+				err = secretManager.SetSecret(getExternalSecretLocation(&r.ExternalSecret), key, &sv)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
 				}
@@ -233,6 +229,60 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 		}
 	}
 	return nil
+}
+
+func getSecretStore(backendType v1alpha1.BackendType) secretstore.SecretStoreType {
+	switch backendType {
+	case v1alpha1.BackendTypeLocal:
+		return secretstore.SecretStoreTypeKubernetes
+	default:
+		return secretstore.SecretStoreType(backendType)
+	}
+}
+
+func createSecretValue(backendType v1alpha1.BackendType, values []editor.PropertyValue, labels map[string]string) secretstore.SecretValue {
+
+	formatValues := func(values []editor.PropertyValue) map[string]string {
+		properties := map[string]string{}
+		for _, p := range values {
+			propertyName := p.Property
+			if propertyName == "" {
+				propertyName = p.Name
+			}
+			properties[propertyName] = p.Value
+		}
+		return properties
+	}
+
+	switch backendType {
+	case v1alpha1.BackendTypeGSM, v1alpha1.BackendTypeAzure:
+		if len(values) == 1 && values[0].Property == "" {
+			return secretstore.SecretValue{Value: values[0].Value}
+		}
+		return secretstore.SecretValue{PropertyValues: formatValues(values)}
+
+	case v1alpha1.BackendTypeVault:
+		return secretstore.SecretValue{PropertyValues: formatValues(values)}
+	case v1alpha1.BackendTypeLocal:
+		sv := secretstore.SecretValue{PropertyValues: formatValues(values)}
+		sv.Labels = labels
+		return sv
+	}
+	return secretstore.SecretValue{}
+}
+
+func getExternalSecretLocation(extsec *v1.ExternalSecret) string {
+	switch v1alpha1.BackendType(extsec.Spec.BackendType) {
+	case v1alpha1.BackendTypeGSM:
+		return extsec.Spec.ProjectID
+	case v1alpha1.BackendTypeAzure:
+		return extsec.Spec.KeyVaultName
+	case v1alpha1.BackendTypeVault:
+		return os.Getenv("VAULT_ADDR")
+	case v1alpha1.BackendTypeLocal:
+		return extsec.Namespace
+	}
+	return ""
 }
 
 func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, property, currentValue string) (string, error) {
