@@ -9,11 +9,11 @@ metadata:
   name: lighthouse-hmac-token
   namespace: jx
 spec:
-  backendType: vault
+  backendType: gcpSecretsManager
+  projectId: "123456"
   data:
   - key: secret/data/lighthouse/hmac
     name: hmac
-    property: token
   template:
     metadata:
       labels:
@@ -22,5 +22,3 @@ spec:
         heritage: Helm
         release: lighthouse
     type: Opaque
-  vaultMountPoint: kubernetes
-  vaultRole: vault-infra

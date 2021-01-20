@@ -1,0 +1,25 @@
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  annotations:
+    secret.jenkins-x.io/schema-object: |
+      {"name":"lighthouse-hmac-token","properties":[{"name":"hmac","question":"Lighthouse webhook token","help":"The webhook token is used as a secret to verify webhooks come from a trusted source","generator":"hmac"}]}
+  labels:
+    gitops.jenkins-x.io/pipeline: environment
+  name: lighthouse-hmac-token
+  namespace: jx
+spec:
+  backendType: vault
+  data:
+  - key: secret/data/lighthouse/hmac
+    name: hmac
+  template:
+    metadata:
+      labels:
+        app: lighthouse-lighthouse
+        chart: lighthouse-0.0.633
+        heritage: Helm
+        release: lighthouse
+    type: Opaque
+  vaultMountPoint: kubernetes
+  vaultRole: vault-infra

@@ -1,0 +1,19 @@
+# Source: jxboot-helmfile-resources/templates/maven-settings-secret.yaml
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: jenkins-maven-settings
+  namespace: jx
+  labels:
+    gitops.jenkins-x.io/pipeline: 'environment'
+spec:
+  backendType: local
+  data:
+  - name: settings.xml
+    key: secret/data/jx/mavenSettings
+    property: settingsXml
+  - name: settings-security.xml
+    key: secret/data/jx/mavenSettings
+    property: securityXml
+  template:
+    type: Opaque

@@ -1,0 +1,29 @@
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  annotations:
+    secret.jenkins-x.io/schema-object: |
+      {"name":"jenkins-x-bucketrepo","properties":[{"name":"BASIC_AUTH_USER","question":"bucket repository user name","help":"The username used to authenticate with the bucket repository","defaultValue":"admin"},{"name":"BASIC_AUTH_PASS","question":"bucket repository password","help":"The password to authenticate with the bucket repository","minLength":5,"maxLength":41,"generator":"password"}]}
+  labels:
+    gitops.jenkins-x.io/pipeline: environment
+  name: jenkins-x-bucketrepo
+  namespace: jx
+spec:
+  backendType: local
+  data:
+  - key: secret/data/jx/adminUser
+    name: BASIC_AUTH_PASS
+    property: password
+  - key: secret/data/jx/adminUser
+    name: BASIC_AUTH_USER
+    property: username
+  template:
+    metadata:
+      annotations:
+        jenkins.io/credentials-keybinding-password: BASIC_AUTH_PASS
+        jenkins.io/credentials-keybinding-username: BASIC_AUTH_USER
+        jenkins.io/foo: bar
+      labels:
+        jenkins.io/credentials-type: usernamePassword
+        release: jenkins-x
+    type: Opaque
