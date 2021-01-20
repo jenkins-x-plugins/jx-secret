@@ -221,7 +221,7 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 		for key, keyProperties := range m {
 			if newValueMap[key] && len(keyProperties.Properties) > 0 {
 				sv := createSecretValue(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), keyProperties.Properties, r.ExternalSecret.Labels)
-				err = secretManager.SetSecret(getExternalSecretLocation(&r.ExternalSecret), key, &sv)
+				err = secretManager.SetSecret(getExternalSecretLocation(&r.ExternalSecret), getSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), r.ExternalSecret.Name, key), &sv)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
 				}
@@ -240,6 +240,12 @@ func getSecretStore(backendType v1alpha1.BackendType) secretstore.SecretStoreTyp
 	}
 }
 
+func getSecretKey(backendType v1alpha1.BackendType, externalSecretName string, keyName string) string {
+	if backendType == v1alpha1.BackendTypeLocal {
+		return externalSecretName
+	}
+	return keyName
+}
 func createSecretValue(backendType v1alpha1.BackendType, values []editor.PropertyValue, labels map[string]string) secretstore.SecretValue {
 
 	formatValues := func(values []editor.PropertyValue) map[string]string {

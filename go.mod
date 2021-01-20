@@ -9,7 +9,7 @@ require (
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/repr v0.0.0-20201103221029-55c485bd663f // indirect
-	github.com/chrismellard/secretfacade v0.0.2
+	github.com/chrismellard/secretfacade v0.0.3
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.4
