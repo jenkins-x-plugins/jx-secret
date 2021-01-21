@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: jx-secret
+  namespace: jx-git-operator
+spec:
+  template:
+    metadata:
+      labels:
+        app: jx-secret
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: jx-secret
+          image: jx-secret
+          command:
+            - /dlv
+          args:
+            - --listen=:40000
+            - --headless=true
+            - --api-version=2
+            - --accept-multiclient
+            - exec
+            - /jx-secret
+            - populate
+      serviceAccountName: jx-boot-job

@@ -11,3 +11,7 @@ charts/
 NOTICE
 LICENSE
 README.md
+deploy/
+Dockerfile*
+skaffold.yaml
+.DS_Store

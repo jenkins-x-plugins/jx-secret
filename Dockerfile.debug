@@ -1,0 +1,21 @@
+# Compile stage
+FROM golang:1.15.6 AS build-env
+
+# Build Delve
+RUN go get github.com/go-delve/delve/cmd/dlv
+
+ADD . /dockerdev
+WORKDIR /dockerdev/cmd
+
+RUN go build -gcflags="all=-N -l" -o /jx-secret
+
+# Final stage
+FROM debian:buster
+
+EXPOSE 40000
+
+WORKDIR /
+COPY --from=build-env /go/bin/dlv /
+COPY --from=build-env /jx-secret /
+
+CMD ["/dlv", "--listen=:40000", "--headless=true", "--api-version=2", "--accept-multiclient", "exec", "/jx-secret"]

@@ -1,0 +1,15 @@
+apiVersion: skaffold/v2beta8
+kind: Config
+metadata:
+  name: jx-secret
+build:
+  artifacts:
+  - image: jx-secret
+    docker:
+      dockerfile: Dockerfile.debug
+deploy:
+  kubectl:
+    manifests:
+    - ./deploy/job.yaml
+    - ./deploy/service.yaml
+
