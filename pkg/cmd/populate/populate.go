@@ -165,7 +165,7 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 
 		secretManager, err := o.SecretStoreManagerFactory.NewSecretManager(getSecretStore(v1alpha1.BackendType(backendType)))
 		if err != nil {
-			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
+			return errors.Wrapf(err, "failed to create a secret manager for ExternalSecret %s", name)
 		}
 
 		data := r.ExternalSecret.Spec.Data
