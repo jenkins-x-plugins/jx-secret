@@ -189,7 +189,7 @@ func TestPopulate(t *testing.T) {
 		assertionFunc       func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string)
 	}
 	gcpLocation := "123456"
-	vaultLocation := ""
+	vaultLocation := "https://127.0.0.1:8200"
 	azureLocation := "azureSuperSecretVault"
 	kubeLocation := "jx"
 	for _, folder := range []testCase{
@@ -250,7 +250,7 @@ func TestPopulate(t *testing.T) {
 
 func TestPopulateFromFileSystem(t *testing.T) {
 	ns := "jx"
-
+	vaultLocation := "https://127.0.0.1:8200"
 	kubeObjects := []runtime.Object{
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -278,8 +278,8 @@ func TestPopulateFromFileSystem(t *testing.T) {
 	require.NoError(t, err, "failed to invoke Run()")
 
 	secretStore := fakeFactory.GetSecretStore()
-	secret, err := secretStore.GetSecret("", "secret/data/jx/pipelineUser", "token")
-	secretStore.AssertHasValue(t, "", "secret/data/jx/pipelineUser", "token")
-	secretStore.AssertValueEquals(t, "", "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
+	secret, err := secretStore.GetSecret(vaultLocation, "secret/data/jx/pipelineUser", "token")
+	secretStore.AssertHasValue(t, vaultLocation, "secret/data/jx/pipelineUser", "token")
+	secretStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
 	assert.Equal(t, "gitoperatorpassword", secret)
 }
