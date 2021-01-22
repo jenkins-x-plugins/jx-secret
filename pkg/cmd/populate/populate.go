@@ -20,6 +20,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-secret/pkg/schemas/generators"
+	"github.com/jenkins-x/jx-secret/pkg/vaults/vaultcli"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	k8swait "k8s.io/apimachinery/pkg/util/wait"
@@ -163,7 +164,8 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 			waited[backendType] = true
 		}
 
-		secretManager, err := o.SecretStoreManagerFactory.NewSecretManager(getSecretStore(v1alpha1.BackendType(backendType)))
+		secretManager, err := o.getSecretManager(backendType)
+
 		if err != nil {
 			return errors.Wrapf(err, "failed to create a secret manager for ExternalSecret %s", name)
 		}
@@ -395,6 +397,28 @@ func (o *Options) secretCommandRunner(_ string) (cmdrunner.CommandRunner, cmdrun
 		return o.CommandRunner, o.QuietCommandRunner, nil
 	}
 	return KubectlExecRunner(podName, sidecar, o.CommandRunner), KubectlExecRunner(podName, sidecar, o.QuietCommandRunner), nil
+}
+
+func (o *Options) getSecretManager(backendType string) (secretstore.Interface, error) {
+	store := getSecretStore(v1alpha1.BackendType(backendType))
+
+	if store == secretstore.SecretStoreTypeVault {
+		envMap, err := vaultcli.CreateVaultEnv(o.KubeClient)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error creating vault env vars")
+		}
+		for k, v := range envMap {
+			err := os.Setenv(k, v)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed setting env var %s for vault auth", k)
+			}
+		}
+	}
+	secretManager, err := o.SecretStoreManagerFactory.NewSecretManager(store)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error creating secret manager")
+	}
+	return secretManager, nil
 }
 
 func KubectlExecRunner(podName string, sidecar string, runner cmdrunner.CommandRunner) func(c *cmdrunner.Command) (string, error) {
