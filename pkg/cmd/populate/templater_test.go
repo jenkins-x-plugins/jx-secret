@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/chrismellard/secretfacade/pkg/secretstore"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/templatertesting"
@@ -72,6 +73,37 @@ func TestTemplater(t *testing.T) {
 	runner := templatertesting.Runner{
 		TestCases: []templatertesting.TestCase{
 			{
+				TestName:   "jx-basic-auth-htpasswd-external",
+				ObjectName: "jx-basic-auth-htpasswd-external",
+				Property:   "auth",
+				VerifyFn: func(t *testing.T, text string) {
+					assert.NotEmpty(t, text, "should have created a valid htpasswd value from the external secret")
+					t.Logf("generated jx-basic-auth-htpasswd auth value: %s\n", text)
+				},
+				Requirements: &jxcore.RequirementsConfig{
+					Repository: "nexus",
+					Cluster: jxcore.ClusterConfig{
+						Provider:    "gke",
+						ProjectID:   "myproject",
+						ClusterName: "mycluster",
+					},
+					SecretStorage: "gsm",
+				},
+				ExternalSecrets: []templatertesting.ExternalSecret{
+					{
+						Location: "myproject",
+						Name:     "jx-basic-auth-user-password",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"username": "my-basic-auth-user",
+								"password": "my-basic-auth-password",
+							},
+						},
+					},
+				},
+				ExternalSecretStorageType: secretstore.SecretStoreTypeGoogle,
+			},
+			{
 				TestName:   "jx-basic-auth-htpasswd",
 				ObjectName: "jx-basic-auth-htpasswd",
 				Property:   "auth",
@@ -103,6 +135,36 @@ func TestTemplater(t *testing.T) {
 				},
 			},
 			{
+				TestName:   "docker-gke",
+				ObjectName: "jenkins-docker-cfg-external",
+				Property:   "config.json",
+				Format:     "json",
+				Requirements: &jxcore.RequirementsConfig{
+					Repository: "nexus",
+					Cluster: jxcore.ClusterConfig{
+						Provider:    "gke",
+						ProjectID:   "myproject",
+						ClusterName: "mycluster",
+					},
+					SecretStorage: "gsm",
+				},
+				ExternalSecretStorageType: secretstore.SecretStoreTypeGoogle,
+				ExternalSecrets: []templatertesting.ExternalSecret{
+					{
+						Location: "myproject",
+						Name:     "docker-hub",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"url":      "mydockerhub.com",
+								"username": "dockeruser",
+								"password": "dockerpassword",
+								"email":    "dockeremail",
+							},
+						},
+					},
+				},
+			},
+			{
 				TestName:   "nexus",
 				ObjectName: "jenkins-maven-settings",
 				Property:   "settings.xml",
@@ -115,6 +177,52 @@ func TestTemplater(t *testing.T) {
 						ClusterName: "mycluster",
 					},
 				},
+			},
+			{
+				TestName:   "nexus",
+				ObjectName: "jenkins-maven-settings-external",
+				Property:   "settings.xml",
+				Format:     "xml",
+				Requirements: &jxcore.RequirementsConfig{
+					Repository: "nexus",
+					Cluster: jxcore.ClusterConfig{
+						Provider:    "gke",
+						ProjectID:   "myproject",
+						ClusterName: "mycluster",
+					},
+					SecretStorage: "gsm",
+				},
+				ExternalSecrets: []templatertesting.ExternalSecret{
+					{
+						Location: "myproject",
+						Name:     "nexus",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"password": "my-nexus-password",
+							},
+						},
+					},
+					{
+						Location: "myproject",
+						Name:     "sonatype",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"username": "my-sonatype-username",
+								"password": "my-sonatype-password",
+							},
+						},
+					},
+					{
+						Location: "myproject",
+						Name:     "gpg",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"passphrase": "my-secret-gpg-passphrase",
+							},
+						},
+					},
+				},
+				ExternalSecretStorageType: secretstore.SecretStoreTypeGoogle,
 			},
 			{
 				TestName:   "bucketrepo",
@@ -131,6 +239,52 @@ func TestTemplater(t *testing.T) {
 				},
 			},
 			{
+				TestName:   "bucketrepo",
+				ObjectName: "jenkins-maven-settings-external",
+				Property:   "settings.xml",
+				Format:     "xml",
+				Requirements: &jxcore.RequirementsConfig{
+					Repository: "nexus",
+					Cluster: jxcore.ClusterConfig{
+						Provider:    "minikube",
+						ProjectID:   "myproject",
+						ClusterName: "mycluster",
+					},
+					SecretStorage: "gsm",
+				},
+				ExternalSecrets: []templatertesting.ExternalSecret{
+					{
+						Location: "myproject",
+						Name:     "nexus",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"password": "my-nexus-password",
+							},
+						},
+					},
+					{
+						Location: "myproject",
+						Name:     "sonatype",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"username": "my-sonatype-username",
+								"password": "my-sonatype-password",
+							},
+						},
+					},
+					{
+						Location: "myproject",
+						Name:     "gpg",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"passphrase": "my-secret-gpg-passphrase",
+							},
+						},
+					},
+				},
+				ExternalSecretStorageType: secretstore.SecretStoreTypeGoogle,
+			},
+			{
 				TestName:   "none",
 				ObjectName: "jenkins-maven-settings",
 				Property:   "settings.xml",
@@ -144,8 +298,54 @@ func TestTemplater(t *testing.T) {
 					},
 				},
 			},
+			{
+				TestName:   "none",
+				ObjectName: "jenkins-maven-settings-external",
+				Property:   "settings.xml",
+				Format:     "xml",
+				Requirements: &jxcore.RequirementsConfig{
+					Repository: "nexus",
+					Cluster: jxcore.ClusterConfig{
+						Provider:    "docker",
+						ProjectID:   "myproject",
+						ClusterName: "mycluster",
+					},
+					SecretStorage: "gsm",
+				},
+				ExternalSecrets: []templatertesting.ExternalSecret{
+					{
+						Location: "myproject",
+						Name:     "nexus",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"password": "my-nexus-password",
+							},
+						},
+					},
+					{
+						Location: "myproject",
+						Name:     "sonatype",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"username": "my-sonatype-username",
+								"password": "my-sonatype-password",
+							},
+						},
+					},
+					{
+						Location: "myproject",
+						Name:     "gpg",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"passphrase": "my-secret-gpg-passphrase",
+							},
+						},
+					},
+				},
+				ExternalSecretStorageType: secretstore.SecretStoreTypeGoogle,
+			},
 		},
-		SchemaFile:  filepath.Join("test_data", "secret-schema.yaml"),
+		SchemaFile:  filepath.Join("test_data", "template", "secret-schema.yaml"),
 		Namespace:   ns,
 		KubeObjects: testSecrets,
 	}
