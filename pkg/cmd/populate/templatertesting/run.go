@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	secretstorefake "github.com/chrismellard/secretfacade/testing/fake"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
@@ -34,6 +35,20 @@ func (r *Runner) Run(t *testing.T) {
 	o.CommandRunner = runner.Run
 
 	for _, tc := range r.TestCases {
+
+		fakeFactory := &secretstorefake.FakeSecretManagerFactory{}
+		o.SecretStoreManagerFactory = fakeFactory
+
+		_, err = fakeFactory.NewSecretManager(tc.ExternalSecretStorageType)
+		assert.NoError(t, err)
+
+		fakeStore := fakeFactory.GetSecretStore()
+
+		for _, p := range tc.ExternalSecrets {
+			err := fakeStore.SetSecret(p.Location, p.Name, &p.Value)
+			assert.NoError(t, err)
+		}
+
 		objName := tc.ObjectName
 		if tc.Requirements != nil {
 			o.Requirements = tc.Requirements
@@ -74,7 +89,7 @@ func (r *Runner) Run(t *testing.T) {
 			AssertValidJSON(t, text, message)
 		}
 
-		expectedFile := filepath.Join("test_data", "expected", objName, propName, tc.TestName+"."+format)
+		expectedFile := filepath.Join("test_data", "template", "expected", objName, propName, tc.TestName+"."+format)
 		require.FileExists(t, expectedFile, "for expected output")
 
 		expected, err := ioutil.ReadFile(expectedFile)

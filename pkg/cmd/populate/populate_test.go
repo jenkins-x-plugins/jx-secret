@@ -1,11 +1,13 @@
 package populate_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/chrismellard/secretfacade/pkg/secretstore"
 	secretstorefake "github.com/chrismellard/secretfacade/testing/fake"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/templatertesting"
@@ -21,17 +23,36 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func runPopulateTestCases(t *testing.T, folder string, secretLocation string, mavenSecretName string, useSecretNameForKey bool, assertionFunc func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string)) {
+func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, folder string, secretLocation string, mavenSecretName string, useSecretNameForKey bool, assertionFunc func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string)) {
 
 	ns := "jx"
-	expectedMavenSettingsFile := filepath.Join("test_data", "expected", "jenkins-maven-settings", "settings.xml", "nexus.xml")
+	expectedMavenSettingsFile := filepath.Join("test_data", "populate", "expected", "jenkins-maven-settings", "settings.xml", "nexus.xml")
 	require.FileExists(t, expectedMavenSettingsFile)
 	expectedMaveSettingsData, err := ioutil.ReadFile(expectedMavenSettingsFile)
 	require.NoError(t, err, "failed to load file %s", expectedMavenSettingsFile)
 
-	schemaFile := filepath.Join("test_data", "secret-schema.yaml")
+	schemaFile := filepath.Join("test_data", "populate", "secret-schema.yaml")
 	schema, err := schemas.LoadSchemaFile(schemaFile)
 	require.NoError(t, err, "failed to load schema file %s")
+
+	extSecrets := map[string]*secretstore.SecretValue{
+		"nexus": {
+			PropertyValues: map[string]string{
+				"password": "my-nexus-password",
+			},
+		},
+		"sonatype": {
+			PropertyValues: map[string]string{
+				"username": "my-sonatype-username",
+				"password": "my-sonatype-password",
+			},
+		},
+		"gpg": {
+			PropertyValues: map[string]string{
+				"passphrase": "my-secret-gpg-passphrase",
+			},
+		},
+	}
 
 	kubeObjects := []runtime.Object{
 		&corev1.Secret{
@@ -44,48 +65,25 @@ func runPopulateTestCases(t *testing.T, folder string, secretLocation string, ma
 				"password": []byte("gitoperatorpassword"),
 			},
 		},
-
-		// some other secrets used for templating the jenkins-maven-settings Secret
-		&corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "nexus",
-				Namespace: ns,
-			},
-			Data: map[string][]byte{
-				"password": []byte("my-nexus-password"),
-			},
-		},
-		&corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "sonatype",
-				Namespace: ns,
-			},
-			Data: map[string][]byte{
-				"username": []byte("my-sonatype-username"),
-				"password": []byte("my-sonatype-password"),
-			},
-		},
-		&corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "gpg",
-				Namespace: ns,
-			},
-			Data: map[string][]byte{
-				"passphrase": []byte("my-secret-gpg-passphrase"),
-			},
-		},
 	}
 
 	_, o := populate.NewCmdPopulate()
-	o.Dir = "test_data"
+	o.Dir = fmt.Sprintf("test_data/populate/%s", folder)
 	o.NoWait = true
 	o.Namespace = ns
 	o.BootSecretNamespace = ns
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
 	fakeFactory := secretstorefake.FakeSecretManagerFactory{}
 	o.SecretStoreManagerFactory = &fakeFactory
+	_, err = fakeFactory.NewSecretManager(storeType)
+	assert.NoError(t, err)
+	fakeStore := fakeFactory.GetSecretStore()
+	for k, v := range extSecrets {
+		err = fakeStore.SetSecret(secretLocation, k, v)
+		assert.NoError(t, err)
+	}
 
-	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", folder))
+	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "populate", folder))
 	err = templatertesting.AddSchemaAnnotations(t, schema, dynObjects)
 	require.NoError(t, err, "failed to add the schema annotations")
 
@@ -105,7 +103,6 @@ func runPopulateTestCases(t *testing.T, folder string, secretLocation string, ma
 	err = o.Run()
 	require.NoError(t, err, "failed to invoke Run()")
 
-	fakeStore := fakeFactory.GetSecretStore()
 	assertionFunc(t, fakeStore, string(expectedMaveSettingsData))
 
 	// Store Maven secret so we can detect diff after running populate a second time
@@ -149,13 +146,13 @@ func runPopulateTestCases(t *testing.T, folder string, secretLocation string, ma
 
 	// lets rerun the populate and assert we have the same data
 	_, o = populate.NewCmdPopulate()
-	o.Dir = "test_data"
+	o.Dir = fmt.Sprintf("test_data/populate/%s", folder)
 	o.NoWait = true
 	o.Namespace = ns
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
 	o.SecretStoreManagerFactory = &fakeFactory
 
-	dynObjects = testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", folder))
+	dynObjects = testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "populate", folder))
 	err = templatertesting.AddSchemaAnnotations(t, schema, dynObjects)
 	require.NoError(t, err, "failed to add the schema annotations")
 	fakeDynClient = testsecrets.NewFakeDynClient(scheme, dynObjects...)
@@ -169,6 +166,11 @@ func runPopulateTestCases(t *testing.T, folder string, secretLocation string, ma
 		Jitter:   0.1,
 	}
 
+	err = fakeStore.SetSecret(secretLocation, "nexus", &secretstore.SecretValue{
+		PropertyValues: map[string]string{
+			"password": "my-new-nexus-password",
+		}})
+	assert.NoError(t, err)
 	err = o.Run()
 	require.NoError(t, err, "failed to invoke Run()")
 
@@ -244,7 +246,7 @@ func TestPopulate(t *testing.T) {
 				fakeStore.AssertValueEquals(t, kubeLocation, "jenkins-maven-settings", "settingsXml", mavenSettings)
 			}},
 	} {
-		runPopulateTestCases(t, folder.backendTypePath, folder.secretLocation, folder.mavenSecretName, folder.useSecretNameForKey, folder.assertionFunc)
+		runPopulateTestCases(t, secretstore.SecretStoreTypeVault, folder.backendTypePath, folder.secretLocation, folder.mavenSecretName, folder.useSecretNameForKey, folder.assertionFunc)
 	}
 }
 
@@ -265,7 +267,7 @@ func TestPopulateFromFileSystem(t *testing.T) {
 	}
 
 	_, o := populate.NewCmdPopulate()
-	o.Dir = "test_data/filesystem"
+	o.Dir = "test_data/populate_filesystem"
 	o.NoWait = true
 	o.Namespace = ns
 	o.BootSecretNamespace = ns

@@ -1,0 +1,32 @@
+apiVersion: core.jenkins-x.io/v4beta1
+kind: Requirements
+spec:
+  autoUpdate:
+    enabled: false
+    schedule: ""
+  cluster:
+    clusterName: bdd-boot-lh-ghe
+    environmentGitOwner: dev1
+    gitKind: github
+    gitName: ghe
+    gitServer: https://github.beescloud.com
+    project: "123456"
+    provider: gke
+    zone: europe-west1-c
+  environments:
+  - key: dev
+  - key: staging
+  - key: production
+  ingress:
+    domain: ""
+    externalDNS: false
+    namespaceSubDomain: ""
+    tls:
+      email: ""
+      enabled: false
+      production: false
+  repository: nexus
+  secretStorage: gsm
+  vault:
+    disableURLDiscovery: true
+  webhook: lighthouse

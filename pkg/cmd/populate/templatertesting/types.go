@@ -3,6 +3,7 @@ package templatertesting
 import (
 	"testing"
 
+	"github.com/chrismellard/secretfacade/pkg/secretstore"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -23,6 +24,12 @@ type Runner struct {
 
 	// KubeObjects so you can define default secrets
 	KubeObjects []runtime.Object
+}
+
+type ExternalSecret struct {
+	Location string
+	Name     string
+	Value    secretstore.SecretValue
 }
 
 // TestCase represents a test case
@@ -50,4 +57,8 @@ type TestCase struct {
 
 	// VerifyFn performs a custom verify of the generated value
 	VerifyFn func(*testing.T, string)
+
+	ExternalSecrets []ExternalSecret
+
+	ExternalSecretStorageType secretstore.SecretStoreType
 }
