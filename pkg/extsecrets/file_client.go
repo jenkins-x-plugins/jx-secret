@@ -31,7 +31,7 @@ func (c *fileClient) List(ns string) ([]*v1.ExternalSecret, error) {
 		if err != nil {
 			return nil, errors.Wrapf(err, "error decoding external secret in dir %s", c.dir)
 		}
-		if es.ObjectMeta.Namespace == ns {
+		if ns == "" || es.ObjectMeta.Namespace == ns {
 			externalSecrets = append(externalSecrets, es)
 		}
 	}
