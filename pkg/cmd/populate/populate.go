@@ -2,6 +2,7 @@ package populate
 
 import (
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
 	"os"
 	"time"
 
@@ -222,7 +223,10 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 		}
 		for key, keyProperties := range m {
 			if newValueMap[key] && len(keyProperties.Properties) > 0 {
-				sv := createSecretValue(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), keyProperties.Properties, r.ExternalSecret.Labels)
+				annotations := r.ExternalSecret.Spec.Template.Metadata.Annotations
+				labels := r.ExternalSecret.Spec.Template.Metadata.Labels
+				secretType := corev1.SecretType(r.ExternalSecret.Spec.Template.Type)
+				sv := createSecretValue(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), keyProperties.Properties, annotations, labels, secretType)
 				err = secretManager.SetSecret(getExternalSecretLocation(&r.ExternalSecret), getSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), r.ExternalSecret.Name, key), &sv)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
@@ -248,8 +252,8 @@ func getSecretKey(backendType v1alpha1.BackendType, externalSecretName string, k
 	}
 	return keyName
 }
-func createSecretValue(backendType v1alpha1.BackendType, values []editor.PropertyValue, labels map[string]string) secretstore.SecretValue {
 
+func createSecretValue(backendType v1alpha1.BackendType, values []editor.PropertyValue, annotations map[string]string, labels map[string]string, secretType corev1.SecretType) secretstore.SecretValue {
 	formatValues := func(values []editor.PropertyValue) map[string]string {
 		properties := map[string]string{}
 		for _, p := range values {
@@ -274,6 +278,8 @@ func createSecretValue(backendType v1alpha1.BackendType, values []editor.Propert
 	case v1alpha1.BackendTypeLocal:
 		sv := secretstore.SecretValue{PropertyValues: formatValues(values)}
 		sv.Labels = labels
+		sv.Annotations = annotations
+		sv.SecretType = secretType
 		return sv
 	}
 	return secretstore.SecretValue{}
