@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: jx-secret
+  namespace: jx-git-operator
+spec:
+  template:
+    metadata:
+      labels:
+        app: jx-secret
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - args:
+          - gitops
+          - git
+          - clone
+          command:
+          - jx
+          env:
+          - name: XDG_CONFIG_HOME
+            value: /workspace/xdg_config
+          image: gcr.io/jenkinsxio/jx-boot:3.1.160
+          name: git-clone
+          volumeMounts:
+          - mountPath: /workspace
+            name: workspace-volume
+          workingDir: /workspace
+      containers:
+        - name: jx-secret
+          image: jx-secret
+          volumeMounts:
+          - mountPath: /workspace
+            name: workspace-volume
+          workingDir: /workspace
+          command:
+            - /dlv
+          args:
+            - --listen=:40000
+            - --headless=true
+            - --api-version=2
+            - --accept-multiclient
+            - exec
+            - /jx-secret
+            - --
+            - populate
+            - --source
+            - filesystem
+            - --dir
+            - /workspace
+          env:
+            - name: VAULT_ADDR
+              value: https://vault.secret-infra:8200
+      serviceAccountName: jx-boot-job
+      volumes:
+      - name: workspace-volume
+        emptyDir: {}
