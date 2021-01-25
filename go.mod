@@ -31,3 +31,5 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.10.6
 	sigs.k8s.io/yaml v1.2.0
 )
+
+replace github.com/chrismellard/secretfacade => github.com/jenkins-x-plugins/secretfacade v0.0.8-0.20210125173816-115a76f34bc8
