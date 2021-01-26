@@ -35,7 +35,7 @@ func NewEditor(commandRunner cmdrunner.CommandRunner, quietCommandRunner cmdrunn
 		commandRunner = cmdrunner.DefaultCommandRunner
 	}
 	if quietCommandRunner == nil {
-		quietCommandRunner = commandRunner
+		quietCommandRunner = cmdrunner.QuietCommandRunner
 	}
 
 	tmpDir := os.Getenv("JX_SECRET_TMP_DIR")
@@ -53,10 +53,7 @@ func NewEditor(commandRunner cmdrunner.CommandRunner, quietCommandRunner cmdrunn
 		kubeClient:         kubeClient,
 		tmpDir:             tmpDir,
 	}
-	err := c.initialise()
-	if err != nil {
-		return c, errors.Wrapf(err, "failed to setup gsm secret editor")
-	}
+
 	return c, nil
 }
 
@@ -159,17 +156,17 @@ func (c *client) ensureSecretExists(key, projectID string) error {
 	return nil
 }
 
-func (c *client) initialise() error {
+func VerifyGcloudInstalled() error {
 
 	log.Logger().Debugf("verifying we have gcloud installed")
 
+	runner := cmdrunner.QuietCommandRunner
 	// lets verify we can find the binary
 	cmd := &cmdrunner.Command{
 		Name: gcloud,
 		Args: []string{"secrets", "--help"},
-		Env:  c.env,
 	}
-	_, err := c.quietCommandRunner(cmd)
+	_, err := runner(cmd)
 	if err != nil {
 		return errors.Wrapf(err, "failed to invoke the binary '%s'. Please make sure you installed '%s' and put it on your $PATH", gcloud, gcloud)
 	}
@@ -180,9 +177,8 @@ func (c *client) initialise() error {
 	cmd = &cmdrunner.Command{
 		Name: gcloud,
 		Args: []string{"secrets", "list", "--help"},
-		Env:  c.env,
 	}
-	_, err = c.quietCommandRunner(cmd)
+	_, err = runner(cmd)
 	if err != nil {
 		return errors.Wrapf(err, "failed to access gsm. command failed: %s", cmdrunner.CLI(cmd))
 	}
