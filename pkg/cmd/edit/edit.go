@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/gsm"
+
 	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
@@ -89,6 +91,16 @@ func (o *Options) Run() error {
 		o.Input = survey.NewInput()
 	}
 
+	// verify client CLIs are installed
+	for _, r := range results {
+		if r.ExternalSecret.Spec.BackendType == string(v1alpha1.BackendTypeGSM) {
+			err := gsm.VerifyGcloudInstalled()
+			if err != nil {
+				return errors.Wrap(err, "failed verifying gloud")
+			}
+			break
+		}
+	}
 	for i := range results {
 		r := results[i]
 		name := r.ExternalSecret.Name
