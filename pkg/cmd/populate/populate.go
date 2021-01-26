@@ -224,6 +224,16 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 		for key, keyProperties := range m {
 			if newValueMap[key] && len(keyProperties.Properties) > 0 {
 				annotations := r.ExternalSecret.Spec.Template.Metadata.Annotations
+
+				// handle replicate to annotation for local secrets so that we also copy the secret to other namespaces
+				replicateTo := ""
+				if r.ExternalSecret.Annotations != nil {
+					replicateTo = r.ExternalSecret.Annotations[extsecrets.ReplicateToAnnotation]
+				}
+				if replicateTo != "" {
+					annotations[extsecrets.ReplicateToAnnotation] = replicateTo
+				}
+
 				labels := r.ExternalSecret.Spec.Template.Metadata.Labels
 				secretType := corev1.SecretType(r.ExternalSecret.Spec.Template.Type)
 				sv := createSecretValue(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), keyProperties.Properties, annotations, labels, secretType)
