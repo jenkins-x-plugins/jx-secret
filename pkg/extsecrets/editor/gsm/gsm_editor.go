@@ -53,10 +53,7 @@ func NewEditor(commandRunner cmdrunner.CommandRunner, quietCommandRunner cmdrunn
 		kubeClient:         kubeClient,
 		tmpDir:             tmpDir,
 	}
-	err := c.initialise()
-	if err != nil {
-		return c, errors.Wrapf(err, "failed to setup gsm secret editor")
-	}
+
 	return c, nil
 }
 
@@ -156,38 +153,5 @@ func (c *client) ensureSecretExists(key, projectID string) error {
 			return errors.Wrapf(err, "failed to describe secret %s in project %s", key, projectID)
 		}
 	}
-	return nil
-}
-
-func (c *client) initialise() error {
-
-	log.Logger().Debugf("verifying we have gcloud installed")
-
-	// lets verify we can find the binary
-	cmd := &cmdrunner.Command{
-		Name: gcloud,
-		Args: []string{"secrets", "--help"},
-		Env:  c.env,
-	}
-	_, err := c.quietCommandRunner(cmd)
-	if err != nil {
-		return errors.Wrapf(err, "failed to invoke the binary '%s'. Please make sure you installed '%s' and put it on your $PATH", gcloud, gcloud)
-	}
-
-	log.Logger().Debugf("verifying we can connect to gsm...")
-
-	// lets verify we can list the secrets
-	cmd = &cmdrunner.Command{
-		Name: gcloud,
-		Args: []string{"secrets", "list", "--help"},
-		Env:  c.env,
-	}
-	_, err = c.quietCommandRunner(cmd)
-	if err != nil {
-		return errors.Wrapf(err, "failed to access gsm. command failed: %s", cmdrunner.CLI(cmd))
-	}
-
-	log.Logger().Debugf("gsm is setup correctly!\n\n")
-
 	return nil
 }
