@@ -21,6 +21,7 @@ import (
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-secret/pkg/schemas/generators"
+	"github.com/jenkins-x/jx-secret/pkg/vaults"
 	"github.com/jenkins-x/jx-secret/pkg/vaults/vaultcli"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -76,6 +77,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/secret/mapping/secret-mappings.yaml file")
 	cmd.Flags().BoolVarP(&o.NoWait, "no-wait", "", false, "disables waiting for the secret store (e.g. vault) to be available")
 	cmd.Flags().DurationVarP(&o.WaitDuration, "wait", "w", 2*time.Hour, "the maximum time period to wait for the vault pod to be ready if using the vault backendType")
+	cmd.Flags().StringVarP(&o.SecretNamespace, "secret-namespace", "", vaults.DefaultVaultNamespace, "the namespace in which secret infrastructure resides such as Hashicorp Vault")
 
 	o.Options.AddFlags(cmd)
 	return cmd, o
@@ -366,6 +368,7 @@ func (o *Options) waitForBackend(backendType string) error {
 	_, wo := wait.NewCmdWait()
 	wo.WaitDuration = o.WaitDuration
 	wo.KubeClient = o.KubeClient
+	wo.Namespace = o.SecretNamespace
 
 	err := wo.Run()
 	if err != nil {
