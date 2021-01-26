@@ -20,6 +20,7 @@ import (
 type Options struct {
 	Dir                       string
 	Namespace                 string
+	SecretNamespace           string
 	Filter                    string
 	SecretClient              extsecrets.Interface
 	KubeClient                kubernetes.Interface
