@@ -424,8 +424,8 @@ github.com/imdario/mergo v0.3.11/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH
 github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
-github.com/jenkins-x-plugins/secretfacade v0.0.8-0.20210126070537-441e69bb87d7 h1:+Dz/SACNbiGvUUgKOcT9OhJE6CkS8WVO5cepprXSDVg=
-github.com/jenkins-x-plugins/secretfacade v0.0.8-0.20210126070537-441e69bb87d7/go.mod h1:cg0Xars29OpX0YGnC6SzD86A3RwNU1Y55zXL/IloxiE=
+github.com/jenkins-x-plugins/secretfacade v0.0.8-0.20210204090437-42176015bb50 h1:bExB8wc4BXvggvu3FTuUwwSwcYHVLcndCR3qnLI9YdI=
+github.com/jenkins-x-plugins/secretfacade v0.0.8-0.20210204090437-42176015bb50/go.mod h1:VQIYuGYpkd9FnYj1KencibWDBS8UgMlsHcdV60MRovA=
 github.com/jenkins-x/go-scm v1.5.215 h1:RBpGmp5ppBOimDc0F/Ln9Dy/DPuZ52OqfSnPbEmUDsM=
 github.com/jenkins-x/go-scm v1.5.215/go.mod h1:Iuk0V0mt0QGIt50TZyChHqRIiXTnp1ink9RyNoe7o7c=
 github.com/jenkins-x/jx-api/v4 v4.0.23 h1:GpgytvBXbHVGaeqsRLGl9f1v8vpxMsTWlZNPyhaXgF0=
