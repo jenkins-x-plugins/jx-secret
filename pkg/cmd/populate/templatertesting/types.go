@@ -3,7 +3,7 @@ package templatertesting
 import (
 	"testing"
 
-	"github.com/chrismellard/secretfacade/pkg/secretstore"
+	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 )

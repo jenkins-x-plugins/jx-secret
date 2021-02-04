@@ -3,8 +3,8 @@ package secretfacade
 import (
 	"fmt"
 
-	"github.com/chrismellard/secretfacade/pkg/secretstore"
-	"github.com/chrismellard/secretfacade/pkg/secretstore/factory"
+	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
+	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore/factory"
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	schema "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"

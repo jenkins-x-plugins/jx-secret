@@ -2,11 +2,12 @@ package populate
 
 import (
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
 	"os"
 	"time"
 
-	"github.com/chrismellard/secretfacade/pkg/secretstore"
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"

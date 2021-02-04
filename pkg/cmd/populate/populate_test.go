@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chrismellard/secretfacade/pkg/secretstore"
-	secretstorefake "github.com/chrismellard/secretfacade/testing/fake"
+	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
+	secretstorefake "github.com/jenkins-x-plugins/secretfacade/testing/fake"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/templatertesting"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets"

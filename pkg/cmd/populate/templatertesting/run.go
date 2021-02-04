@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	secretstorefake "github.com/chrismellard/secretfacade/testing/fake"
+	secretstorefake "github.com/jenkins-x-plugins/secretfacade/testing/fake"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
