@@ -8,7 +8,7 @@
 
 `jx-secret` is a small command line tool working with [Kubernetes External Secrets](https://github.com/godaddy/kubernetes-external-secrets).
 
-You can find more about how we use the [jx-secret binary](https://github.com/jenkins-x/jx-secret/releases) binary inside Jenkins X in the [guide on working with Secrets](https://jenkins-x.io/docs/v3/guides/secrets/)
+You can find more about how we use the [jx-secret binary](https://github.com/jenkins-x/jx-secret/releases) binary inside Jenkins X in the [guide on working with Secrets](https://jenkins-x.io/v3/admin/guides/secrets/)
 
 
 ## Getting Started
