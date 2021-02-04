@@ -14,7 +14,7 @@ require (
 	github.com/google/go-cmp v0.5.4
 	github.com/jenkins-x-plugins/secretfacade v0.0.8-0.20210204090437-42176015bb50
 	github.com/jenkins-x/jx-api/v4 v4.0.23
-	github.com/jenkins-x/jx-helpers/v3 v3.0.71
+	github.com/jenkins-x/jx-helpers/v3 v3.0.73
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
 	github.com/pkg/errors v0.9.1
