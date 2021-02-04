@@ -36,7 +36,7 @@ Though we would welcome [contributions to the version stream](https://github.com
 
 ### Mappings
 
-When using the [jx-secret convert](cmd/jx-secret_convert.md) command to generate [ExternalSecret](https://github.com/godaddy/kubernetes-external-secrets) CRDs you may wish to use a custom mapping of `Secret` names and data keys to key/properties in Vault.
+When using the [jx-secret convert](docs/cmd/jx-secret_convert.md) command to generate [ExternalSecret](https://github.com/godaddy/kubernetes-external-secrets) CRDs you may wish to use a custom mapping of `Secret` names and data keys to key/properties in Vault.
 
 To do this just create a [.jx/secret/mapping/secret-mapping.yaml](https://github.com/jenkins-x/jx3-gitops-template/blob/master/.jx/secret/vault/mapping/secret-mappings.yaml) file in your directory tree when running the command. 
 
