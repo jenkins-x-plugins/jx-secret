@@ -42,3 +42,9 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.10.6
 	sigs.k8s.io/yaml v1.2.0
 )
+
+replace (
+	k8s.io/api => k8s.io/api v0.20.2
+	k8s.io/apimachinery => k8s.io/apimachinery v0.20.2
+	k8s.io/client-go => k8s.io/client-go v0.20.2
+)
