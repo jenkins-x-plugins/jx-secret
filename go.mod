@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/Azure/azure-sdk-for-go v50.1.0+incompatible
+	github.com/Azure/go-autorest/autorest/adal v0.9.11 // indirect
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.5
 	github.com/Masterminds/sprig/v3 v3.2.0
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
@@ -12,8 +13,8 @@ require (
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.4
-	github.com/jenkins-x-plugins/secretfacade v0.0.8
-	github.com/jenkins-x/jx-api/v4 v4.0.23
+	github.com/jenkins-x-plugins/secretfacade v0.0.9
+	github.com/jenkins-x/jx-api/v4 v4.0.24
 	github.com/jenkins-x/jx-helpers/v3 v3.0.73
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
