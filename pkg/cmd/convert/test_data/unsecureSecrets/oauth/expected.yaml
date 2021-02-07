@@ -11,7 +11,7 @@ metadata:
 spec:
   backendType: vault
   vaultMountPoint: kubernetes
-  vaultRole: secret-infra
+  vaultRole: jx-vault
   template:
     data:
       oauth: pinkiepie

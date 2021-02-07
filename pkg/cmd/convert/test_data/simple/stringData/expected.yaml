@@ -7,7 +7,7 @@ metadata:
 spec:
   backendType: vault
   vaultMountPoint: kubernetes
-  vaultRole: secret-infra
+  vaultRole: jx-vault
   data:
     - name: config.yaml
       key: secret/data/bucketrepo/config

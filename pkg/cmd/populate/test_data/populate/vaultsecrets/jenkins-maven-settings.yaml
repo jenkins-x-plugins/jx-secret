@@ -9,7 +9,7 @@ metadata:
 spec:
   backendType: vault
   vaultMountPoint: kubernetes
-  vaultRole: secret-infra
+  vaultRole: jx-vault
   data:
   - name: settings.xml
     key: secret/data/jx/mavenSettings

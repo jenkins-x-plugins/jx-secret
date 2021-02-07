@@ -26,7 +26,7 @@ Converts all Secret resources in the path to ExternalSecret resources so they ca
   -h, --help                        help for convert
       --source-dir string           the source directory to recursively look for the *.yaml or *.yml files to convert. If not specified defaults to 'config-root' in the dir
   -m, --vault-mount-point string    the vault authentication mount point (default "kubernetes")
-  -r, --vault-role string           the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html (default "secret-infra")
+  -r, --vault-role string           the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html (default "jx-vault")
       --version-stream-dir string   the directory containing the version stream. If not specified defaults to the 'versionStream' folder in the dir
 ```
 
