@@ -6,7 +6,7 @@ metadata:
 spec:
   backendType: vault
   vaultMountPoint: kubernetes
-  vaultRole: secret-infra
+  vaultRole: jx-vault
   data:
   - name: hmac
     key: secret/data/lighthouse/hmac/token
