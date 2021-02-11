@@ -1,0 +1,17 @@
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: sonatype
+  namespace: jx
+spec:
+  backendType: azureKeyVault
+  keyVaultName: azureSuperSecretVault
+  data:
+  - name: password
+    key: sonatype
+    property: password
+  - name: username
+    key: sonatype
+    property: username
+  template:
+    type: Opaque

@@ -19,10 +19,10 @@ spec:
   backendType: azureKeyVault
   keyVaultName: azureSuperSecretVault
   data:
-  - key: secret/data/knative/docker/user/pass
+  - key: knative-docker-user-pass
     name: password
     property: password
-  - key: secret/data/knative/docker/user/pass
+  - key: knative-docker-user-pass
     name: username
     property: username
   template:

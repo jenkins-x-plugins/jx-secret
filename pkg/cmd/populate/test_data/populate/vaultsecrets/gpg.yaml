@@ -1,0 +1,13 @@
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: gpg
+  namespace: jx
+spec:
+  backendType: vault
+  data:
+  - name: passphrase
+    key: secret/data/gpg
+    property: passphrase
+  template:
+    type: Opaque

@@ -19,7 +19,7 @@ spec:
   backendType: gcpSecretsManager
   projectId: "123456"
   data:
-  - key: secret/data/jx/pipelineUser
+  - key: jx-pipeline-user
     name: oauth
     property: token
   template:

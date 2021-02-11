@@ -17,20 +17,15 @@
         <server>
             <id>local-nexus</id>
             <username>admin</username>
-            <password>my-nexus-password</password>
+            <password>admin123</password>
         </server>
         <server>
             <id>nexus</id>
             <username>admin</username>
-            <password>my-nexus-password</password>
+            <password>admin123</password>
         </server>
         <server>
             <id>chartmuseum</id>
-            <username></username>
-            <password></password>
-        </server>
-        <server>
-            <id>bucketrepo</id>
             <username></username>
             <password></password>
         </server>

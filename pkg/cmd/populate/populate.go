@@ -240,7 +240,7 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 				labels := r.ExternalSecret.Spec.Template.Metadata.Labels
 				secretType := corev1.SecretType(r.ExternalSecret.Spec.Template.Type)
 				sv := createSecretValue(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), keyProperties.Properties, annotations, labels, secretType)
-				err = secretManager.SetSecret(getExternalSecretLocation(&r.ExternalSecret), getSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), r.ExternalSecret.Name, key), &sv)
+				err = secretManager.SetSecret(GetExternalSecretLocation(&r.ExternalSecret), getSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), r.ExternalSecret.Name, key), &sv)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
 				}
@@ -250,7 +250,7 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 	return nil
 }
 
-func getSecretStore(backendType v1alpha1.BackendType) secretstore.SecretStoreType {
+func GetSecretStore(backendType v1alpha1.BackendType) secretstore.SecretStoreType {
 	switch backendType {
 	case v1alpha1.BackendTypeLocal:
 		return secretstore.SecretStoreTypeKubernetes
@@ -298,7 +298,7 @@ func createSecretValue(backendType v1alpha1.BackendType, values []editor.Propert
 	return secretstore.SecretValue{}
 }
 
-func getExternalSecretLocation(extsec *v1.ExternalSecret) string {
+func GetExternalSecretLocation(extsec *v1.ExternalSecret) string {
 	switch v1alpha1.BackendType(extsec.Spec.BackendType) {
 	case v1alpha1.BackendTypeGSM:
 		return extsec.Spec.ProjectID
@@ -420,7 +420,7 @@ func (o *Options) secretCommandRunner(_ string) (cmdrunner.CommandRunner, cmdrun
 }
 
 func (o *Options) getSecretManager(backendType string) (secretstore.Interface, error) {
-	store := getSecretStore(v1alpha1.BackendType(backendType))
+	store := GetSecretStore(v1alpha1.BackendType(backendType))
 
 	if store == secretstore.SecretStoreTypeVault {
 		envMap, err := vaultcli.CreateVaultEnv(o.KubeClient)

@@ -6,6 +6,8 @@ import (
 
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
+	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate/templatertesting"
 	"github.com/stretchr/testify/assert"
@@ -99,6 +101,27 @@ func TestTemplater(t *testing.T) {
 								"password": "my-basic-auth-password",
 							},
 						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "jx-basic-auth-user-password",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "jx-basic-auth-user-password",
+										Property: "username",
+										Name:     "username",
+									},
+									{
+										Key:      "jx-basic-auth-user-password",
+										Property: "password",
+										Name:     "password",
+									},
+								},
+							},
+						},
 					},
 				},
 				ExternalSecretStorageType: secretstore.SecretStoreTypeGoogle,
@@ -161,6 +184,37 @@ func TestTemplater(t *testing.T) {
 								"email":    "dockeremail",
 							},
 						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "docker-hub",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "docker-hub",
+										Property: "url",
+										Name:     "url",
+									},
+									{
+										Key:      "docker-hub",
+										Property: "username",
+										Name:     "username",
+									},
+									{
+										Key:      "docker-hub",
+										Property: "password",
+										Name:     "password",
+									},
+									{
+										Key:      "docker-hub",
+										Property: "email",
+										Name:     "email",
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -201,6 +255,22 @@ func TestTemplater(t *testing.T) {
 								"password": "my-nexus-password",
 							},
 						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "nexus",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "nexus",
+										Property: "password",
+										Name:     "password",
+									},
+								},
+							},
+						},
 					},
 					{
 						Location: "myproject",
@@ -211,6 +281,27 @@ func TestTemplater(t *testing.T) {
 								"password": "my-sonatype-password",
 							},
 						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "sonatype",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "sonatype",
+										Property: "username",
+										Name:     "username",
+									},
+									{
+										Key:      "sonatype",
+										Property: "password",
+										Name:     "password",
+									},
+								},
+							},
+						},
 					},
 					{
 						Location: "myproject",
@@ -218,6 +309,22 @@ func TestTemplater(t *testing.T) {
 						Value: secretstore.SecretValue{
 							PropertyValues: map[string]string{
 								"passphrase": "my-secret-gpg-passphrase",
+							},
+						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "gpg",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "gpg",
+										Property: "passphrase",
+										Name:     "passphrase",
+									},
+								},
 							},
 						},
 					},
@@ -261,6 +368,22 @@ func TestTemplater(t *testing.T) {
 								"password": "my-nexus-password",
 							},
 						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "nexus",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "nexus",
+										Property: "password",
+										Name:     "password",
+									},
+								},
+							},
+						},
 					},
 					{
 						Location: "myproject",
@@ -271,6 +394,27 @@ func TestTemplater(t *testing.T) {
 								"password": "my-sonatype-password",
 							},
 						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "sonatype",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "sonatype",
+										Property: "username",
+										Name:     "username",
+									},
+									{
+										Key:      "sonatype",
+										Property: "password",
+										Name:     "password",
+									},
+								},
+							},
+						},
 					},
 					{
 						Location: "myproject",
@@ -278,6 +422,22 @@ func TestTemplater(t *testing.T) {
 						Value: secretstore.SecretValue{
 							PropertyValues: map[string]string{
 								"passphrase": "my-secret-gpg-passphrase",
+							},
+						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "gpg",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "gpg",
+										Property: "passphrase",
+										Name:     "passphrase",
+									},
+								},
 							},
 						},
 					},
@@ -321,6 +481,22 @@ func TestTemplater(t *testing.T) {
 								"password": "my-nexus-password",
 							},
 						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "nexus",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "nexus",
+										Property: "password",
+										Name:     "password",
+									},
+								},
+							},
+						},
 					},
 					{
 						Location: "myproject",
@@ -331,6 +507,27 @@ func TestTemplater(t *testing.T) {
 								"password": "my-sonatype-password",
 							},
 						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "sonatype",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "sonatype",
+										Property: "username",
+										Name:     "username",
+									},
+									{
+										Key:      "sonatype",
+										Property: "password",
+										Name:     "password",
+									},
+								},
+							},
+						},
 					},
 					{
 						Location: "myproject",
@@ -338,6 +535,22 @@ func TestTemplater(t *testing.T) {
 						Value: secretstore.SecretValue{
 							PropertyValues: map[string]string{
 								"passphrase": "my-secret-gpg-passphrase",
+							},
+						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "gpg",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "gpg",
+										Property: "passphrase",
+										Name:     "passphrase",
+									},
+								},
 							},
 						},
 					},

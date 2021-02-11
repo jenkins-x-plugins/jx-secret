@@ -1,0 +1,16 @@
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: sonatype
+  namespace: jx
+spec:
+  backendType: vault
+  data:
+  - name: password
+    key: secret/data/sonatype
+    property: password
+  - name: username
+    key: secret/data/sonatype
+    property: username
+  template:
+    type: Opaque
