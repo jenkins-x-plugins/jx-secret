@@ -1,0 +1,14 @@
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: gpg
+  namespace: jx
+spec:
+  backendType: gcpSecretsManager
+  projectId: "123456"
+  data:
+  - name: passphrase
+    key: gpg
+    property: passphrase
+  template:
+    type: Opaque

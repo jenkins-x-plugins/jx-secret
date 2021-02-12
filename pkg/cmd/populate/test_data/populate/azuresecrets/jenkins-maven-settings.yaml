@@ -11,10 +11,10 @@ spec:
   keyVaultName: azureSuperSecretVault
   data:
   - name: settings.xml
-    key: secret/data/jx/mavenSettings
+    key: jx-maven-settings
     property: settingsXml
   - name: settings-security.xml
-    key: secret/data/jx/mavenSettings
+    key: jx-maven-settings
     property: securityXml
   template:
     type: Opaque

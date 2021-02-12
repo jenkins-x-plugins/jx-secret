@@ -12,7 +12,7 @@ spec:
   backendType: gcpSecretsManager
   projectId: "123456"
   data:
-  - key: secret/data/lighthouse/hmac
+  - key: lighthouse-hmac
     name: hmac
   template:
     metadata:

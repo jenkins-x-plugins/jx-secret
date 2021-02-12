@@ -12,7 +12,7 @@ spec:
   backendType: azureKeyVault
   keyVaultName: azureSuperSecretVault
   data:
-  - key: secret/data/lighthouse/hmac
+  - key: lighthouse-hmac
     name: hmac
   template:
     metadata:

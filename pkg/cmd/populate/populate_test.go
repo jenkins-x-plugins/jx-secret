@@ -23,7 +23,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, folder string, secretLocation string, mavenSecretName string, useSecretNameForKey bool, assertionFunc func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string)) {
+func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, folder string, secretLocation string, mavenSecretName string, nexusSecretName string, extSecrets map[string]*secretstore.SecretValue, useSecretNameForKey bool, assertionFunc func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string)) {
 
 	ns := "jx"
 	expectedMavenSettingsFile := filepath.Join("test_data", "populate", "expected", "jenkins-maven-settings", "settings.xml", "nexus.xml")
@@ -34,25 +34,6 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, f
 	schemaFile := filepath.Join("test_data", "populate", "secret-schema.yaml")
 	schema, err := schemas.LoadSchemaFile(schemaFile)
 	require.NoError(t, err, "failed to load schema file %s")
-
-	extSecrets := map[string]*secretstore.SecretValue{
-		"nexus": {
-			PropertyValues: map[string]string{
-				"password": "my-nexus-password",
-			},
-		},
-		"sonatype": {
-			PropertyValues: map[string]string{
-				"username": "my-sonatype-username",
-				"password": "my-sonatype-password",
-			},
-		},
-		"gpg": {
-			PropertyValues: map[string]string{
-				"passphrase": "my-secret-gpg-passphrase",
-			},
-		},
-	}
 
 	kubeObjects := []runtime.Object{
 		&corev1.Secret{
@@ -166,7 +147,7 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, f
 		Jitter:   0.1,
 	}
 
-	err = fakeStore.SetSecret(secretLocation, "nexus", &secretstore.SecretValue{
+	err = fakeStore.SetSecret(secretLocation, nexusSecretName, &secretstore.SecretValue{
 		PropertyValues: map[string]string{
 			"password": "my-new-nexus-password",
 		}})
@@ -187,6 +168,8 @@ func TestPopulate(t *testing.T) {
 		backendTypePath     string
 		secretLocation      string
 		mavenSecretName     string
+		nexusSecretName     string
+		extSecrets          map[string]*secretstore.SecretValue
 		useSecretNameForKey bool
 		assertionFunc       func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string)
 	}
@@ -198,6 +181,20 @@ func TestPopulate(t *testing.T) {
 		{"vaultsecrets",
 			vaultLocation,
 			"secret/data/jx/mavenSettings",
+			"secret/data/nexus",
+			map[string]*secretstore.SecretValue{
+				"secret/data/sonatype": {
+					PropertyValues: map[string]string{
+						"username": "my-sonatype-username",
+						"password": "my-sonatype-password",
+					},
+				},
+				"secret/data/gpg": {
+					PropertyValues: map[string]string{
+						"passphrase": "my-secret-gpg-passphrase",
+					},
+				},
+			},
 			false,
 			func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string) {
 				fakeStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/adminUser", "username", "admin")
@@ -210,32 +207,74 @@ func TestPopulate(t *testing.T) {
 			}},
 		{"gsmsecrets",
 			gcpLocation,
-			"secret/data/jx/mavenSettings",
+			"jx-maven-settings",
+			"nexus",
+			map[string]*secretstore.SecretValue{
+				"sonatype": {
+					PropertyValues: map[string]string{
+						"username": "my-sonatype-username",
+						"password": "my-sonatype-password",
+					},
+				},
+				"gpg": {
+					PropertyValues: map[string]string{
+						"passphrase": "my-secret-gpg-passphrase",
+					},
+				},
+			},
 			false,
 			func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string) {
-				fakeStore.AssertValueEquals(t, gcpLocation, "secret/data/jx/adminUser", "username", "admin")
-				fakeStore.AssertHasValue(t, gcpLocation, "secret/data/jx/adminUser", "password")
-				fakeStore.AssertHasValue(t, gcpLocation, "secret/data/lighthouse/hmac", "")
-				fakeStore.AssertValueEquals(t, gcpLocation, "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
-				fakeStore.AssertHasValue(t, gcpLocation, "secret/data/knative/docker/user/pass", "password")
-				fakeStore.AssertValueEquals(t, gcpLocation, "secret/data/jx/mavenSettings", "settingsXml", mavenSettings)
+				fakeStore.AssertValueEquals(t, gcpLocation, "jx-admin-user", "username", "admin")
+				fakeStore.AssertHasValue(t, gcpLocation, "jx-admin-user", "password")
+				fakeStore.AssertHasValue(t, gcpLocation, "lighthouse-hmac", "")
+				fakeStore.AssertValueEquals(t, gcpLocation, "jx-pipeline-user", "token", "gitoperatorpassword")
+				fakeStore.AssertHasValue(t, gcpLocation, "knative-docker-user-pass", "password")
+				fakeStore.AssertValueEquals(t, gcpLocation, "jx-maven-settings", "settingsXml", mavenSettings)
 
 			}},
 		{"azuresecrets",
 			azureLocation,
-			"secret/data/jx/mavenSettings",
+			"jx-maven-settings",
+			"nexus",
+			map[string]*secretstore.SecretValue{
+				"sonatype": {
+					PropertyValues: map[string]string{
+						"username": "my-sonatype-username",
+						"password": "my-sonatype-password",
+					},
+				},
+				"gpg": {
+					PropertyValues: map[string]string{
+						"passphrase": "my-secret-gpg-passphrase",
+					},
+				},
+			},
 			false,
 			func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string) {
-				fakeStore.AssertValueEquals(t, azureLocation, "secret/data/jx/adminUser", "username", "admin")
-				fakeStore.AssertHasValue(t, azureLocation, "secret/data/jx/adminUser", "password")
-				fakeStore.AssertHasValue(t, azureLocation, "secret/data/lighthouse/hmac", "")
-				fakeStore.AssertValueEquals(t, azureLocation, "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
-				fakeStore.AssertHasValue(t, azureLocation, "secret/data/knative/docker/user/pass", "password")
-				fakeStore.AssertValueEquals(t, azureLocation, "secret/data/jx/mavenSettings", "settingsXml", mavenSettings)
+				fakeStore.AssertValueEquals(t, azureLocation, "jx-admin-user", "username", "admin")
+				fakeStore.AssertHasValue(t, azureLocation, "jx-admin-user", "password")
+				fakeStore.AssertHasValue(t, azureLocation, "lighthouse-hmac", "")
+				fakeStore.AssertValueEquals(t, azureLocation, "jx-pipeline-user", "token", "gitoperatorpassword")
+				fakeStore.AssertHasValue(t, azureLocation, "knative-docker-user-pass", "password")
+				fakeStore.AssertValueEquals(t, azureLocation, "jx-maven-settings", "settingsXml", mavenSettings)
 			}},
 		{"kubesecrets",
 			kubeLocation,
 			"jenkins-maven-settings",
+			"nexus",
+			map[string]*secretstore.SecretValue{
+				"sonatype": {
+					PropertyValues: map[string]string{
+						"username": "my-sonatype-username",
+						"password": "my-sonatype-password",
+					},
+				},
+				"gpg": {
+					PropertyValues: map[string]string{
+						"passphrase": "my-secret-gpg-passphrase",
+					},
+				},
+			},
 			true,
 			func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string) {
 				fakeStore.AssertValueEquals(t, kubeLocation, "jenkins-x-bucketrepo", "username", "admin")
@@ -246,7 +285,7 @@ func TestPopulate(t *testing.T) {
 				fakeStore.AssertValueEquals(t, kubeLocation, "jenkins-maven-settings", "settingsXml", mavenSettings)
 			}},
 	} {
-		runPopulateTestCases(t, secretstore.SecretStoreTypeVault, folder.backendTypePath, folder.secretLocation, folder.mavenSecretName, folder.useSecretNameForKey, folder.assertionFunc)
+		runPopulateTestCases(t, secretstore.SecretStoreTypeVault, folder.backendTypePath, folder.secretLocation, folder.mavenSecretName, folder.nexusSecretName, folder.extSecrets, folder.useSecretNameForKey, folder.assertionFunc)
 	}
 }
 

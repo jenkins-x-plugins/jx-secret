@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -45,6 +47,16 @@ func (s *ExternalSecret) KeyAndNames() []string {
 		}
 	}
 	return keys
+}
+
+// KeyAndProperty returns the secret key and property for a given secret data entry defined by name
+func (s *ExternalSecret) KeyAndProperty(name string) (string, string, error) {
+	for _, d := range s.Spec.Data {
+		if d.Name == name {
+			return d.Key, d.Property, nil
+		}
+	}
+	return "", "", fmt.Errorf("unable to find secret data entry of %s of External Secret %s", name, s.Name)
 }
 
 // ExternalSecretSpec defines the desired state of ExternalSecret.

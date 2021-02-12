@@ -8,6 +8,7 @@ import (
 
 	secretstorefake "github.com/jenkins-x-plugins/secretfacade/testing/fake"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
+	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
 	"github.com/jenkins-x/jx-secret/pkg/schemas"
@@ -44,7 +45,10 @@ func (r *Runner) Run(t *testing.T) {
 
 		fakeStore := fakeFactory.GetSecretStore()
 
+		o.Options.ExternalSecrets = []*v1.ExternalSecret{}
 		for _, p := range tc.ExternalSecrets {
+			es := p.ExternalSecret
+			o.Options.ExternalSecrets = append(o.Options.ExternalSecrets, &es)
 			err := fakeStore.SetSecret(p.Location, p.Name, &p.Value)
 			assert.NoError(t, err)
 		}

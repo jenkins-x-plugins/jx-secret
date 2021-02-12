@@ -63,6 +63,15 @@ func (o *Options) Validate() error {
 	return nil
 }
 
+func (o *Options) ExternalSecretByName(secretName string) (*v1.ExternalSecret, error) {
+	for _, s := range o.ExternalSecrets {
+		if s.ObjectMeta.Name == secretName {
+			return s, nil
+		}
+	}
+	return nil, fmt.Errorf("unable to find External Secret with name %s", secretName)
+}
+
 // SecretError returns an error for a secret
 type SecretError struct {
 	// ExternalSecret the external secret which is not valid

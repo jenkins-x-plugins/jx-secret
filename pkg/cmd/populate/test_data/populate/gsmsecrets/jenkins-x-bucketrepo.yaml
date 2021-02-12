@@ -12,10 +12,10 @@ spec:
   backendType: gcpSecretsManager
   projectId: "123456"
   data:
-  - key: secret/data/jx/adminUser
+  - key: jx-admin-user
     name: BASIC_AUTH_PASS
     property: password
-  - key: secret/data/jx/adminUser
+  - key: jx-admin-user
     name: BASIC_AUTH_USER
     property: username
   template:
