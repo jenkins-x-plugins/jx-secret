@@ -239,12 +239,12 @@ func (o *Options) getExternalSecretValue(lookupSecretName string, lookupKey stri
 
 	externalSecret, err := o.Options.ExternalSecretByName(lookupSecret)
 	if err != nil {
-		log.Logger().Warnf("failed to find referenced External Secret name %s", lookupSecret)
+		log.Logger().Debugf("failed to find referenced External Secret name %s", lookupSecret)
 		return ""
 	}
 	externalSecretKey, externalSecretProperty, err := externalSecret.KeyAndProperty(lookupKey)
 	if err != nil {
-		log.Logger().Warnf("failed to find secret key and property for External Secret name %s", lookupSecret)
+		log.Logger().Debugf("failed to find secret key and property for External Secret name %s", lookupSecret)
 		return ""
 	}
 

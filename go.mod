@@ -13,8 +13,8 @@ require (
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.4
 	github.com/jenkins-x-plugins/secretfacade v0.0.9
-	github.com/jenkins-x/jx-api/v4 v4.0.24
-	github.com/jenkins-x/jx-helpers/v3 v3.0.76
+	github.com/jenkins-x/jx-api/v4 v4.0.25
+	github.com/jenkins-x/jx-helpers/v3 v3.0.82
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.3
 	github.com/pkg/errors v0.9.1
@@ -25,9 +25,8 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	gopkg.in/validator.v2 v2.0.0-20200605151824-2b28d334fa05
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/api v0.20.2
-	k8s.io/apimachinery v0.20.2
+	k8s.io/api v0.20.4
+	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/kustomize/kyaml v0.10.6
 	sigs.k8s.io/yaml v1.2.0
