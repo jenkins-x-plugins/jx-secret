@@ -2,6 +2,7 @@ package extsecrets
 
 import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kyamls"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
 	"github.com/pkg/errors"
 )
@@ -25,11 +26,12 @@ func (c *fileClient) List(ns string) ([]*v1.ExternalSecret, error) {
 	}
 	var externalSecrets []*v1.ExternalSecret
 	for _, esNode := range rNodes {
-
 		es := &v1.ExternalSecret{}
-		err = esNode.Document().Decode(es)
+		doc := esNode.Document()
+		err = doc.Decode(es)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error decoding external secret in dir %s", c.dir)
+			log.Logger().Debugf("ignored file we could not decode it as a kubernetes resource: %s", err.Error())
+			continue
 		}
 		if ns == "" || es.ObjectMeta.Namespace == ns {
 			externalSecrets = append(externalSecrets, es)
