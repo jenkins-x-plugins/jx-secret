@@ -32,7 +32,7 @@ func GetSecretEntry(kubeClient kubernetes.Interface, namespace, secretName, entr
 		log.Logger().Warnf("could not find secret %s with entry %s in namespace %s", secretName, entry, namespace)
 		return answer, nil
 	}
-	log.Logger().Infof("found Secret %s in namespace %s with entry %s", secretName, namespace, entry)
+	log.Logger().Debugf("found Secret %s in namespace %s with entry %s", secretName, namespace, entry)
 	return answer, nil
 }
 
