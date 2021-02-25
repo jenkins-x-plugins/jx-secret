@@ -43,11 +43,14 @@ var (
 // Options the options for the command
 type Options struct {
 	secretfacade.Options
-	Filter             string
-	Input              input.Interface
-	Results            []*secretfacade.SecretPair
-	CommandRunner      cmdrunner.CommandRunner
-	QuietCommandRunner cmdrunner.CommandRunner
+	Filter               string
+	Interactive          bool
+	InteractiveMultiple  bool
+	InteractiveSelectAll bool
+	Input                input.Interface
+	Results              []*secretfacade.SecretPair
+	CommandRunner        cmdrunner.CommandRunner
+	QuietCommandRunner   cmdrunner.CommandRunner
 }
 
 // NewCmdEdit creates a command object for the command
@@ -67,6 +70,9 @@ func NewCmdEdit() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/secret/mapping/secret-mappings.yaml file")
 	cmd.Flags().StringVarP(&o.Filter, "filter", "f", "", "filter on the Secret / ExternalSecret names to enter")
+	cmd.Flags().BoolVarP(&o.Interactive, "interactive", "i", false, "interactive mode asks the user for the Secret name and the properties to edit")
+	cmd.Flags().BoolVarP(&o.InteractiveMultiple, "multiple", "m", false, "for interactive mode do you want to select multiple secrets to edit. If not defaults to just picking a single secret")
+	cmd.Flags().BoolVarP(&o.InteractiveSelectAll, "all", "", false, "for interactive mode do you want to select all of the properties to edit by default. Otherwise none are selected and you choose to select the properties to change")
 	return cmd, o
 }
 
@@ -90,6 +96,13 @@ func (o *Options) Run() error {
 
 	if o.Input == nil {
 		o.Input = survey.NewInput()
+	}
+
+	if o.Interactive {
+		results, err = o.chooseSecrets(results)
+		if err != nil {
+			return errors.Wrapf(err, "failed to choose secrets in interactive mode")
+		}
 	}
 
 	// verify client CLIs are installed
