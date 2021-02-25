@@ -2,6 +2,7 @@ package edit
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/gsm"
@@ -159,6 +160,47 @@ func (o *Options) Run() error {
 	return nil
 }
 
+func (o *Options) chooseSecrets(results []*secretfacade.SecretPair) ([]*secretfacade.SecretPair, error) {
+	var names []string
+	m := map[string][]*secretfacade.SecretPair{}
+	for _, s := range results {
+		name := s.ExternalSecret.Name
+		if len(m[name]) == 0 {
+			names = append(names, name)
+		}
+		m[name] = append(m[name], s)
+	}
+	sort.Strings(names)
+
+	var err error
+	if o.InteractiveMultiple {
+		names, err = o.Input.SelectNames(names, "Pick the Secrets to edit", false, "select the names of the ExternalSecrets you want to edit")
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to ")
+		}
+		if len(names) == 0 {
+			return nil, errors.Errorf("no ExternalSecret names selected")
+		}
+	} else {
+		name := ""
+		name, err = o.Input.PickNameWithDefault(names, "Pick the Secret to edit", "", "select the name of the ExternalSecrets you want to edit")
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to ")
+		}
+		if name == "" {
+			return nil, errors.Errorf("no ExternalSecret name selected")
+		}
+		names = []string{name}
+	}
+	var answer []*secretfacade.SecretPair
+	for _, name := range names {
+		for _, s := range m[name] {
+			answer = append(answer, s)
+		}
+	}
+	return answer, nil
+}
+
 func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1.Data) (string, error) {
 	var value string
 	var err error
@@ -215,6 +257,9 @@ func (o *Options) propertyMessage(s *secretfacade.SecretPair, d *v1.Data) (strin
 // If no filter then just filter out mandatory properties only?
 func (o *Options) Matches(r *secretfacade.SecretPair) bool {
 	if o.Filter == "" {
+		if o.Interactive {
+			return true
+		}
 		return r.IsInvalid()
 	}
 	return strings.Contains(r.ExternalSecret.Name, o.Filter)
@@ -223,7 +268,7 @@ func (o *Options) Matches(r *secretfacade.SecretPair) bool {
 // DataToEdit returns the properties to edit
 func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1.Data {
 	// if filtering return all properties
-	if o.Filter != "" {
+	if o.Filter != "" || o.Interactive {
 		return r.ExternalSecret.Spec.Data
 	}
 
