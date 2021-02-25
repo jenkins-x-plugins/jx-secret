@@ -2,6 +2,8 @@ package extsecrets
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
@@ -109,4 +111,13 @@ func CopySecretToNamespace(kubeClient kubernetes.Interface, ns string, fromSecre
 	}
 	log.Logger().Infof("updated Secret %s in namespace %s", info(name), info(ns))
 	return nil
+}
+
+// DefaultHelmSecretFolder creates a default helm secret folder
+func DefaultHelmSecretFolder() string {
+	answer := os.Getenv("JX_HELM_SECRET_FOLDER")
+	if answer == "" {
+		answer = filepath.Join("/tmp", "secrets", "jx-helm")
+	}
+	return answer
 }

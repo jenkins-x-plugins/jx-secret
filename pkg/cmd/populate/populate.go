@@ -2,12 +2,13 @@ package populate
 
 import (
 	"fmt"
-	"github.com/jenkins-x/go-scm/scm"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/jenkins-x/go-scm/scm"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -81,7 +82,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().StringVarP(&o.BootSecretNamespace, "boot-secret-namespace", "", "", "the namespace to that contains the boot secret used to populate git secrets from")
-	cmd.Flags().StringVarP(&o.HelmSecretFolder, "helm-secrets-dir", "", "", "the directory where the helm secrets live with a folder per namespace and a file with a '.yaml' extension for each secret name")
+	cmd.Flags().StringVarP(&o.HelmSecretFolder, "helm-secrets-dir", "", "", "the directory where the helm secrets live with a folder per namespace and a file with a '.yaml' extension for each secret name. Defaults to $JX_HELM_SECRET_FOLDER")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/secret/mapping/secret-mappings.yaml file")
 	cmd.Flags().BoolVarP(&o.NoWait, "no-wait", "", false, "disables waiting for the secret store (e.g. vault) to be available")
 	cmd.Flags().DurationVarP(&o.WaitDuration, "wait", "w", 2*time.Hour, "the maximum time period to wait for the vault pod to be ready if using the vault backendType")
@@ -98,11 +99,10 @@ func (o *Options) Validate() error {
 	}
 
 	if o.HelmSecretFolder == "" {
-		o.HelmSecretFolder = os.Getenv("JX_HELM_SECRET_FOLDER")
-		if o.HelmSecretFolder == "" {
-			o.HelmSecretFolder = filepath.Join("/tmp", "secrets", "jx-helm")
-		}
+		o.HelmSecretFolder = extsecrets.DefaultHelmSecretFolder()
 	}
+	log.Logger().Infof("loading default Secret data from helm secret folder: %s", o.HelmSecretFolder)
+
 	if o.Backoff == nil {
 		o.Backoff = &DefaultBackoff
 	}

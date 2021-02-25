@@ -107,6 +107,36 @@ Defaults
 </tr>
 </tbody>
 </table>
+<h3 id="secret.jenkins-x.io/v1alpha1.AzureKeyVaultConfig">AzureKeyVaultConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#secret.jenkins-x.io/v1alpha1.Defaults">Defaults</a>, 
+<a href="#secret.jenkins-x.io/v1alpha1.SecretRule">SecretRule</a>)
+</p>
+<p>
+<p>AzureKeyVaultConfig stores default config when using Azure Key Vault for secret storage</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>keyVaultName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="secret.jenkins-x.io/v1alpha1.BackendType">BackendType
 (<code>string</code> alias)</p></h3>
 <p>
@@ -160,6 +190,19 @@ GcpSecretsManager
 <p>GcpSecretsManager config</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>azureKeyVault</code></br>
+<em>
+<a href="#secret.jenkins-x.io/v1alpha1.AzureKeyVaultConfig">
+AzureKeyVaultConfig
+</a>
+</em>
+</td>
+<td>
+<p>AzureKeyVault config</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="secret.jenkins-x.io/v1alpha1.GcpSecretsManager">GcpSecretsManager
@@ -170,7 +213,7 @@ GcpSecretsManager
 <a href="#secret.jenkins-x.io/v1alpha1.SecretRule">SecretRule</a>)
 </p>
 <p>
-<p>GcpSecretsManager the predicates which must be true to invoke the associated tasks/pipelines</p>
+<p>GcpSecretsManager stores default config when using GSM for secret storage</p>
 </p>
 <table>
 <thead>
@@ -380,10 +423,34 @@ BackendType
 </tr>
 <tr>
 <td>
+<code>unsecured</code></br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Unsecured represent a list of a secret&rsquo;s keys that will remain as plain secrets rather than undergoing conversion</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>gcpSecretsManager</code></br>
 <em>
 <a href="#secret.jenkins-x.io/v1alpha1.GcpSecretsManager">
 GcpSecretsManager
+</a>
+</em>
+</td>
+<td>
+<p>GcpSecretsManager config</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>azureKeyVault</code></br>
+<em>
+<a href="#secret.jenkins-x.io/v1alpha1.AzureKeyVaultConfig">
+AzureKeyVaultConfig
 </a>
 </em>
 </td>
@@ -396,5 +463,5 @@ GcpSecretsManager
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>ccb2dc3</code>.
+on git commit <code>71d569a</code>.
 </em></p>

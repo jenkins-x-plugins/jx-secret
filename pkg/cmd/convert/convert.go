@@ -47,11 +47,13 @@ var (
 // LabelOptions the options for the command
 type Options struct {
 	Dir              string
+	DefaultNamespace string
 	SourceDir        string
 	VersionStreamDir string
 	Backend          string
 	VaultMountPoint  string
 	VaultRole        string
+	HelmSecretFolder string
 	SecretMapping    *v1alpha1.SecretMapping
 
 	Prefix string
@@ -77,6 +79,8 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.VersionStreamDir, "version-stream-dir", "", "", "the directory containing the version stream. If not specified defaults to the 'versionStream' folder in the dir")
 	cmd.Flags().StringVarP(&o.VaultMountPoint, "vault-mount-point", "m", "kubernetes", "the vault authentication mount point")
 	cmd.Flags().StringVarP(&o.VaultRole, "vault-role", "r", vaults.DefaultVaultNamespace, "the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html")
+	cmd.Flags().StringVarP(&o.HelmSecretFolder, "helm-secrets-dir", "", "", "the directory where the helm secrets live with a folder per namespace and a file with a '.yaml' extension for each secret name. Defaults to $JX_HELM_SECRET_FOLDER")
+	cmd.Flags().StringVarP(&o.DefaultNamespace, "default-namespace", "", "jx", "the default namespace if no namespace is specified in a Secret resource")
 
 	cmd.AddCommand(cobras.SplitCommand(edit.NewCmdSecretMappingEdit()))
 	return cmd, o
@@ -91,6 +95,11 @@ func (o *Options) Run() error {
 	if o.VersionStreamDir == "" {
 		o.VersionStreamDir = filepath.Join(o.Dir, "versionStream")
 	}
+
+	if o.HelmSecretFolder == "" {
+		o.HelmSecretFolder = extsecrets.DefaultHelmSecretFolder()
+	}
+	log.Logger().Infof("moving converted Secret resources to the temporary helm secret folder %s", o.HelmSecretFolder)
 
 	if o.SecretMapping == nil {
 		var err error
@@ -194,6 +203,24 @@ func (o *Options) Run() error {
 		flag, err = o.moveMetadataToTemplate(node, path)
 		if err != nil {
 			return flag, err
+		}
+
+		// lets make sure the helm secret dir exists
+		if namespace == "" {
+			namespace = secret.Namespace
+			if namespace == "" {
+				namespace = o.DefaultNamespace
+			}
+		}
+		helmDir := filepath.Join(o.HelmSecretFolder, namespace)
+		err = os.MkdirAll(helmDir, files.DefaultDirWritePermissions)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to create helm secret dir %s", helmDir)
+		}
+		dest := filepath.Join(helmDir, name+".yaml")
+		err = files.CopyFile(path, dest)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to copy secret %s to %s", path, dest)
 		}
 		return true, nil
 	}
