@@ -1,0 +1,9 @@
+apiVersion: core.jenkins-x.io/v4beta1
+kind: Requirements
+spec:
+  cluster:
+    provider: gke
+  environments:
+  - key: dev
+  secretStorage: vault
+  webhook: lighthouse

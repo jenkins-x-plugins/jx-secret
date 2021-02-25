@@ -2,7 +2,11 @@ package populate
 
 import (
 	"fmt"
+	"github.com/jenkins-x/go-scm/scm"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
 	"os"
+	"path/filepath"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -50,12 +54,14 @@ var (
 type Options struct {
 	secretfacade.Options
 	WaitDuration        time.Duration
+	HelmSecretFolder    string
 	Backoff             *k8swait.Backoff
 	Results             []*secretfacade.SecretPair
 	CommandRunner       cmdrunner.CommandRunner
 	QuietCommandRunner  cmdrunner.CommandRunner
 	NoWait              bool
 	Generators          map[string]generators.Generator
+	HelmSecretValues    map[string]map[string]string
 	Requirements        *jxcore.RequirementsConfig
 	BootSecretNamespace string
 }
@@ -75,6 +81,7 @@ func NewCmdPopulate() (*cobra.Command, *Options) {
 	}
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().StringVarP(&o.BootSecretNamespace, "boot-secret-namespace", "", "", "the namespace to that contains the boot secret used to populate git secrets from")
+	cmd.Flags().StringVarP(&o.HelmSecretFolder, "helm-secrets-dir", "", "", "the directory where the helm secrets live with a folder per namespace and a file with a '.yaml' extension for each secret name")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/secret/mapping/secret-mappings.yaml file")
 	cmd.Flags().BoolVarP(&o.NoWait, "no-wait", "", false, "disables waiting for the secret store (e.g. vault) to be available")
 	cmd.Flags().DurationVarP(&o.WaitDuration, "wait", "w", 2*time.Hour, "the maximum time period to wait for the vault pod to be ready if using the vault backendType")
@@ -90,6 +97,12 @@ func (o *Options) Validate() error {
 		return errors.Wrap(err, "error validating options")
 	}
 
+	if o.HelmSecretFolder == "" {
+		o.HelmSecretFolder = os.Getenv("JX_HELM_SECRET_FOLDER")
+		if o.HelmSecretFolder == "" {
+			o.HelmSecretFolder = filepath.Join("/tmp", "secrets", "jx-helm")
+		}
+	}
 	if o.Backoff == nil {
 		o.Backoff = &DefaultBackoff
 	}
@@ -318,11 +331,11 @@ func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, pr
 		return "", errors.Wrapf(err, "failed to find object schema for object %s property %s", secretName, property)
 	}
 	if object == nil {
-		return "", nil
+		return o.helmSecretValue(s, property)
 	}
 	propertySchema := object.FindProperty(property)
 	if propertySchema == nil {
-		return "", nil
+		return o.helmSecretValue(s, property)
 	}
 
 	templateText := propertySchema.Template
@@ -338,7 +351,12 @@ func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, pr
 
 	generatorName := propertySchema.Generator
 	if generatorName == "" {
-		return propertySchema.DefaultValue, nil
+		if propertySchema.DefaultValue != "" {
+			return propertySchema.DefaultValue, nil
+		}
+
+		// lets try fetch the default value from the generated helm secrets
+		return o.helmSecretValue(s, property)
 	}
 
 	generator := o.Generators[generatorName]
@@ -439,6 +457,47 @@ func (o *Options) getSecretManager(backendType string) (secretstore.Interface, e
 		return nil, errors.Wrapf(err, "error creating secret manager")
 	}
 	return secretManager, nil
+}
+
+func (o *Options) helmSecretValue(s *secretfacade.SecretPair, entryName string) (string, error) {
+	ns := s.Namespace()
+	name := s.Name()
+	key := scm.Join(ns, name)
+	if o.HelmSecretValues == nil {
+		o.HelmSecretValues = map[string]map[string]string{}
+	}
+	values := o.HelmSecretValues[key]
+	if values == nil {
+		path := filepath.Join(o.HelmSecretFolder, ns, name+".yaml")
+
+		exists, err := files.FileExists(path)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to check for file %s", path)
+		}
+
+		// lets populate an empty map so we don't try load this file again for another entry...
+		o.HelmSecretValues[key] = map[string]string{}
+
+		if !exists {
+			log.Logger().Warnf("no helm secrets file %s exists so cannot default the external secret store data", path)
+			return "", nil
+		}
+
+		secret := &corev1.Secret{}
+		err = yamls.LoadFile(path, secret)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to parse Secret file %s", path)
+		}
+
+		values = map[string]string{}
+		if secret.Data != nil {
+			for k, v := range secret.Data {
+				values[k] = string(v)
+			}
+		}
+		o.HelmSecretValues[key] = values
+	}
+	return values[entryName], nil
 }
 
 func KubectlExecRunner(podName string, sidecar string, runner cmdrunner.CommandRunner) func(c *cmdrunner.Command) (string, error) {

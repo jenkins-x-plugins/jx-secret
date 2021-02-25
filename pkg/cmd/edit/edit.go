@@ -2,6 +2,7 @@ package edit
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/gsm"
@@ -42,11 +43,14 @@ var (
 // Options the options for the command
 type Options struct {
 	secretfacade.Options
-	Filter             string
-	Input              input.Interface
-	Results            []*secretfacade.SecretPair
-	CommandRunner      cmdrunner.CommandRunner
-	QuietCommandRunner cmdrunner.CommandRunner
+	Filter               string
+	Interactive          bool
+	InteractiveMultiple  bool
+	InteractiveSelectAll bool
+	Input                input.Interface
+	Results              []*secretfacade.SecretPair
+	CommandRunner        cmdrunner.CommandRunner
+	QuietCommandRunner   cmdrunner.CommandRunner
 }
 
 // NewCmdEdit creates a command object for the command
@@ -66,6 +70,9 @@ func NewCmdEdit() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.Namespace, "ns", "n", "", "the namespace to filter the ExternalSecret resources")
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the .jx/secret/mapping/secret-mappings.yaml file")
 	cmd.Flags().StringVarP(&o.Filter, "filter", "f", "", "filter on the Secret / ExternalSecret names to enter")
+	cmd.Flags().BoolVarP(&o.Interactive, "interactive", "i", false, "interactive mode asks the user for the Secret name and the properties to edit")
+	cmd.Flags().BoolVarP(&o.InteractiveMultiple, "multiple", "m", false, "for interactive mode do you want to select multiple secrets to edit. If not defaults to just picking a single secret")
+	cmd.Flags().BoolVarP(&o.InteractiveSelectAll, "all", "", false, "for interactive mode do you want to select all of the properties to edit by default. Otherwise none are selected and you choose to select the properties to change")
 	return cmd, o
 }
 
@@ -89,6 +96,13 @@ func (o *Options) Run() error {
 
 	if o.Input == nil {
 		o.Input = survey.NewInput()
+	}
+
+	if o.Interactive {
+		results, err = o.chooseSecrets(results)
+		if err != nil {
+			return errors.Wrapf(err, "failed to choose secrets in interactive mode")
+		}
 	}
 
 	// verify client CLIs are installed
@@ -159,6 +173,47 @@ func (o *Options) Run() error {
 	return nil
 }
 
+func (o *Options) chooseSecrets(results []*secretfacade.SecretPair) ([]*secretfacade.SecretPair, error) {
+	var names []string
+	m := map[string][]*secretfacade.SecretPair{}
+	for _, s := range results {
+		name := s.ExternalSecret.Name
+		if len(m[name]) == 0 {
+			names = append(names, name)
+		}
+		m[name] = append(m[name], s)
+	}
+	sort.Strings(names)
+
+	var err error
+	if o.InteractiveMultiple {
+		names, err = o.Input.SelectNames(names, "Pick the Secrets to edit", false, "select the names of the ExternalSecrets you want to edit")
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to ")
+		}
+		if len(names) == 0 {
+			return nil, errors.Errorf("no ExternalSecret names selected")
+		}
+	} else {
+		name := ""
+		name, err = o.Input.PickNameWithDefault(names, "Pick the Secret to edit", "", "select the name of the ExternalSecrets you want to edit")
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to ")
+		}
+		if name == "" {
+			return nil, errors.Errorf("no ExternalSecret name selected")
+		}
+		names = []string{name}
+	}
+	var answer []*secretfacade.SecretPair
+	for _, name := range names {
+		for _, s := range m[name] {
+			answer = append(answer, s)
+		}
+	}
+	return answer, nil
+}
+
 func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1.Data) (string, error) {
 	var value string
 	var err error
@@ -215,6 +270,9 @@ func (o *Options) propertyMessage(s *secretfacade.SecretPair, d *v1.Data) (strin
 // If no filter then just filter out mandatory properties only?
 func (o *Options) Matches(r *secretfacade.SecretPair) bool {
 	if o.Filter == "" {
+		if o.Interactive {
+			return true
+		}
 		return r.IsInvalid()
 	}
 	return strings.Contains(r.ExternalSecret.Name, o.Filter)
@@ -222,6 +280,29 @@ func (o *Options) Matches(r *secretfacade.SecretPair) bool {
 
 // DataToEdit returns the properties to edit
 func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1.Data {
+	if o.Interactive {
+		var names []string
+		m := map[string]*v1.Data{}
+		for i := range r.ExternalSecret.Spec.Data {
+			data := &r.ExternalSecret.Spec.Data[i]
+			name := data.Name
+			names = append(names, name)
+			m[name] = data
+		}
+
+		var err error
+		names, err = o.Input.SelectNames(names, "Pick the secret properties to edit: ", o.InteractiveSelectAll, "Please choose the names to edit in the ExternalSecret")
+		if err != nil {
+			log.Logger().Warnf("failed to pick the data entries to edit: %s", err.Error())
+		}
+
+		var answer []v1.Data
+		for _, name := range names {
+			answer = append(answer, *m[name])
+		}
+		return answer
+	}
+
 	// if filtering return all properties
 	if o.Filter != "" {
 		return r.ExternalSecret.Spec.Data
