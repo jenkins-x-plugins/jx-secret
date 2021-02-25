@@ -324,3 +324,36 @@ func TestPopulateFromFileSystem(t *testing.T) {
 	secretStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
 	assert.Equal(t, "gitoperatorpassword", secret)
 }
+
+func TestPopulateFromHelmSecrets(t *testing.T) {
+	ns := "jx"
+	secretLocation := "azureSuperSecretVault"
+	//secretLocation := "jx"
+
+	_, o := populate.NewCmdPopulate()
+	o.Dir = "test_data/populate_helm_secrets"
+	o.NoWait = true
+	o.Namespace = ns
+	o.BootSecretNamespace = ns
+	fakeFactory := secretstorefake.FakeSecretManagerFactory{}
+	o.SecretStoreManagerFactory = &fakeFactory
+	o.KubeClient = fake.NewSimpleClientset()
+
+	extSecretsDir := filepath.Join(o.Dir, "extsecrets")
+	dynObjects := testsecrets.LoadExtSecretDir(t, ns, extSecretsDir)
+	scheme := runtime.NewScheme()
+
+	o.HelmSecretFolder = filepath.Join(o.Dir, "fake-helm-secrets")
+	require.NotEmpty(t, dynObjects, "failed to load ExternaSecrets from dir %s", extSecretsDir)
+	fakeDynClient := testsecrets.NewFakeDynClient(scheme, dynObjects...)
+
+	var err error
+	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
+	require.NoError(t, err, "failed to create secret client")
+
+	err = o.Run()
+	require.NoError(t, err, "failed to invoke Run()")
+
+	fakeStore := fakeFactory.GetSecretStore()
+	fakeStore.AssertValueEquals(t, secretLocation, "lighthouse-oauth-token", "token", "fake-secret-value")
+}
