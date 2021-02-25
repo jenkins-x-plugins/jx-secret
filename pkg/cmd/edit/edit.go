@@ -267,8 +267,31 @@ func (o *Options) Matches(r *secretfacade.SecretPair) bool {
 
 // DataToEdit returns the properties to edit
 func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1.Data {
+	if o.Interactive {
+		var names []string
+		m := map[string]*v1.Data{}
+		for i := range r.ExternalSecret.Spec.Data {
+			data := &r.ExternalSecret.Spec.Data[i]
+			name := data.Name
+			names = append(names, name)
+			m[name] = data
+		}
+
+		var err error
+		names, err = o.Input.SelectNames(names, "Pick the secret properties to edit: ", o.InteractiveSelectAll, "Please choose the names to edit in the ExternalSecret")
+		if err != nil {
+			log.Logger().Warnf("failed to pick the data entries to edit: %s", err.Error())
+		}
+
+		var answer []v1.Data
+		for _, name := range names {
+			answer = append(answer, *m[name])
+		}
+		return answer
+	}
+
 	// if filtering return all properties
-	if o.Filter != "" || o.Interactive {
+	if o.Filter != "" {
 		return r.ExternalSecret.Spec.Data
 	}
 
