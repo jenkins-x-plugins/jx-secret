@@ -255,6 +255,17 @@ define the template in the schema</p>
 </tr>
 <tr>
 <td>
+<code>retry</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Retry enable a retry loop if a template does not evaluate correctly first time</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labels</code></br>
 <em>
 map[string]string
@@ -334,5 +345,5 @@ bool
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>ccb2dc3</code>.
+on git commit <code>71d569a</code>.
 </em></p>

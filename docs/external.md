@@ -120,6 +120,16 @@ string
 </tr>
 <tr>
 <td>
+<code>keyVaultName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
 <code>data</code></br>
 <em>
 <a href="#kubernetes-client.io/v1.Data">
@@ -274,6 +284,16 @@ string
 </tr>
 <tr>
 <td>
+<code>keyVaultName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
 <code>data</code></br>
 <em>
 <a href="#kubernetes-client.io/v1.Data">
@@ -399,5 +419,5 @@ Refer to the Kubernetes API documentation for the fields of the
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>ccb2dc3</code>.
+on git commit <code>71d569a</code>.
 </em></p>
