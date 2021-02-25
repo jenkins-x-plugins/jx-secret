@@ -61,6 +61,7 @@ func TestToExtSecrets(t *testing.T) {
 
 	_, eo := convert.NewCmdSecretConvert()
 	eo.Dir = tmpDir
+	eo.HelmSecretFolder = filepath.Join(tmpDir, "helm-secrets")
 	eo.SourceDir = tmpDir
 
 	eo.SecretMapping, _, err = secretmapping.LoadSecretMapping(sourceData, true)
@@ -83,6 +84,10 @@ func TestToExtSecrets(t *testing.T) {
 		}
 		t.Logf("generated for file %s file\n%s\n", tc.SourceFile, result)
 	}
+
+	helmSecretsFile := filepath.Join(eo.HelmSecretFolder, "jx", "bucketrepo-config.yaml")
+	assert.FileExists(t, helmSecretsFile, "should have generated helm secrets file")
+	t.Logf("generated canonical helm secrets file %s\n", helmSecretsFile)
 }
 
 func TestToUnsecuredSecrets(t *testing.T) {
@@ -127,6 +132,7 @@ func TestToUnsecuredSecrets(t *testing.T) {
 
 	_, eo := convert.NewCmdSecretConvert()
 	eo.Dir = tmpDir
+	eo.HelmSecretFolder = filepath.Join(tmpDir, "helm-secrets")
 	eo.SourceDir = tmpDir
 
 	eo.SecretMapping, _, err = secretmapping.LoadSecretMapping(sourceData, true)
@@ -196,6 +202,7 @@ func TestMultipleBackendTypes(t *testing.T) {
 
 	_, eo := convert.NewCmdSecretConvert()
 	eo.Dir = tmpDir
+	eo.HelmSecretFolder = filepath.Join(tmpDir, "helm-secrets")
 	eo.SourceDir = tmpDir
 
 	eo.SecretMapping, _, err = secretmapping.LoadSecretMapping(sourceData, true)
@@ -264,6 +271,7 @@ func TestAzureKeyVault(t *testing.T) {
 
 	_, eo := convert.NewCmdSecretConvert()
 	eo.Dir = tmpDir
+	eo.HelmSecretFolder = filepath.Join(tmpDir, "helm-secrets")
 	eo.SourceDir = tmpDir
 
 	eo.SecretMapping, _, err = secretmapping.LoadSecretMapping(sourceData, true)
@@ -310,6 +318,7 @@ func TestConvertAndSchemaEnrich(t *testing.T) {
 
 	_, eo := convert.NewCmdSecretConvert()
 	eo.Dir = tmpDir
+	eo.HelmSecretFolder = filepath.Join(tmpDir, "helm-secrets")
 
 	err = eo.Run()
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
@@ -384,6 +393,7 @@ func TestConvertAndSchemaEnrichWithLocalSchemas(t *testing.T) {
 	_, eo := convert.NewCmdSecretConvert()
 	eo.VersionStreamDir = filepath.Join(tmpDir, "versionStream")
 	eo.Dir = tmpDir
+	eo.HelmSecretFolder = filepath.Join(tmpDir, "helm-secrets")
 
 	err = eo.Run()
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
