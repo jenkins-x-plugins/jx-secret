@@ -99,7 +99,7 @@ func (o *Options) Run() error {
 	if o.HelmSecretFolder == "" {
 		o.HelmSecretFolder = extsecrets.DefaultHelmSecretFolder()
 	}
-	log.Logger().Infof("moving converted Secret resources to the temporary helm secret folder %s", o.HelmSecretFolder)
+	log.Logger().Debugf("moving converted Secret resources to the temporary helm secret folder %s", o.HelmSecretFolder)
 
 	if o.SecretMapping == nil {
 		var err error
@@ -118,7 +118,7 @@ func (o *Options) Run() error {
 			return false, errors.Wrapf(err, "failed to check if file has Secret data %s", path)
 		}
 		if !hasData {
-			log.Logger().Infof("not converting Secret %s in namespace %s to an ExternalSecret as it has no data", info(name), info(namespace))
+			log.Logger().Debugf("not converting Secret %s in namespace %s to an ExternalSecret as it has no data", info(name), info(namespace))
 			return false, nil
 		}
 

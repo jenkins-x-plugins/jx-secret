@@ -152,7 +152,7 @@ func (o *Options) Run() error {
 			if err != nil {
 				return false, errors.Wrapf(err, "failed to write ExternalSecret %s/%s to file %s", ns, name, outFile)
 			}
-			log.Logger().Infof("replicated ExternalSecret %s/%s to %s", ns, name, outFile)
+			log.Logger().Debugf("replicated ExternalSecret %s/%s to %s", ns, name, outFile)
 		}
 		err := o.addReplicatedLocalBackendAnnotation(path)
 		if err != nil {
@@ -194,7 +194,7 @@ func (o *Options) addReplicatedLocalBackendAnnotation(path string) error {
 	}
 	backendType = strings.TrimSpace(backendType)
 	if backendType != "local" {
-		log.Logger().Infof("ignoring backend type %s", backendType)
+		log.Logger().Debugf("ignoring backend type %s", backendType)
 		return nil
 	}
 
