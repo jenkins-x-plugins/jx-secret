@@ -106,7 +106,7 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to save %s", fileName)
 	}
 
-	log.Logger().Infof("saved file: %s", termcolor.ColorInfo(fileName))
+	log.Logger().Debugf("saved file: %s", termcolor.ColorInfo(fileName))
 	return nil
 }
 

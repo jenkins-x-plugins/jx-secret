@@ -101,7 +101,7 @@ func (o *Options) Validate() error {
 	if o.HelmSecretFolder == "" {
 		o.HelmSecretFolder = extsecrets.DefaultHelmSecretFolder()
 	}
-	log.Logger().Infof("loading default Secret data from helm secret folder: %s", o.HelmSecretFolder)
+	log.Logger().Debugf("loading default Secret data from helm secret folder: %s", o.HelmSecretFolder)
 
 	if o.Backoff == nil {
 		o.Backoff = &DefaultBackoff
