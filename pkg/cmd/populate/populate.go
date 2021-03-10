@@ -490,10 +490,11 @@ func (o *Options) helmSecretValue(s *secretfacade.SecretPair, entryName string) 
 		}
 
 		values = map[string]string{}
-		if secret.Data != nil {
-			for k, v := range secret.Data {
-				values[k] = string(v)
-			}
+		for k, v := range secret.Data {
+			values[k] = string(v)
+		}
+		for k, v := range secret.StringData {
+			values[k] = v
 		}
 		o.HelmSecretValues[key] = values
 	}

@@ -356,4 +356,5 @@ func TestPopulateFromHelmSecrets(t *testing.T) {
 
 	fakeStore := fakeFactory.GetSecretStore()
 	fakeStore.AssertValueEquals(t, secretLocation, "lighthouse-oauth-token", "token", "fake-secret-value")
+	fakeStore.AssertValueEquals(t, secretLocation, "secret-with-stringdata", "token", "token-value")
 }
