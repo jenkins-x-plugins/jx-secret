@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
 	"strings"
 	"text/template"
 
@@ -242,6 +243,9 @@ func (o *Options) getExternalSecretValue(lookupSecretName string, lookupKey stri
 		log.Logger().Debugf("failed to find referenced External Secret name %s", lookupSecret)
 		return ""
 	}
+	if externalSecret.Namespace == "" {
+		externalSecret.Namespace = namespace
+	}
 	externalSecretKey, externalSecretProperty, err := externalSecret.KeyAndProperty(lookupKey)
 	if err != nil {
 		log.Logger().Debugf("failed to find secret key and property for External Secret name %s", lookupSecret)
@@ -251,10 +255,15 @@ func (o *Options) getExternalSecretValue(lookupSecretName string, lookupKey stri
 	storeType := GetSecretStore(v1alpha1.BackendType(externalSecret.Spec.BackendType))
 	secretManager, err := o.SecretStoreManagerFactory.NewSecretManager(storeType)
 
+	key := externalSecretKey
+	if storeType == secretstore.SecretStoreTypeKubernetes {
+		key = externalSecret.Name
+	}
+
 	getSecretFunc := func() error {
 		var err error
 		secretLocation := GetExternalSecretLocation(externalSecret)
-		secret, err = secretManager.GetSecret(secretLocation, externalSecretKey, externalSecretProperty)
+		secret, err = secretManager.GetSecret(secretLocation, key, externalSecretProperty)
 		return err
 	}
 
