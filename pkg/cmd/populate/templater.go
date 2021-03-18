@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/maps"
 	"strings"
 	"text/template"
 
@@ -222,6 +223,13 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 	if requirementsMap["storage"] == nil {
 		requirementsMap["storage"] = map[string]string{}
 	}
+	if requirementsMap["cluster"] == nil {
+		requirementsMap["cluster"] = map[string]string{}
+	}
+	if maps.GetMapValueAsStringViaPath(requirementsMap, "cluster.registry") == "" {
+		maps.SetMapValueViaPath(requirementsMap, "cluster.registry", "")
+	}
+
 	templateData := map[string]interface{}{
 		"Requirements": requirementsMap,
 	}

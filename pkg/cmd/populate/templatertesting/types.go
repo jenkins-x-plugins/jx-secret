@@ -36,6 +36,9 @@ type ExternalSecret struct {
 
 // TestCase represents a test case
 type TestCase struct {
+	// GenerateTestOutput to regenerate the expected output
+	GenerateTestOutput bool
+
 	// ObjectName name of the object in the schema
 	ObjectName string
 
@@ -56,6 +59,9 @@ type TestCase struct {
 
 	// Requirements the jx-requirements.yml used to parameterize the template
 	Requirements *jxcore.RequirementsConfig
+
+	// KubeObjects extra kubernetes resources such as Secrets for the test case
+	KubeObjects []runtime.Object
 
 	// VerifyFn performs a custom verify of the generated value
 	VerifyFn func(*testing.T, string)
