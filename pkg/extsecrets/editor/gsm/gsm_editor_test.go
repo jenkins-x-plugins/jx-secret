@@ -7,7 +7,7 @@ import (
 
 	"github.com/alecthomas/assert"
 
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 )
 
 func Test_client_Write(t *testing.T) {

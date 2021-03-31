@@ -6,8 +6,8 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
-	"github.com/jenkins-x/jx-secret/pkg/cmd/vault/wait"
-	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/vault/wait"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

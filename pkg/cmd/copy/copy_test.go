@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
-	"github.com/jenkins-x/jx-secret/pkg/cmd/copy"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/copy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"

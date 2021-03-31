@@ -9,9 +9,9 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/yamls"
-	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
-	"github.com/jenkins-x/jx-secret/pkg/cmd/replicate"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
+	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/replicate"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

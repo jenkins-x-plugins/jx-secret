@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
-	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )

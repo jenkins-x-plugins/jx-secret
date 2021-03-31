@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/vault"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/vault"
 	"github.com/stretchr/testify/assert"
 )
 
