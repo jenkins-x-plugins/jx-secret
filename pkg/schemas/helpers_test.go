@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x/jx-secret/pkg/schemas"
-	"github.com/jenkins-x/jx-secret/pkg/schemas/testschemas"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas/testschemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

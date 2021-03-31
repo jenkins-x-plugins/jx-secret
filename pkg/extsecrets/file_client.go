@@ -3,7 +3,7 @@ package extsecrets
 import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kyamls"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
+	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	"github.com/pkg/errors"
 )
 

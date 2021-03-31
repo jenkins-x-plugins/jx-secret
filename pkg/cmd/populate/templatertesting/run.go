@@ -3,7 +3,7 @@ package templatertesting
 import (
 	"fmt"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/testsecrets"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,9 +11,9 @@ import (
 
 	secretstorefake "github.com/jenkins-x-plugins/secretfacade/testing/fake"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
-	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
-	"github.com/jenkins-x/jx-secret/pkg/cmd/populate"
-	"github.com/jenkins-x/jx-secret/pkg/schemas"
+	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/kubernetes/fake"

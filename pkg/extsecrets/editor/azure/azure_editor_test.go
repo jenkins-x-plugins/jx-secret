@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert"
-	editor2 "github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/azure"
+	editor2 "github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/azure"
 )
 
 type Mock struct{}

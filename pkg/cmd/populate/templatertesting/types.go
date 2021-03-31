@@ -5,7 +5,7 @@ import (
 
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
-	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
+	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 

@@ -12,7 +12,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	v1 "k8s.io/api/core/v1"

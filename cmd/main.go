@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/jenkins-x/jx-secret/cmd/app"
+	"github.com/jenkins-x-plugins/jx-secret/cmd/app"
 )
 
 // Entrypoint for the command

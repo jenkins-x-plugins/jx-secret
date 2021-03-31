@@ -2,13 +2,13 @@ package factory
 
 import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
-	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
-	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/azure"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/gsm"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/local"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/vault"
+	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/azure"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/gsm"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/local"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/vault"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 )

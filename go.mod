@@ -1,4 +1,4 @@
-module github.com/jenkins-x/jx-secret
+module github.com/jenkins-x-plugins/jx-secret
 
 go 1.15
 

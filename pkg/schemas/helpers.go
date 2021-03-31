@@ -7,8 +7,8 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 

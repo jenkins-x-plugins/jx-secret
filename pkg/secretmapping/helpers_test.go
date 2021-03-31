@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jenkins-x/jx-secret/pkg/secretmapping"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/secretmapping"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

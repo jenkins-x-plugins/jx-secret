@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/gsm"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/gsm"
 
-	"github.com/jenkins-x/jx-secret/pkg/apis/mapping/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
@@ -16,12 +16,12 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input/survey"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	v1 "github.com/jenkins-x/jx-secret/pkg/apis/external/v1"
-	schemaapi "github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor/factory"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x/jx-secret/pkg/rootcmd"
+	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	schemaapi "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/factory"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

@@ -3,8 +3,8 @@ package testschemas
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-secret/pkg/apis/schema/v1alpha1"
-	"github.com/jenkins-x/jx-secret/pkg/schemas"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
 	"github.com/stretchr/testify/require"
 )
 

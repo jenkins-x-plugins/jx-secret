@@ -1,26 +1,26 @@
 # jx-secret
 
-[![Documentation](https://godoc.org/github.com/jenkins-x/jx-secret?status.svg)](https://pkg.go.dev/mod/github.com/jenkins-x/jx-secret)
-[![Go Report Card](https://goreportcard.com/badge/github.com/jenkins-x/jx-secret)](https://goreportcard.com/report/github.com/jenkins-x/jx-secret)
-[![Releases](https://img.shields.io/github/release-pre/jenkins-x/jx-secret.svg)](https://github.com/jenkins-x/jx-secret/releases)
-[![LICENSE](https://img.shields.io/github/license/jenkins-x/jx-secret.svg)](https://github.com/jenkins-x/jx-secret/blob/master/LICENSE)
+[![Documentation](https://godoc.org/github.com/jenkins-x-plugins/jx-secret?status.svg)](https://pkg.go.dev/mod/github.com/jenkins-x-plugins/jx-secret)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jenkins-x-plugins/jx-secret)](https://goreportcard.com/report/github.com/jenkins-x-plugins/jx-secret)
+[![Releases](https://img.shields.io/github/release-pre/jenkins-x-plugins/jx-secret.svg)](https://github.com/jenkins-x-plugins/jx-secret/releases)
+[![LICENSE](https://img.shields.io/github/license/jenkins-x-plugins/jx-secret.svg)](https://github.com/jenkins-x-plugins/jx-secret/blob/master/LICENSE)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.k8s.io/)
 
 `jx-secret` is a small command line tool working with [Kubernetes External Secrets](https://github.com/godaddy/kubernetes-external-secrets).
 
-You can find more about how we use the [jx-secret binary](https://github.com/jenkins-x/jx-secret/releases) binary inside Jenkins X in the [guide on working with Secrets](https://jenkins-x.io/v3/admin/guides/secrets/)
+You can find more about how we use the [jx-secret binary](https://github.com/jenkins-x-plugins/jx-secret/releases) binary inside Jenkins X in the [guide on working with Secrets](https://jenkins-x.io/v3/admin/guides/secrets/)
 
 
 ## Getting Started
 
-Download the [jx-secret binary](https://github.com/jenkins-x/jx-secret/releases) for your operating system and add it to your `$PATH`.
+Download the [jx-secret binary](https://github.com/jenkins-x-plugins/jx-secret/releases) for your operating system and add it to your `$PATH`.
 
-See the [jx-secret command reference](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret.md) for the available commands
+See the [jx-secret command reference](https://github.com/jenkins-x-plugins/jx-secret/blob/master/docs/cmd/jx-secret.md) for the available commands
 
 
 ## Schema
 
-To improve the UX around editing Secrets via [jx secret edit](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret_edit.md) or populating initial or generated secrets on first install via [jx secret populate](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret_populate.md) we use a Schema definition (similar to JSON Schema) which allows you to provide better validation and configuration for default values and the generator to be used.
+To improve the UX around editing Secrets via [jx secret edit](https://github.com/jenkins-x-plugins/jx-secret/blob/master/docs/cmd/jx-secret_edit.md) or populating initial or generated secrets on first install via [jx secret populate](https://github.com/jenkins-x-plugins/jx-secret/blob/master/docs/cmd/jx-secret_populate.md) we use a Schema definition (similar to JSON Schema) which allows you to provide better validation and configuration for default values and the generator to be used.
 
 For details of the schema configuration see [Schema](docs/schema.md#secret.jenkins-x.io/v1alpha1.Schema).
 
@@ -49,7 +49,7 @@ For more details see the [Mapping Configuration Reference](docs/mapping.md#secre
 
 ## Commands
 
-See the [jx-secret command reference](https://github.com/jenkins-x/jx-secret/blob/master/docs/cmd/jx-secret.md)
+See the [jx-secret command reference](https://github.com/jenkins-x-plugins/jx-secret/blob/master/docs/cmd/jx-secret.md)
 
 
 ## Configuration

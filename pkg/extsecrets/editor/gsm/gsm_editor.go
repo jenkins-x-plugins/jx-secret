@@ -12,8 +12,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/json"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 )

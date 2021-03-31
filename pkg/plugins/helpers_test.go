@@ -3,7 +3,7 @@ package plugins_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-secret/pkg/plugins"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/plugins"
 	"github.com/stretchr/testify/assert"
 )
 

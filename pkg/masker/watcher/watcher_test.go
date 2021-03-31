@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
-	"github.com/jenkins-x/jx-secret/pkg/masker/watcher"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/masker/watcher"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"

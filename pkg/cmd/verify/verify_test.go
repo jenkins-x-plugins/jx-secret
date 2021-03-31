@@ -3,9 +3,9 @@ package verify_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-secret/pkg/cmd/verify"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/testsecrets"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/verify"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/testsecrets"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"

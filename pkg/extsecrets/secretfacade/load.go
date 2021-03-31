@@ -5,7 +5,7 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x/jx-secret/pkg/extsecrets/editor"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
