@@ -463,5 +463,5 @@ AzureKeyVaultConfig
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>71d569a</code>.
+on git commit <code>3d0db59</code>.
 </em></p>

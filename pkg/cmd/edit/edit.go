@@ -2,6 +2,7 @@ package edit
 
 import (
 	"fmt"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"sort"
 	"strings"
 
@@ -9,6 +10,12 @@ import (
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 
+	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	schemaapi "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/factory"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
@@ -16,12 +23,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/input/survey"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
-	schemaapi "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/factory"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -132,7 +133,7 @@ func (o *Options) Run() error {
 			m := map[string]*editor.KeyProperties{}
 			for i := range data {
 				d := &data[i]
-				key := d.Key
+				key := populate.GetSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), name, d.Key)
 				property := d.Property
 				keyProperties := m[key]
 				if keyProperties == nil {
