@@ -12,13 +12,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
-	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
-	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/vault/wait"
@@ -29,6 +22,13 @@ import (
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas/generators"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults/vaultcli"
+	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
+	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	k8swait "k8s.io/apimachinery/pkg/util/wait"
@@ -253,7 +253,7 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 				labels := r.ExternalSecret.Spec.Template.Metadata.Labels
 				secretType := corev1.SecretType(r.ExternalSecret.Spec.Template.Type)
 				sv := createSecretValue(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), keyProperties.Properties, annotations, labels, secretType)
-				err = secretManager.SetSecret(GetExternalSecretLocation(&r.ExternalSecret), getSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), r.ExternalSecret.Name, key), &sv)
+				err = secretManager.SetSecret(GetExternalSecretLocation(&r.ExternalSecret), GetSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), r.ExternalSecret.Name, key), &sv)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
 				}
@@ -272,7 +272,7 @@ func GetSecretStore(backendType v1alpha1.BackendType) secretstore.SecretStoreTyp
 	}
 }
 
-func getSecretKey(backendType v1alpha1.BackendType, externalSecretName string, keyName string) string {
+func GetSecretKey(backendType v1alpha1.BackendType, externalSecretName string, keyName string) string {
 	if backendType == v1alpha1.BackendTypeLocal {
 		return externalSecretName
 	}
