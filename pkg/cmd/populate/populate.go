@@ -192,7 +192,7 @@ func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[st
 		newValueMap := map[string]bool{}
 		for i := range data {
 			d := &data[i]
-			key := d.Key
+			key := GetSecretKey(v1alpha1.BackendType(backendType), r.ExternalSecret.Name, d.Key)
 			property := d.Property
 			entryName := d.Name
 			keyProperties := m[key]
