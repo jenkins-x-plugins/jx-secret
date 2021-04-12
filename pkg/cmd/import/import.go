@@ -4,6 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/factory"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
@@ -11,11 +16,6 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/factory"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -23,11 +23,11 @@ import (
 )
 
 var (
-	editLong = templates.LongDesc(`
+	cmdLong = templates.LongDesc(`
 		Imports a YAML of secret values into the underlying secret store
 `)
 
-	editExample = templates.Examples(`
+	cmdExample = templates.Examples(`
 		%s import -f mysecrets.yaml
 	`)
 )
@@ -55,8 +55,8 @@ func NewCmdImport() (*cobra.Command, *Options) {
 	cmd := &cobra.Command{
 		Use:     "import",
 		Short:   "Imports a YAML file of secret values",
-		Long:    editLong,
-		Example: fmt.Sprintf(editExample, rootcmd.BinaryName),
+		Long:    cmdLong,
+		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)
