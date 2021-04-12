@@ -345,5 +345,5 @@ bool
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>3d0db59</code>.
+on git commit <code>9cdc521</code>.
 </em></p>
