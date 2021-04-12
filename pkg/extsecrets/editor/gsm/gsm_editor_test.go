@@ -29,7 +29,9 @@ func Test_client_Write(t *testing.T) {
 			},
 		},
 	}
-	err = c.writeTemporarySecretPropertiesJSON(p, file)
+	existingSecrets := make(map[string]string)
+	existingSecrets["fish"] = "chips"
+	err = c.writeTemporarySecretPropertiesJSON(existingSecrets, p, file)
 	assert.NoError(t, err)
 
 	expected, err := ioutil.ReadFile(filepath.Join("test_data", "write_secrets", "expected.json"))

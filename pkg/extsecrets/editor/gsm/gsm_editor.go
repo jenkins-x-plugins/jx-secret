@@ -1,6 +1,7 @@
 package gsm
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,10 +12,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/json"
 
-	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/pkg/errors"
+	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -77,15 +80,22 @@ func (c *client) Write(properties *editor.KeyProperties) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create temporary directory used to write secrets to then upload to google secrets manager")
 	}
+
 	defer os.Remove(file.Name())
 
+	// only replace properties that we are editing, so first lets get the existing values
+	existingValues, err := accessSecretVersion(properties.GCPProject, properties.Key)
+	if err != nil {
+		return errors.Wrapf(err, "failed to access secret %s in project %s", properties.Key, properties.GCPProject)
+	}
+
 	// write properties as a key values ina  json file so we can upload to Google Secrets Manager
-	err = c.writeTemporarySecretPropertiesJSON(properties, file)
+	err = c.writeTemporarySecretPropertiesJSON(existingValues, properties, file)
 	if err != nil {
 		return errors.Wrapf(err, "failed to write secret key values pairs to filename %s", file.Name())
 	}
 
-	// create a new secret version
+	//create a new secret version
 	args := []string{"secrets", "versions", "add", key, "--project", properties.GCPProject, "--data-file", file.Name()}
 	cmd := &cmdrunner.Command{
 		Name: gcloud,
@@ -100,7 +110,7 @@ func (c *client) Write(properties *editor.KeyProperties) error {
 	return nil
 }
 
-func (c *client) writeTemporarySecretPropertiesJSON(properties *editor.KeyProperties, file *os.File) error {
+func (c *client) writeTemporarySecretPropertiesJSON(existingValues map[string]string, properties *editor.KeyProperties, file *os.File) error {
 	// if we only have one property and its got an empty property name lets just write the value
 	if len(properties.Properties) == 1 && properties.Properties[0].Property == "" {
 		_, err := file.Write([]byte(properties.Properties[0].Value))
@@ -111,12 +121,11 @@ func (c *client) writeTemporarySecretPropertiesJSON(properties *editor.KeyProper
 	}
 
 	// write properties as a key values ina  json file so we can upload to Google Secrets Manager
-	values := map[string]string{}
 	for _, p := range properties.Properties {
-		values[p.Property] = p.Value
+		existingValues[p.Property] = p.Value
 	}
 
-	data, err := json.Marshal(values)
+	data, err := json.Marshal(existingValues)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshall secrets used to upload to google secrets manager")
 	}
@@ -186,4 +195,35 @@ func VerifyGcloudInstalled() error {
 	log.Logger().Debugf("gsm is setup correctly!\n\n")
 
 	return nil
+}
+
+func accessSecretVersion(projectID, key string) (map[string]string, error) {
+
+	name := fmt.Sprintf("projects/%s/secrets/%s/versions/latest", projectID, key)
+
+	// Create the client.
+	ctx := context.Background()
+	client, err := secretmanager.NewClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create secretmanager client: %v", err)
+	}
+
+	// Build the request.
+	req := &secretmanagerpb.AccessSecretVersionRequest{
+		Name: name,
+	}
+
+	// Call the API.
+	result, err := client.AccessSecretVersion(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to access secret version: %v", err)
+	}
+
+	m := make(map[string]string)
+	if result != nil && result.Payload.Data != nil {
+		err = json.Unmarshal(result.Payload.Data, &m)
+	}
+
+	return m, err
+
 }
