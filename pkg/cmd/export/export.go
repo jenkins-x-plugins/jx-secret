@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/templates"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
@@ -14,21 +17,18 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 )
 
 var (
-	editLong = templates.LongDesc(`
+	cmdLong = templates.LongDesc(`
 		Exports the current populated values to a YAML file
 `)
 
-	editExample = templates.Examples(`
-		%s edit
+	cmdExample = templates.Examples(`
+		%s export
 	`)
 )
 
@@ -46,8 +46,8 @@ func NewCmdExport() (*cobra.Command, *Options) {
 	cmd := &cobra.Command{
 		Use:     "export",
 		Short:   "Exports the current populated values to a YAML file",
-		Long:    editLong,
-		Example: fmt.Sprintf(editExample, rootcmd.BinaryName),
+		Long:    cmdLong,
+		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := o.Run()
 			helper.CheckErr(err)
