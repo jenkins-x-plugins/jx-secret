@@ -115,8 +115,6 @@ func (o *Options) Run() error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to copy secret %s to namespace %s", secret.Name, o.ToNamespace)
 		}
-
-		log.Logger().Infof("copied secret  %s to namespace %s", secret.Name, o.ToNamespace)
 	}
 	return nil
 }
