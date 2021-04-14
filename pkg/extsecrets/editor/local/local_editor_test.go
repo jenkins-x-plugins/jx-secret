@@ -3,11 +3,11 @@ package local_test
 import (
 	"testing"
 
-	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/local"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/testhelpers"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"

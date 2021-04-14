@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/copy"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/edit"
@@ -17,6 +14,9 @@ import (
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/version"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/wait"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/spf13/cobra"
 )
 

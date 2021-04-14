@@ -2,13 +2,14 @@ package templatertesting
 
 import (
 	"fmt"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/testsecrets"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/testsecrets"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 
 	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
