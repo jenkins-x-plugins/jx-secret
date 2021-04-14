@@ -255,6 +255,17 @@ define the template in the schema</p>
 </tr>
 <tr>
 <td>
+<code>onlyTemplateIfBlank</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>OnlyTemplateIfBlank if this is true then lets only regenerate a template value if the current value is empty</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>retry</code></br>
 <em>
 bool
@@ -345,5 +356,5 @@ bool
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>9cdc521</code>.
+on git commit <code>27580cb</code>.
 </em></p>
