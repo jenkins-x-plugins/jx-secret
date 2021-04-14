@@ -2,9 +2,10 @@ package edit
 
 import (
 	"fmt"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"sort"
 	"strings"
+
+	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/gsm"
 

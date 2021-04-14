@@ -4,9 +4,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/jenkins-x-plugins/jx-secret/pkg/masker"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/masker"
 )
 
 func main() {

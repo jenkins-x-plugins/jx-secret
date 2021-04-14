@@ -10,9 +10,9 @@ import (
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/secretmapping"
 
+	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"

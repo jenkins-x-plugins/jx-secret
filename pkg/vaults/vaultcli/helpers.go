@@ -6,11 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/jenkins-x-plugins/jx-secret/pkg/plugins"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/plugins"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -3,13 +3,13 @@ package secretfacade
 import (
 	"fmt"
 
-	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
-	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore/factory"
 	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	schema "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
+	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
+	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore/factory"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"

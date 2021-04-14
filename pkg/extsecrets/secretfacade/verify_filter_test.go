@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/testsecrets"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/stringhelpers"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

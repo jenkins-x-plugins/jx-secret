@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults/vaultcli"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 )

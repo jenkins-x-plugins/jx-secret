@@ -131,7 +131,7 @@ func (o *Options) Run() error {
 
 	waited := map[string]bool{}
 
-	err = o.populateLoop(results, waited)
+	err = o.PopulateLoop(results, waited)
 	if err != nil {
 		return errors.Wrapf(err, "failed to populate secrets")
 	}
@@ -146,14 +146,15 @@ func (o *Options) Run() error {
 		log.Logger().Infof("the %d ExternalSecrets on second pass are %s", len(o.ExternalSecrets), termcolor.ColorInfo("populated"))
 		return nil
 	}
-	err = o.populateLoop(results, waited)
+	err = o.PopulateLoop(results, waited)
 	if err != nil {
 		return errors.Wrapf(err, "failed to populate secrets on second pass")
 	}
 	return nil
 }
 
-func (o *Options) populateLoop(results []*secretfacade.SecretPair, waited map[string]bool) error {
+// PopulateLoop populates any external secret stores
+func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[string]bool) error {
 	for _, r := range results {
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
@@ -340,6 +341,10 @@ func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, pr
 
 	templateText := propertySchema.Template
 	if templateText != "" {
+		// don't regenerate if configured to only do so if non blank
+		if propertySchema.OnlyTemplateIfBlank && currentValue != "" {
+			return "", nil
+		}
 		return o.EvaluateTemplate(s.ExternalSecret.Namespace, secretName, property, templateText, propertySchema.Retry)
 	}
 
