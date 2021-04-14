@@ -28,7 +28,7 @@ var secretRetriableErrors = []string{
 func Main() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   rootcmd.TopLevelCommand,
-		Short: "External Secrets utility commands",
+		Short: "commands for working with Secrets, ExternalSecrets and external secret stores",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()
 			if err != nil {
