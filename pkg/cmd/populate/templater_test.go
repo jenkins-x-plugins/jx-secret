@@ -4,12 +4,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
-	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate/templatertesting"
+	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
+	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -563,6 +563,139 @@ func TestTemplater(t *testing.T) {
 		KubeObjects: testSecrets,
 	}
 	runner.Run(t)
+}
+
+func TestTemplaterDoesNotRegenerate(t *testing.T) {
+	ns := "jx"
+
+	htpasswdSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "jx-basic-auth-htpasswd-external",
+			Namespace: ns,
+		},
+		Data: map[string][]byte{},
+	}
+	testSecrets := []runtime.Object{
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "jx-basic-auth-user-password",
+				Namespace: ns,
+			},
+			Data: map[string][]byte{
+				"username": []byte("my-basic-auth-user"),
+				"password": []byte("my-basic-auth-password"),
+			},
+		},
+		htpasswdSecret,
+	}
+
+	first := true
+	generatedValue := ""
+	externalSecretValues := map[string]string{
+		"auth": "",
+	}
+
+	fn := func(t *testing.T, text string) {
+		assert.NotEmpty(t, text, "should have created a valid htpasswd value from the external secret")
+		if first {
+			generatedValue = text
+			first = false
+			t.Logf("generated jx-basic-auth-htpasswd auth value: %s\n", text)
+		} else {
+			assert.Equal(t, generatedValue, text, "should have generated the same htpasswd value from the Secret")
+		}
+	}
+
+	runner := templatertesting.Runner{
+		TestCases: []templatertesting.TestCase{
+			{
+				TestName:   "jx-basic-auth-htpasswd-external",
+				ObjectName: "jx-basic-auth-htpasswd-external",
+				Property:   "auth",
+				VerifyFn:   fn,
+				Requirements: &jxcore.RequirementsConfig{
+					Repository: "nexus",
+					Cluster: jxcore.ClusterConfig{
+						Provider:    "gke",
+						ProjectID:   "myproject",
+						ClusterName: "mycluster",
+					},
+					SecretStorage: "gsm",
+				},
+				ExternalSecrets: []templatertesting.ExternalSecret{
+					{
+						Location: "myproject",
+						Name:     "jx-basic-auth-htpasswd-external",
+						Value: secretstore.SecretValue{
+							PropertyValues: externalSecretValues,
+						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "jx-basic-auth-htpasswd-external",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "jx-basic-auth-htpasswd-external",
+										Property: "auth",
+										Name:     "auth",
+									},
+								},
+							},
+						},
+					},
+
+					// this ExternalSecret is so we can lookup the ExternalSecret values for the user/pwd
+					// so we can generate the htpasswd
+					{
+						Location: "myproject",
+						Name:     "jx-basic-auth-user-password",
+						Value: secretstore.SecretValue{
+							PropertyValues: map[string]string{
+								"username": "my-basic-auth-user",
+								"password": "my-basic-auth-password",
+							},
+						},
+						ExternalSecret: v1.ExternalSecret{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "jx-basic-auth-user-password",
+							},
+							Spec: v1.ExternalSecretSpec{
+								BackendType: string(v1alpha1.BackendTypeGSM),
+								ProjectID:   "myproject",
+								Data: []v1.Data{
+									{
+										Key:      "jx-basic-auth-user-password",
+										Property: "username",
+										Name:     "username",
+									},
+									{
+										Key:      "jx-basic-auth-user-password",
+										Property: "password",
+										Name:     "password",
+									},
+								},
+							},
+						},
+					},
+				},
+				Secret:                    htpasswdSecret,
+				ExternalSecretStorageType: secretstore.SecretStoreTypeGoogle,
+			},
+		},
+		SchemaFile:  filepath.Join("test_data", "template", "secret-schema.yaml"),
+		Namespace:   ns,
+		KubeObjects: testSecrets,
+	}
+	runner.Populate(t)
+
+	// now lets update the secret to mimic the kubernetes external secrets
+	htpasswdSecret.Data["auth"] = []byte(generatedValue)
+	externalSecretValues["auth"] = generatedValue
+
+	runner.Populate(t)
 }
 
 func TestResolveNames(t *testing.T) {
