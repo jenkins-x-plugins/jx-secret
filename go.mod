@@ -14,7 +14,7 @@ require (
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.4
 	github.com/jenkins-x-plugins/secretfacade v0.0.9
-	github.com/jenkins-x/go-scm v1.6.14
+	github.com/jenkins-x/go-scm v1.6.17
 	github.com/jenkins-x/jx-api/v4 v4.0.28
 	github.com/jenkins-x/jx-helpers/v3 v3.0.104
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
@@ -28,8 +28,8 @@ require (
 	google.golang.org/genproto v0.0.0-20210202153253-cf70463f6119
 	gopkg.in/validator.v2 v2.0.0-20200605151824-2b28d334fa05
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
-	k8s.io/api v0.20.5
-	k8s.io/apimachinery v0.20.5
+	k8s.io/api v0.20.6
+	k8s.io/apimachinery v0.20.6
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/kustomize/kyaml v0.10.6
 	sigs.k8s.io/yaml v1.2.0

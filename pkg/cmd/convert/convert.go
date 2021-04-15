@@ -2,6 +2,7 @@ package convert
 
 import (
 	"fmt"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,6 +47,7 @@ var (
 
 // LabelOptions the options for the command
 type Options struct {
+	options.BaseOptions
 	Dir              string
 	DefaultNamespace string
 	SourceDir        string
@@ -74,6 +76,8 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 			helper.CheckErr(err)
 		},
 	}
+	o.BaseOptions.AddBaseFlags(cmd)
+
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the secret mapping files and version stream")
 	cmd.Flags().StringVarP(&o.SourceDir, "source-dir", "", "", "the source directory to recursively look for the *.yaml or *.yml files to convert. If not specified defaults to 'config-root' in the dir")
 	cmd.Flags().StringVarP(&o.VersionStreamDir, "version-stream-dir", "", "", "the directory containing the version stream. If not specified defaults to the 'versionStream' folder in the dir")
@@ -87,6 +91,10 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 }
 
 func (o *Options) Run() error {
+	err := o.BaseOptions.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate options")
+	}
 	dir := o.Dir
 
 	if o.SourceDir == "" {
@@ -225,7 +233,7 @@ func (o *Options) Run() error {
 		return true, nil
 	}
 
-	err := kyamls.ModifyFiles(o.SourceDir, modifyFn, secretFilter)
+	err = kyamls.ModifyFiles(o.SourceDir, modifyFn, secretFilter)
 	if err != nil {
 		return errors.Wrapf(err, "failed to modify files")
 	}

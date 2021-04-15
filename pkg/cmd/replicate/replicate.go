@@ -40,6 +40,7 @@ var (
 
 // LabelOptions the options for the command
 type Options struct {
+	options.BaseOptions
 	File          string
 	Dir           string
 	OutputDir     string
@@ -64,6 +65,8 @@ func NewCmdReplicate() (*cobra.Command, *Options) {
 			helper.CheckErr(err)
 		},
 	}
+	o.BaseOptions.AddBaseFlags(cmd)
+
 	cmd.Flags().StringVarP(&o.File, "file", "f", "t", "the ExternalSecret to replicate")
 	cmd.Flags().StringVarP(&o.Selector, "selector", "s", "", "defines the label selector to find the ExternalSecret resources to replicate")
 	cmd.Flags().StringArrayVarP(&o.Name, "name", "n", nil, "specifies the names of the ExternalSecrets to replicate if not using a selector")
@@ -74,6 +77,11 @@ func NewCmdReplicate() (*cobra.Command, *Options) {
 }
 
 func (o *Options) Run() error {
+	err := o.BaseOptions.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate options")
+	}
+
 	path := o.File
 	if path == "" {
 		return options.MissingOption("file")
@@ -97,7 +105,7 @@ func (o *Options) Run() error {
 	dir := filepath.Join(o.NamespacesDir, o.From)
 
 	if len(o.To) == 0 {
-		err := o.discoverEnvironmentNamespaces(dir)
+		err = o.discoverEnvironmentNamespaces(dir)
 		if err != nil {
 			return errors.Wrapf(err, "failed to discover the Environment namespaces in dir %s", dir)
 		}
@@ -154,14 +162,14 @@ func (o *Options) Run() error {
 			}
 			log.Logger().Debugf("replicated ExternalSecret %s/%s to %s", ns, name, outFile)
 		}
-		err := o.addReplicatedLocalBackendAnnotation(path)
+		err = o.addReplicatedLocalBackendAnnotation(path)
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to annotate replicated local backend")
 		}
 		return false, nil
 	}
 
-	err := kyamls.ModifyFiles(dir, modifyFn, filter)
+	err = kyamls.ModifyFiles(dir, modifyFn, filter)
 	if err != nil {
 		return errors.Wrapf(err, "failed to replicate secrets in namespace %s in dir %s", o.From, dir)
 	}
