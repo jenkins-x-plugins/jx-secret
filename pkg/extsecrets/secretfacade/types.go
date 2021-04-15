@@ -2,6 +2,7 @@ package secretfacade
 
 import (
 	"fmt"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 
 	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	schema "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
@@ -18,6 +19,7 @@ import (
 
 // Options options for verifying secrets
 type Options struct {
+	options.BaseOptions
 	Dir                       string
 	Namespace                 string
 	SecretNamespace           string
@@ -40,12 +42,17 @@ const FileSystem string = "filesystem"
 const Kubernetes string = "kubernetes"
 
 func (o *Options) AddFlags(cmd *cobra.Command) {
+	o.BaseOptions.AddBaseFlags(cmd)
+
 	cmd.Flags().StringVarP(&o.Filter, "filter", "f", "", "the filter to filter on ExternalSecret names")
 	cmd.Flags().StringVarP(&o.Source, "source", "s", "kubernetes", "the source location for the ExternalSecrets, valid values include filesystem or kubernetes")
 }
 
 func (o *Options) Validate() error {
-	var err error
+	err := o.BaseOptions.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate base options")
+	}
 	if o.SecretClient == nil && (o.Source == Kubernetes || o.Source == "") {
 		o.SecretClient, err = extsecrets.NewClient(nil)
 		if err != nil {
