@@ -1,0 +1,27 @@
+# Source: lighthouse/templates/oauthsecret.yaml
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: simple-secret-property
+  labels:
+    app: lighthouse-lighthouse
+    chart: "lighthouse-0.0.633"
+    release: "lighthouse"
+    heritage: "Helm"
+spec:
+  backendType: secretsManager
+  roleArn: acs:ram::{UID}:role/demo
+  region: us-east-1
+  data:
+    - name: azure.json
+      key: azure-secret-name
+      property: customProperty
+      versionStage: AWSPREVIOUS
+  template:
+    metadata:
+      labels:
+        app: lighthouse-lighthouse
+        chart: "lighthouse-0.0.633"
+        release: "lighthouse"
+        heritage: "Helm"
+    type: Opaque
