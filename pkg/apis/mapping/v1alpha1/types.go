@@ -44,11 +44,20 @@ type Defaults struct {
 	// DefaultBackendType the default back end to use if there's no specific mapping
 	BackendType BackendType `json:"backendType,omitempty" validate:"nonzero"`
 
-	// GcpSecretsManager config
-	GcpSecretsManager *GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
+	// RoleArn is used for some back ends like AWS and Alicloud
+	RoleArn string `json:"roleArn,omitempty"`
+
+	// Region is used for some back ends like AWS
+	Region string `json:"region,omitempty"`
+
+	// VersionStage the default version stage to use which is used on some back ends like AWS and Alicloud
+	VersionStage string `json:"versionStage,omitempty"`
 
 	// AzureKeyVault config
 	AzureKeyVaultConfig *AzureKeyVaultConfig `json:"azureKeyVault,omitempty"`
+
+	// GcpSecretsManager config
+	GcpSecretsManager *GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
 }
 
 // SecretMappingList contains a list of SecretMapping
@@ -73,24 +82,36 @@ type SecretRule struct {
 	Mappings []Mapping `json:"mappings,omitempty"`
 	// Unsecured represent a list of a secret's keys that will remain as plain secrets rather than undergoing conversion
 	Unsecured []string `json:"unsecured,omitempty"`
+	// RoleArn is used for some back ends like AWS and Alicloud
+	RoleArn string `json:"roleArn,omitempty"`
+	// Region is used for some back ends like AWS
+	Region string `json:"region,omitempty"`
+	// AzureKeyVaultConfig config
+	AzureKeyVaultConfig *AzureKeyVaultConfig `json:"azureKeyVault,omitempty"`
 	// GcpSecretsManager config
 	GcpSecretsManager *GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
-	// GcpSecretsManager config
-	AzureKeyVaultConfig *AzureKeyVaultConfig `json:"azureKeyVault,omitempty"`
 }
 
 // BackendType describes a secrets backend
 type BackendType string
 
 const (
-	// BackendTypeVault Vault is the Backed service
-	BackendTypeVault BackendType = "vault"
-	// BackendTypeGSM Google Secrets Manager is the Backed service
-	BackendTypeGSM BackendType = "gcpSecretsManager"
-	// BackendTypeLocal local secrets - i.e. vanilla k8s Secrets
-	BackendTypeLocal BackendType = "local"
+	// BackendTypeAlicloud Alicloud KMS Secret Manager as the Backed service
+	BackendTypeAlicloud BackendType = "alicloudSecretsManager"
+	// BackendTypeAWSSecretsManager AWS Secrets Manager as the Backed service
+	BackendTypeAWSSecretsManager BackendType = "secretsManager"
+	// BackendTypeAWSParameterStore AWS SSM Parameter Store as the Backed service
+	BackendTypeAWSParameterStore BackendType = "systemManager"
 	// BackendTypeAzure Azure Key Vault as the Backed service
 	BackendTypeAzure BackendType = "azureKeyVault"
+	// BackendTypeGSM Google Secrets Manager is the Backed service
+	BackendTypeGSM BackendType = "gcpSecretsManager"
+	// BackendTypeIBMSecretsManager IBM Secrets Manager is the Backed service
+	BackendTypeIBMSecretsManager BackendType = "ibmcloudSecretsManager"
+	// BackendTypeLocal local secrets - i.e. vanilla k8s Secrets
+	BackendTypeLocal BackendType = "local"
+	// BackendTypeVault Vault is the Backed service
+	BackendTypeVault BackendType = "vault"
 	// BackendTypeNone if none is configured
 	BackendTypeNone BackendType = ""
 )
@@ -103,6 +124,13 @@ type GcpSecretsManager struct {
 	ProjectID string `json:"projectId,omitempty"`
 	// UniquePrefix needs to be a unique prefix in the GCP project where the secret resides, defaults to cluster name
 	UniquePrefix string `json:"uniquePrefix,omitempty"`
+}
+
+// AwsSecretsManager stores default config when using AWS Secret Manager for secret storage
+type AwsSecretsManager struct {
+	RoleArn      string `json:"roleArn,omitempty"`
+	Region       string `json:"region,omitempty"`
+	VersionStage string `json:"versionStage,omitempty"`
 }
 
 // AzureKeyVaultConfig stores default config when using Azure Key Vault for secret storage
@@ -122,6 +150,14 @@ type Mapping struct {
 	// Property the Vault property on the key to load the secret value
 	// +optional
 	Property string `json:"property,omitempty"`
+
+	// VersionStage the version of the secret value
+	// +optional
+	VersionStage string `json:"versionStage,omitempty"`
+
+	// IsBinary to indicate a binary secret
+	// +optional
+	IsBinary bool `json:"isBinary,omitempty"`
 }
 
 // FindRule finds a secret rule for the given secret name

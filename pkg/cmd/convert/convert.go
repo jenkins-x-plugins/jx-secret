@@ -148,7 +148,27 @@ func (o *Options) Run() error {
 			return false, err
 		}
 
-		if secret.BackendType == v1alpha1.BackendTypeGSM {
+		if secret.RoleArn == "" {
+			secret.RoleArn = o.SecretMapping.Spec.Defaults.RoleArn
+		}
+		if secret.RoleArn != "" {
+			err = kyamls.SetStringValue(node, path, secret.RoleArn, "spec", "roleArn")
+			if err != nil {
+				return false, err
+			}
+		}
+		if secret.Region == "" {
+			secret.Region = o.SecretMapping.Spec.Defaults.Region
+		}
+		if secret.Region != "" {
+			err = kyamls.SetStringValue(node, path, secret.Region, "spec", "region")
+			if err != nil {
+				return false, err
+			}
+		}
+
+		switch secret.BackendType {
+		case v1alpha1.BackendTypeGSM:
 			if secret.GcpSecretsManager == nil {
 				secret.GcpSecretsManager = &v1alpha1.GcpSecretsManager{}
 			}
@@ -172,9 +192,8 @@ func (o *Options) Run() error {
 			} else if o.SecretMapping.Spec.Defaults.GcpSecretsManager.UniquePrefix != "" {
 				o.Prefix = o.SecretMapping.Spec.Defaults.GcpSecretsManager.UniquePrefix
 			}
-		}
 
-		if secret.BackendType == v1alpha1.BackendTypeVault {
+		case v1alpha1.BackendTypeVault:
 			err = kyamls.SetStringValue(node, path, o.VaultMountPoint, "spec", "vaultMountPoint")
 			if err != nil {
 				return false, err
@@ -183,9 +202,8 @@ func (o *Options) Run() error {
 			if err != nil {
 				return false, err
 			}
-		}
 
-		if secret.BackendType == v1alpha1.BackendTypeAzure {
+		case v1alpha1.BackendTypeAzure:
 			if secret.AzureKeyVaultConfig == nil {
 				secret.AzureKeyVaultConfig = &v1alpha1.AzureKeyVaultConfig{}
 			}
@@ -202,6 +220,7 @@ func (o *Options) Run() error {
 			} else {
 				return false, errors.New("missing secret mapping secret.AzureKeyVaultConfig.KeyVaultName")
 			}
+
 		}
 
 		flag, err := o.convertData(node, path, secret.BackendType)
@@ -316,9 +335,8 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 				case v1alpha1.BackendTypeLocal:
 					err = o.modifyLocal(rNode, field, secretName, path)
 
-				case v1alpha1.BackendTypeAzure:
-					err = o.modifyAzure(rNode, field, secretName, path, complexSecretType)
-
+				default:
+					err = o.modifyDefault(rNode, field, secretName, path, complexSecretType)
 				}
 
 				if err != nil {
@@ -402,8 +420,7 @@ func (o *Options) modifyVault(node *yaml.RNode, rNode *yaml.RNode, field, secret
 	return nil
 }
 
-func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string, complexType bool) error {
-
+func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path string, complexType bool) error {
 	var key string
 	property := ""
 	if complexType {
@@ -416,6 +433,9 @@ func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string,
 		key = secretName
 	}
 
+	versionStage := ""
+	isBinary := false
+
 	if o.SecretMapping != nil {
 		mapping := o.SecretMapping.Find(secretName, field)
 		if mapping != nil {
@@ -425,6 +445,13 @@ func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string,
 			if mapping.Property != "" {
 				property = mapping.Property
 			}
+			if mapping.VersionStage != "" {
+				versionStage = mapping.VersionStage
+			}
+			isBinary = mapping.IsBinary
+		}
+		if versionStage == "" {
+			versionStage = o.SecretMapping.Spec.Defaults.VersionStage
 		}
 	}
 
@@ -446,7 +473,18 @@ func (o *Options) modifyAzure(rNode *yaml.RNode, field, secretName, path string,
 			return err
 		}
 	}
-
+	if versionStage != "" {
+		err = kyamls.SetStringValue(rNode, path, versionStage, "versionStage")
+		if err != nil {
+			return err
+		}
+	}
+	if isBinary {
+		err = kyamls.SetStringValue(rNode, path, "true", "isBinary")
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
