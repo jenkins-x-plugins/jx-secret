@@ -1,0 +1,31 @@
+# Source: lighthouse/templates/oauthsecret.yaml
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: unspecified-complex-type
+  labels:
+    app: external-dns
+    chart: "external-dns-0.5.3"
+    release: "external-dns"
+    heritage: "Helm"
+spec:
+  backendType: secretsManager
+  roleArn: acs:ram::{UID}:role/demo
+  region: us-east-1
+  data:
+    - name: hmac
+      key: unspecified-complex-type
+      property: hmac
+      versionStage: AWSPREVIOUS
+    - name: git_token
+      key: unspecified-complex-type
+      property: git_token
+      versionStage: AWSPREVIOUS
+  template:
+    metadata:
+      labels:
+        app: external-dns
+        chart: "external-dns-0.5.3"
+        release: "external-dns"
+        heritage: "Helm"
+    type: Opaque

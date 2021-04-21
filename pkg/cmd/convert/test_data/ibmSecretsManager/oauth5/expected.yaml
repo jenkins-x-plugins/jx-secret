@@ -1,0 +1,24 @@
+# Source: lighthouse/templates/oauthsecret.yaml
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: simple-secret-property
+  labels:
+    app: lighthouse-lighthouse
+    chart: "lighthouse-0.0.633"
+    release: "lighthouse"
+    heritage: "Helm"
+spec:
+  backendType: ibmcloudSecretsManager
+  data:
+    - name: azure.json
+      key: azure-secret-name
+      property: customProperty
+  template:
+    metadata:
+      labels:
+        app: lighthouse-lighthouse
+        chart: "lighthouse-0.0.633"
+        release: "lighthouse"
+        heritage: "Helm"
+    type: Opaque

@@ -1,0 +1,30 @@
+# Source: lighthouse/templates/oauthsecret.yaml
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: complex-secret
+  labels:
+    app: lighthouse-lighthouse
+    chart: "lighthouse-0.0.633"
+    release: "lighthouse"
+    heritage: "Helm"
+spec:
+  backendType: alicloudSecretsManager
+  roleArn: acs:ram::{UID}:role/custom
+  data:
+    - name: username
+      key: secretSquirrel
+      property: username
+      versionStage: ACSCurrent
+    - name: password
+      key: secretSquirrel
+      property: password
+      versionStage: CustomVersion
+  template:
+    metadata:
+      labels:
+        app: lighthouse-lighthouse
+        chart: "lighthouse-0.0.633"
+        release: "lighthouse"
+        heritage: "Helm"
+    type: Opaque
