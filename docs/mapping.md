@@ -107,6 +107,51 @@ Defaults
 </tr>
 </tbody>
 </table>
+<h3 id="secret.jenkins-x.io/v1alpha1.AwsSecretsManager">AwsSecretsManager
+</h3>
+<p>
+<p>AwsSecretsManager stores default config when using AWS Secret Manager for secret storage</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>roleArn</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>versionStage</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="secret.jenkins-x.io/v1alpha1.AzureKeyVaultConfig">AzureKeyVaultConfig
 </h3>
 <p>
@@ -179,15 +224,35 @@ BackendType
 </tr>
 <tr>
 <td>
-<code>gcpSecretsManager</code></br>
+<code>roleArn</code></br>
 <em>
-<a href="#secret.jenkins-x.io/v1alpha1.GcpSecretsManager">
-GcpSecretsManager
-</a>
+string
 </em>
 </td>
 <td>
-<p>GcpSecretsManager config</p>
+<p>RoleArn is used for some back ends like AWS and Alicloud</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region is used for some back ends like AWS</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>versionStage</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>VersionStage the default version stage to use which is used on some back ends like AWS and Alicloud</p>
 </td>
 </tr>
 <tr>
@@ -201,6 +266,19 @@ AzureKeyVaultConfig
 </td>
 <td>
 <p>AzureKeyVault config</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>gcpSecretsManager</code></br>
+<em>
+<a href="#secret.jenkins-x.io/v1alpha1.GcpSecretsManager">
+GcpSecretsManager
+</a>
+</em>
+</td>
+<td>
+<p>GcpSecretsManager config</p>
 </td>
 </tr>
 </tbody>
@@ -308,6 +386,30 @@ string
 <td>
 <em>(Optional)</em>
 <p>Property the Vault property on the key to load the secret value</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>versionStage</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>VersionStage the version of the secret value</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>isBinary</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IsBinary to indicate a binary secret</p>
 </td>
 </tr>
 </tbody>
@@ -434,15 +536,24 @@ BackendType
 </tr>
 <tr>
 <td>
-<code>gcpSecretsManager</code></br>
+<code>roleArn</code></br>
 <em>
-<a href="#secret.jenkins-x.io/v1alpha1.GcpSecretsManager">
-GcpSecretsManager
-</a>
+string
 </em>
 </td>
 <td>
-<p>GcpSecretsManager config</p>
+<p>RoleArn is used for some back ends like AWS and Alicloud</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region is used for some back ends like AWS</p>
 </td>
 </tr>
 <tr>
@@ -455,6 +566,19 @@ AzureKeyVaultConfig
 </em>
 </td>
 <td>
+<p>AzureKeyVaultConfig config</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>gcpSecretsManager</code></br>
+<em>
+<a href="#secret.jenkins-x.io/v1alpha1.GcpSecretsManager">
+GcpSecretsManager
+</a>
+</em>
+</td>
+<td>
 <p>GcpSecretsManager config</p>
 </td>
 </tr>
@@ -463,5 +587,5 @@ AzureKeyVaultConfig
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>14c92b0</code>.
+on git commit <code>c787b50</code>.
 </em></p>
