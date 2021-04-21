@@ -2,10 +2,11 @@ package convert
 
 import (
 	"fmt"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert/edit"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
