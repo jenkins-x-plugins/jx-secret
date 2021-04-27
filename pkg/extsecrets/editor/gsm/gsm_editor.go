@@ -215,15 +215,14 @@ func accessSecretVersion(projectID, key string) (map[string]string, error) {
 
 	// Call the API.
 	result, err := client.AccessSecretVersion(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to access secret version: %v", err)
+	if err != nil && !strings.Contains(err.Error(), "not found or has no versions") {
+		return nil, errors.Wrapf(err, "failed to access secret version %s", name)
 	}
 
 	m := make(map[string]string)
 	if result != nil && result.Payload.Data != nil {
 		err = json.Unmarshal(result.Payload.Data, &m)
+		return m, err
 	}
-
-	return m, err
-
+	return m, nil
 }
