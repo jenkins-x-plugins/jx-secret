@@ -2,6 +2,8 @@ package populate_test
 
 import (
 	"fmt"
+	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/maps"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -357,4 +359,19 @@ func TestPopulateFromHelmSecrets(t *testing.T) {
 	fakeStore := fakeFactory.GetSecretStore()
 	fakeStore.AssertValueEquals(t, secretLocation, "lighthouse-oauth-token", "token", "fake-secret-value")
 	fakeStore.AssertValueEquals(t, secretLocation, "secret-with-stringdata", "token", "token-value")
+}
+
+func TestParseRequirements(t *testing.T) {
+	dir := filepath.Join("test_data", "load_requirements")
+	requirementsResource, _, err := jxcore.LoadRequirementsConfig(dir, false)
+	require.NoError(t, err, "Failed to load requirements from dir %s", dir)
+	req := &requirementsResource.Spec
+	expectedRegistry := "123456789012.dkr.ecr.ap-southeast-2.amazonaws.com"
+	assert.Equal(t, expectedRegistry, req.Cluster.Registry, "cluster.registry")
+
+	requirementsMap, err := populate.CreateRequirementsMap(req)
+	require.NoError(t, err, "failed to create requirements map")
+
+	value := maps.GetMapValueAsStringViaPath(requirementsMap, "cluster.registry")
+	assert.Equal(t, expectedRegistry, value, "cluster.registry on the requirementsMap")
 }

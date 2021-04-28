@@ -220,9 +220,11 @@ func accessSecretVersion(projectID, key string) (map[string]string, error) {
 	}
 
 	m := make(map[string]string)
-	if result != nil && result.Payload.Data != nil {
+	if result != nil && len(result.Payload.Data) > 0 && strings.TrimSpace(string(result.Payload.Data)) != "" {
 		err = json.Unmarshal(result.Payload.Data, &m)
-		return m, err
+		if err != nil {
+			return m, errors.Wrapf(err, "failed to parse JSON '%s' from GSM secret version", string(result.Payload.Data))
+		}
 	}
 	return m, nil
 }
