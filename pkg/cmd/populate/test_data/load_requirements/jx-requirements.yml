@@ -1,0 +1,10 @@
+apiVersion: core.jenkins-x.io/v4beta1
+kind: Requirements
+spec:
+  autoUpdate:
+    enabled: false
+    schedule: ""
+  cluster:
+    chartRepository: http://jenkins-x-chartmuseum.jx.svc.cluster.local:8080
+    clusterName: mycluster
+    registry: 123456789012.dkr.ecr.ap-southeast-2.amazonaws.com

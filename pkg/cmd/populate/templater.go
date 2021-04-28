@@ -217,18 +217,9 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 		return "", errors.Wrapf(err, "failed to parse Secret %s property %s with template: %s", secretName, property, templateText)
 	}
 
-	requirementsMap, err := o.Requirements.ToMap()
+	requirementsMap, err := CreateRequirementsMap(o.Requirements)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed turn requirements into a map: %v", o.Requirements)
-	}
-	if requirementsMap["storage"] == nil {
-		requirementsMap["storage"] = map[string]string{}
-	}
-	if requirementsMap["cluster"] == nil {
-		requirementsMap["cluster"] = map[string]string{}
-	}
-	if maps.GetMapValueAsStringViaPath(requirementsMap, "cluster.registry") == "" {
-		maps.SetMapValueViaPath(requirementsMap, "cluster.registry", "")
+		return "", errors.Wrapf(err, "failed to create requirements map")
 	}
 
 	templateData := map[string]interface{}{
@@ -241,6 +232,24 @@ func (o *Options) EvaluateTemplate(namespace, secretName, property, templateText
 		return "", errors.Wrapf(err, "failed to evaluate template to create value of Secret %s property %s", secretName, property)
 	}
 	return buf.String(), nil
+}
+
+// CreateRequirementsMap creates the requirements map thats used to send into
+func CreateRequirementsMap(req *jxcore.RequirementsConfig) (map[string]interface{}, error) {
+	requirementsMap, err := req.ToMap()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed turn requirements into a map: %v", req)
+	}
+	if requirementsMap["storage"] == nil {
+		requirementsMap["storage"] = map[string]string{}
+	}
+	if requirementsMap["cluster"] == nil {
+		requirementsMap["cluster"] = map[string]string{}
+	}
+	if maps.GetMapValueAsStringViaPath(requirementsMap, "cluster.registry") == "" {
+		maps.SetMapValueViaPath(requirementsMap, "cluster.registry", "")
+	}
+	return requirementsMap, nil
 }
 
 func (o *Options) getExternalSecretValue(lookupSecretName string, lookupKey string, namespace string, retryTemplate bool) string {
