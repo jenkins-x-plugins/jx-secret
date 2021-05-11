@@ -190,8 +190,13 @@ bin/docs:
 	go build $(LDFLAGS) -v -o bin/docs cmd/docs/*.go
 
 .PHONY: docs
-docs: bin/docs generate-refdocs ## update docs
+docs: bin/docs generate-refdocs gen-schema ## update docs
 	@echo "Generating docs"
 	@./bin/docs --target=./docs/cmd
 	@./bin/docs --target=./docs/man/man1 --kind=man
 	@rm -f ./bin/docs
+
+.PHONY: gen-schema
+gen-schema:
+	mkdir -p schema
+	go run cmd/schemagen/main.go
