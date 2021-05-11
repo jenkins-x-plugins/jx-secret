@@ -7,18 +7,16 @@ require (
 	github.com/Azure/azure-sdk-for-go v50.1.0+incompatible
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.5
 	github.com/Masterminds/sprig/v3 v3.2.0
-	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
-	github.com/alecthomas/colour v0.1.0 // indirect
-	github.com/alecthomas/repr v0.0.0-20201103221029-55c485bd663f // indirect
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/dimchansky/utfbom v1.1.1 // indirect
-	github.com/google/go-cmp v0.5.4
+	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/google/go-cmp v0.5.5
 	github.com/jenkins-x-plugins/secretfacade v0.0.9
-	github.com/jenkins-x/go-scm v1.6.18
-	github.com/jenkins-x/jx-api/v4 v4.0.28
-	github.com/jenkins-x/jx-helpers/v3 v3.0.104
+	github.com/jenkins-x/go-scm v1.8.2
+	github.com/jenkins-x/jx-api/v4 v4.0.32
+	github.com/jenkins-x/jx-helpers/v3 v3.0.113
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
-	github.com/jenkins-x/jx-logging/v3 v3.0.3
+	github.com/jenkins-x/jx-logging/v3 v3.0.6
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/cobra v1.1.1
@@ -32,6 +30,7 @@ require (
 	k8s.io/apimachinery v0.20.6
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/kustomize/kyaml v0.10.6
+	sigs.k8s.io/structured-merge-diff/v4 v4.0.3 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )
 

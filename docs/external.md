@@ -419,5 +419,5 @@ Refer to the Kubernetes API documentation for the fields of the
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>c787b50</code>.
+on git commit <code>c11d462</code>.
 </em></p>
