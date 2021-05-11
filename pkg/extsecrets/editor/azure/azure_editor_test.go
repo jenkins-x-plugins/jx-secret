@@ -3,9 +3,9 @@ package azure_test
 import (
 	"testing"
 
-	"github.com/alecthomas/assert"
 	editor2 "github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/azure"
+	"github.com/stretchr/testify/assert"
 )
 
 type Mock struct{}

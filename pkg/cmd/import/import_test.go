@@ -1,10 +1,10 @@
 package importcmd_test
 
 import (
+	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
 
-	"github.com/alecthomas/assert"
 	importcmd "github.com/jenkins-x-plugins/jx-secret/pkg/cmd/import"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/testsecrets"
@@ -61,6 +61,6 @@ func TestImport(t *testing.T) {
 	// lets assert the vault env vars are setup correctly
 	lastCommand := runner.OrderedCommands[len(runner.OrderedCommands)-1]
 	vaultCaCert := lastCommand.Env["VAULT_CACERT"]
-	assert.NotEmpty(t, vaultCaCert, "should have $VAULT_CACERT for command %s", cmdrunner.CLI(lastCommand))
+	assert.NotEmptyf(t, vaultCaCert, "should have $VAULT_CACERT for command %s", cmdrunner.CLI(lastCommand))
 	t.Logf("has $VAULT_CACERT %s\n", vaultCaCert)
 }

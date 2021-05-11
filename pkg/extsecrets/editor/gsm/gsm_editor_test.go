@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/alecthomas/assert"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 )
