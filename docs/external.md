@@ -223,6 +223,17 @@ string
 <p>Property the property in the underlying secret storage (e.g.  in vault)</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>version</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version the version of the property to use. e.g. &lsquo;latest&rsquo;</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="kubernetes-client.io/v1.ExternalSecretSpec">ExternalSecretSpec
@@ -419,5 +430,5 @@ Refer to the Kubernetes API documentation for the fields of the
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>f867b89</code>.
+on git commit <code>6950310</code>.
 </em></p>
