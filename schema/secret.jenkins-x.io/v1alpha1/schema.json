@@ -1,56 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "$ref": "#/definitions/SecretMapping",
+  "$ref": "#/definitions/Schema",
   "definitions": {
-    "AzureKeyVaultConfig": {
-      "properties": {
-        "keyVaultName": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "Defaults": {
-      "properties": {
-        "azureKeyVault": {
-          "$ref": "#/definitions/AzureKeyVaultConfig"
-        },
-        "backendType": {
-          "type": "string"
-        },
-        "gcpSecretsManager": {
-          "$ref": "#/definitions/GcpSecretsManager"
-        },
-        "region": {
-          "type": "string"
-        },
-        "roleArn": {
-          "type": "string"
-        },
-        "versionStage": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
     "FieldsV1": {
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "GcpSecretsManager": {
-      "properties": {
-        "projectId": {
-          "type": "string"
-        },
-        "uniquePrefix": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        }
-      },
       "additionalProperties": false,
       "type": "object"
     },
@@ -73,32 +25,26 @@
           "type": "string"
         },
         "time": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "format": "date-time"
+          "$ref": "#/definitions/Time"
         }
       },
       "additionalProperties": false,
       "type": "object"
     },
-    "Mapping": {
+    "Object": {
       "properties": {
-        "isBinary": {
+        "mandatory": {
           "type": "boolean"
-        },
-        "key": {
-          "type": "string"
         },
         "name": {
           "type": "string"
         },
-        "property": {
-          "type": "string"
-        },
-        "versionStage": {
-          "type": "string"
+        "properties": {
+          "items": {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "$ref": "#/definitions/Property"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
@@ -128,11 +74,7 @@
           "type": "integer"
         },
         "deletionTimestamp": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "format": "date-time"
+          "$ref": "#/definitions/Time"
         },
         "finalizers": {
           "items": {
@@ -211,7 +153,63 @@
       "additionalProperties": false,
       "type": "object"
     },
-    "SecretMapping": {
+    "Property": {
+      "properties": {
+        "defaultValue": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "generator": {
+          "type": "string"
+        },
+        "help": {
+          "type": "string"
+        },
+        "labels": {
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "maxLength": {
+          "type": "integer"
+        },
+        "minLength": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "noMask": {
+          "type": "boolean"
+        },
+        "onlyTemplateIfBlank": {
+          "type": "boolean"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        },
+        "requires": {
+          "type": "string"
+        },
+        "retry": {
+          "type": "boolean"
+        },
+        "template": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Schema": {
       "properties": {
         "apiVersion": {
           "type": "string"
@@ -225,64 +223,18 @@
         },
         "spec": {
           "$schema": "http://json-schema.org/draft-04/schema#",
-          "$ref": "#/definitions/SecretMappingSpec"
+          "$ref": "#/definitions/SchemaSpec"
         }
       },
       "additionalProperties": false,
       "type": "object"
     },
-    "SecretMappingSpec": {
+    "SchemaSpec": {
       "properties": {
-        "defaults": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "$ref": "#/definitions/Defaults"
-        },
-        "secrets": {
+        "objects": {
           "items": {
             "$schema": "http://json-schema.org/draft-04/schema#",
-            "$ref": "#/definitions/SecretRule"
-          },
-          "type": "array"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
-    },
-    "SecretRule": {
-      "properties": {
-        "azureKeyVault": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "$ref": "#/definitions/AzureKeyVaultConfig"
-        },
-        "backendType": {
-          "type": "string"
-        },
-        "gcpSecretsManager": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "$ref": "#/definitions/GcpSecretsManager"
-        },
-        "mappings": {
-          "items": {
-            "$schema": "http://json-schema.org/draft-04/schema#",
-            "$ref": "#/definitions/Mapping"
-          },
-          "type": "array"
-        },
-        "name": {
-          "type": "string"
-        },
-        "namespace": {
-          "type": "string"
-        },
-        "region": {
-          "type": "string"
-        },
-        "roleArn": {
-          "type": "string"
-        },
-        "unsecured": {
-          "items": {
-            "type": "string"
+            "$ref": "#/definitions/Object"
           },
           "type": "array"
         }

@@ -13,17 +13,17 @@ var (
 	resourceKinds = []schemagen.ResourceKind{
 		{
 			APIVersion: "kubernetes-client.io/v1",
-			Name:       "externalsecrets",
+			Name:       "externalsecret",
 			Resource:   &v1.ExternalSecret{},
 		},
 		{
 			APIVersion: "secret.jenkins-x.io/v1alpha1",
-			Name:       "secretmappings",
+			Name:       "secretmapping",
 			Resource:   &v1alpha1.SecretMapping{},
 		},
 		{
 			APIVersion: "secret.jenkins-x.io/v1alpha1",
-			Name:       "schemas",
+			Name:       "schema",
 			Resource:   &schemav1alpha1.Schema{},
 		},
 	}
