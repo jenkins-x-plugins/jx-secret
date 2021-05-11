@@ -101,6 +101,9 @@ type Data struct {
 
 	// Property the property in the underlying secret storage (e.g.  in vault)
 	Property string `json:"property,omitempty" yaml:"property,omitempty"`
+
+	// Version the version of the property to use. e.g. 'latest'
+	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 }
 
 // Template the template data

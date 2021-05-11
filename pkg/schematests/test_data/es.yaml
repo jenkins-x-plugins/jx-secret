@@ -1,0 +1,37 @@
+# Source: chartmuseum/templates/secret.yaml
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: jenkins-x-chartmuseum
+  labels:
+    app: chartmuseum
+    chart: chartmuseum-2.14.2
+    heritage: "Helm"
+    release: "chartmuseum"
+    gitops.jenkins-x.io/pipeline: 'namespaces'
+  namespace: jx
+  annotations:
+    secret.jenkins-x.io/schema-object: '{"name":"jenkins-x-chartmuseum","properties":[{"name":"BASIC_AUTH_USER","question":"chartmuseum repository user name","help":"The username used to authenticate with chartmuseum (the helm repository)","defaultValue":"admin"},{"name":"BASIC_AUTH_PASS","question":"chartmuseum repository password","help":"The password to authenticate with the chartmuseum (the helm repository)","generator":"password","minLength":5,"maxLength":41}],"mandatory":true}'
+spec:
+  backendType: gcpSecretsManager
+  projectId: jenkins-x-labs-bdd1
+  data:
+    - name: BASIC_AUTH_PASS
+      key: jstrachan-tekton3-jx-admin-user
+      property: password
+      version: latest
+    - name: BASIC_AUTH_USER
+      key: jstrachan-tekton3-jx-admin-user
+      property: username
+      version: latest
+  template:
+    metadata:
+      annotations:
+        meta.helm.sh/release-name: 'chartmuseum'
+        secret.jenkins-x.io/schema-object: '{"name":"jenkins-x-chartmuseum","properties":[{"name":"BASIC_AUTH_USER","question":"chartmuseum repository user name","help":"The username used to authenticate with chartmuseum (the helm repository)","defaultValue":"admin"},{"name":"BASIC_AUTH_PASS","question":"chartmuseum repository password","help":"The password to authenticate with the chartmuseum (the helm repository)","generator":"password","minLength":5,"maxLength":41}],"mandatory":true}'
+      labels:
+        app: chartmuseum
+        chart: chartmuseum-2.14.2
+        heritage: "Helm"
+        release: "chartmuseum"
+    type: Opaque
