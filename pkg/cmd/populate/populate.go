@@ -65,6 +65,7 @@ type Options struct {
 	HelmSecretValues    map[string]map[string]string
 	Requirements        *jxcore.RequirementsConfig
 	BootSecretNamespace string
+	DisableSecretFolder bool
 }
 
 // NewCmdPopulate creates a command object for the command
@@ -472,7 +473,7 @@ func (o *Options) helmSecretValue(s *secretfacade.SecretPair, entryName string) 
 		o.HelmSecretValues = map[string]map[string]string{}
 	}
 	values := o.HelmSecretValues[key]
-	if values == nil {
+	if values == nil && !o.DisableSecretFolder {
 		path := filepath.Join(o.HelmSecretFolder, ns, name+".yaml")
 
 		exists, err := files.FileExists(path)

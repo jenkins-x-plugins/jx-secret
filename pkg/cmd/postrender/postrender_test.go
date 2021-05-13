@@ -29,6 +29,10 @@ func TestPostrendererConvert(t *testing.T) {
 	err = o.ConvertOptions.Validate()
 	require.NoError(t, err, "failed validate options")
 
+	if o.ConvertOptions.DefaultNamespace == "" {
+		o.ConvertOptions.DefaultNamespace = "jx"
+	}
+
 	input := string(data)
 	got, err := o.Convert(input)
 	require.NoError(t, err, "failed to convert input")
@@ -41,11 +45,22 @@ func TestPostrendererConvert(t *testing.T) {
 		err = ioutil.WriteFile(expectedFile, []byte(got), 0666)
 		require.NoError(t, err, "failed to save file %s", expectedFile)
 		t.Logf("saved %s\n", expectedFile)
-
 	} else {
 		data, err := ioutil.ReadFile(expectedFile)
 		require.NoError(t, err, "failed to read %s", expectedFile)
 
 		assert.Equal(t, string(data), got, "expected output")
 	}
+
+	// lets verify the secret data....
+	assert.NotEmpty(t, o.PopulateOptions.HelmSecretValues, "should have helm secret values")
+
+	for k, m := range o.PopulateOptions.HelmSecretValues {
+		t.Logf("%s = %#v\n", k, m)
+	}
+	key := "jx/mysecret"
+	values := o.PopulateOptions.HelmSecretValues[key]
+	assert.NotEmpty(t, values, "should have secret values for key %s", key)
+	assert.Equal(t, "edam", values["cheese"], "no secret value for cheese with key %s", key)
+	t.Logf("key %s cheese = %s\n", key, values["cheese"])
 }

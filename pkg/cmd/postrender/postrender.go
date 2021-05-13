@@ -3,6 +3,8 @@ package postrender
 import (
 	"fmt"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
+	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kyamls"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -34,7 +36,9 @@ var (
 
 // Options the options for the command
 type Options struct {
-	ConvertOptions convert.Options
+	ConvertOptions  convert.Options
+	PopulateOptions populate.Options
+	SecretCount     int
 }
 
 // NewCmdPostrender creates a command object for the command
@@ -61,6 +65,9 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to read standard input")
 	}
 
+	// TODO parse env vars...
+	o.PopulateOptions.DisableSecretFolder = true
+
 	err = o.ConvertOptions.Validate()
 	if err != nil {
 		return errors.Wrapf(err, "failed to validate options")
@@ -86,6 +93,13 @@ func (o *Options) Run() error {
 		buf.WriteString(result)
 	}
 
+	if o.SecretCount > 0 {
+		err = o.PopulateSecrets()
+		if err != nil {
+			return errors.Wrapf(err, "failed to ")
+		}
+		buf.WriteString(fmt.Sprintf("\n\n# failed to populate external secret store\n# %s\n", err.Error()))
+	}
 	fmt.Println(buf.String())
 	return nil
 }
@@ -100,18 +114,68 @@ func (o *Options) Convert(text string) (string, error) {
 		return text, nil
 	}
 
+	secretData, err := o.GetSecretData(node, path)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get secret data")
+	}
+
 	// lets transform....
-	_, err = o.ConvertOptions.ModifyYAML(node, path)
+	opts, err := o.ConvertOptions.ModifyYAML(node, path)
 	if err != nil {
 		return text, errors.Wrapf(err, "failed to convert Secret")
 	}
 
-	// now lets save the modified node
+	// populate the secret data so we can lazy populate any external secret store
+	if secretData != nil {
+		key := scm.Join(opts.Namespace, opts.Name)
+		if o.PopulateOptions.HelmSecretValues == nil {
+			o.PopulateOptions.HelmSecretValues = map[string]map[string]string{}
+		}
+		o.PopulateOptions.HelmSecretValues[key] = secretData
+	}
+
+	// lets save the modified node
 	out, err := node.String()
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to marshal converted YAML")
 	}
+	o.SecretCount++
 	return out, nil
+}
+
+func (o *Options) PopulateSecrets() error {
+	err := o.PopulateOptions.Run()
+	if err != nil {
+		return errors.Wrapf(err, "failed to populate serets")
+	}
+	return nil
+}
+
+func (o *Options) GetSecretData(node *yaml.RNode, path string) (map[string]string, error) {
+	m := map[string]string{}
+	for _, dataPath := range []string{"data", "stringData"} {
+		data, err := node.Pipe(yaml.Lookup(dataPath))
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get data for path %s", path)
+		}
+
+		if data != nil {
+			fields, err := data.Fields()
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to find data fields for path %s", path)
+			}
+
+			for _, field := range fields {
+				//if o.SecretMapping.IsSecretKeyUnsecured(secretName, field) {
+				value := kyamls.GetStringField(data, "", field)
+				if value == "" {
+					continue
+				}
+				m[field] = value
+			}
+		}
+	}
+	return m, nil
 }
 
 // IsWhitespaceOrComments returns true if the text is empty, whitespace or comments only
