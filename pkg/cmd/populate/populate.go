@@ -61,6 +61,7 @@ type Options struct {
 	CommandRunner       cmdrunner.CommandRunner
 	QuietCommandRunner  cmdrunner.CommandRunner
 	NoWait              bool
+	DisableLoadResults  bool
 	Generators          map[string]generators.Generator
 	HelmSecretValues    map[string]map[string]string
 	Requirements        *jxcore.RequirementsConfig
@@ -117,13 +118,16 @@ func (o *Options) Run() error {
 		return errors.Wrap(err, "error validating options")
 	}
 
-	// get a list of external secrets which do not have corresponding k8s secret data populated
-	results, err := o.VerifyAndFilter()
-	if err != nil {
-		return errors.Wrap(err, "failed to verify secrets")
+	if !o.DisableLoadResults {
+		// get a list of external secrets which do not have corresponding k8s secret data populated
+		results, err := o.VerifyAndFilter()
+		if err != nil {
+			return errors.Wrap(err, "failed to verify secrets")
+		}
+		o.Results = results
 	}
-	o.Results = results
 
+	results := o.Results
 	if len(results) == 0 {
 		log.Logger().Infof("the %d ExternalSecrets are %s", len(o.ExternalSecrets), termcolor.ColorInfo("populated"))
 		return nil
