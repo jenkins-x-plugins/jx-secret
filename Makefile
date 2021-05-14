@@ -88,10 +88,6 @@ build: $(GO_DEPENDENCIES) clean ## Build jx-labs binary for current OS
 build-all: $(GO_DEPENDENCIES) build make-reports-dir ## Build all files - runtime, all tests etc.
 	CGO_ENABLED=$(CGO_ENABLED) $(GOTEST) -run=nope -tags=integration -failfast -short ./... $(BUILDFLAGS)
 
-
-postrenderer: $(GO_DEPENDENCIES) clean ## Build jx-labs binary for current OS
-	CGO_ENABLED=$(CGO_ENABLED) $(GO) $(BUILD_TARGET) $(BUILDFLAGS) -o build/jx-secret-postrenderer cmd/postrenderer/main.go
-
 tidy-deps: ## Cleans up dependencies
 	$(GO) mod tidy
 	# mod tidy only takes compile dependencies into account, let's make sure we capture tooling dependencies as well
