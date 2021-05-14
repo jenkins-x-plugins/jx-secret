@@ -4,8 +4,6 @@ metadata:
   name: mysecret
 spec:
   backendType: vault
-  vaultMountPoint:
-  vaultRole:
   data:
     - name: cheese
       key: secret/data/mysecret
