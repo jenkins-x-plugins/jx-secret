@@ -1,9 +1,10 @@
 package importcmd_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	importcmd "github.com/jenkins-x-plugins/jx-secret/pkg/cmd/import"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"

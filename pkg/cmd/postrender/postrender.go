@@ -3,6 +3,10 @@ package postrender
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/go-scm/scm"
@@ -10,10 +14,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/pkg/errors"
 	"github.com/sethvargo/go-envconfig"
-	"io/ioutil"
-	"os"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-	"strings"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"

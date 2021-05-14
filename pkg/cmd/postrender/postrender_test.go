@@ -1,13 +1,14 @@
 package postrender_test
 
 import (
-	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/postrender"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/postrender"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
 )
