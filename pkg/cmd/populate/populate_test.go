@@ -2,12 +2,13 @@ package populate_test
 
 import (
 	"fmt"
-	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
-	"github.com/jenkins-x/jx-helpers/v3/pkg/maps"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
 	"time"
+
+	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/maps"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate/templatertesting"

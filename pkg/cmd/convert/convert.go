@@ -49,13 +49,13 @@ var (
 // LabelOptions the options for the command
 type Options struct {
 	options.BaseOptions
-	Dir              string
-	DefaultNamespace string
+
+	VaultMountPoint  string `env:"JX_VAULT_MOUNT_POINT"`
+	VaultRole        string `env:"JX_VAULT_ROLE"`
+	Dir              string `env:"JX_DIR"`
+	DefaultNamespace string `env:"JX_DEFAULT_NAMESPACE"`
 	SourceDir        string
 	VersionStreamDir string
-	Backend          string
-	VaultMountPoint  string
-	VaultRole        string
 	HelmSecretFolder string
 	SecretMapping    *v1alpha1.SecretMapping
 
@@ -91,7 +91,7 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 	return cmd, o
 }
 
-func (o *Options) Run() error {
+func (o *Options) Validate() error {
 	err := o.BaseOptions.Validate()
 	if err != nil {
 		return errors.Wrapf(err, "failed to validate options")
@@ -117,129 +117,22 @@ func (o *Options) Run() error {
 			return errors.Wrapf(err, "failed to load secret mapping file")
 		}
 	}
+	return nil
+}
+
+func (o *Options) Run() error {
+	err := o.Validate()
+	if err != nil {
+		return errors.Wrapf(err, "failed to validate options")
+	}
 
 	modifyFn := func(node *yaml.RNode, path string) (bool, error) {
-		namespace := kyamls.GetNamespace(node, path)
-		name := kyamls.GetName(node, path)
-
-		hasData, err := hasSecretData(node, path)
+		results, err := o.ModifyYAML(node, path)
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to check if file has Secret data %s", path)
+			return results.Modified, err
 		}
-		if !hasData {
-			log.Logger().Debugf("not converting Secret %s in namespace %s to an ExternalSecret as it has no data", info(name), info(namespace))
-			return false, nil
-		}
-
-		secret := o.SecretMapping.FindRule(namespace, name)
-		err = kyamls.SetStringValue(node, path, "kubernetes-client.io/v1", "apiVersion")
-		if err != nil {
-			return false, err
-		}
-		err = kyamls.SetStringValue(node, path, "ExternalSecret", "kind")
-		if err != nil {
-			return false, err
-		}
-
-		if secret.BackendType == "" {
-			secret.BackendType = o.SecretMapping.Spec.Defaults.BackendType
-		}
-		err = kyamls.SetStringValue(node, path, string(secret.BackendType), "spec", "backendType")
-		if err != nil {
-			return false, err
-		}
-
-		if secret.RoleArn == "" {
-			secret.RoleArn = o.SecretMapping.Spec.Defaults.RoleArn
-		}
-		if secret.RoleArn != "" {
-			err = kyamls.SetStringValue(node, path, secret.RoleArn, "spec", "roleArn")
-			if err != nil {
-				return false, err
-			}
-		}
-		if secret.Region == "" {
-			secret.Region = o.SecretMapping.Spec.Defaults.Region
-		}
-		if secret.Region != "" {
-			err = kyamls.SetStringValue(node, path, secret.Region, "spec", "region")
-			if err != nil {
-				return false, err
-			}
-		}
-
-		switch secret.BackendType {
-		case v1alpha1.BackendTypeGSM:
-			if secret.GcpSecretsManager == nil {
-				secret.GcpSecretsManager = &v1alpha1.GcpSecretsManager{}
-			}
-			if secret.GcpSecretsManager.ProjectID != "" {
-				err = kyamls.SetStringValue(node, path, secret.GcpSecretsManager.ProjectID, "spec", "projectId")
-				if err != nil {
-					return false, err
-				}
-			} else if o.SecretMapping.Spec.Defaults.GcpSecretsManager.ProjectID != "" {
-				err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.Defaults.GcpSecretsManager.ProjectID, "spec", "projectId")
-				if err != nil {
-					return false, err
-				}
-			} else {
-				return false, errors.New("missing secret mapping secret.GcpSecretsManager.ProjectID")
-			}
-
-			// if we have a unique prefix for the specific secret or a default one then set it to use as a gsm secret prefix later
-			if secret.GcpSecretsManager.UniquePrefix != "" {
-				o.Prefix = secret.GcpSecretsManager.UniquePrefix
-			} else if o.SecretMapping.Spec.Defaults.GcpSecretsManager.UniquePrefix != "" {
-				o.Prefix = o.SecretMapping.Spec.Defaults.GcpSecretsManager.UniquePrefix
-			}
-
-		case v1alpha1.BackendTypeVault:
-			err = kyamls.SetStringValue(node, path, o.VaultMountPoint, "spec", "vaultMountPoint")
-			if err != nil {
-				return false, err
-			}
-			err = kyamls.SetStringValue(node, path, o.VaultRole, "spec", "vaultRole")
-			if err != nil {
-				return false, err
-			}
-
-		case v1alpha1.BackendTypeAzure:
-			if secret.AzureKeyVaultConfig == nil {
-				secret.AzureKeyVaultConfig = &v1alpha1.AzureKeyVaultConfig{}
-			}
-			if secret.AzureKeyVaultConfig.KeyVaultName != "" {
-				err = kyamls.SetStringValue(node, path, secret.AzureKeyVaultConfig.KeyVaultName, "spec", "keyVaultName")
-				if err != nil {
-					return false, err
-				}
-			} else if o.SecretMapping.Spec.Defaults.AzureKeyVaultConfig != nil && o.SecretMapping.Spec.Defaults.AzureKeyVaultConfig.KeyVaultName != "" {
-				err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.Defaults.AzureKeyVaultConfig.KeyVaultName, "spec", "keyVaultName")
-				if err != nil {
-					return false, err
-				}
-			} else {
-				return false, errors.New("missing secret mapping secret.AzureKeyVaultConfig.KeyVaultName")
-			}
-
-		}
-
-		flag, err := o.convertData(node, path, secret.BackendType)
-		if err != nil {
-			return flag, err
-		}
-		flag, err = o.moveMetadataToTemplate(node, path)
-		if err != nil {
-			return flag, err
-		}
-
-		// lets make sure the helm secret dir exists
-		if namespace == "" {
-			namespace = secret.Namespace
-			if namespace == "" {
-				namespace = o.DefaultNamespace
-			}
-		}
+		namespace := results.Namespace
+		name := results.Name
 		helmDir := filepath.Join(o.HelmSecretFolder, namespace)
 		err = os.MkdirAll(helmDir, files.DefaultDirWritePermissions)
 		if err != nil {
@@ -258,6 +151,147 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to modify files")
 	}
 	return nil
+}
+
+// ModifyResults returns the results of modifying a file
+type ModifyResults struct {
+	Namespace string
+	Name      string
+	Modified  bool
+}
+
+// ModifyYAML modifies the given YAML files
+func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, error) {
+	results := ModifyResults{}
+	namespace := kyamls.GetNamespace(node, path)
+	name := kyamls.GetName(node, path)
+
+	hasData, err := hasSecretData(node, path)
+	if err != nil {
+		return results, errors.Wrapf(err, "failed to check if file has Secret data %s", path)
+	}
+	if !hasData {
+		log.Logger().Debugf("not converting Secret %s in namespace %s to an ExternalSecret as it has no data", info(name), info(namespace))
+		return results, nil
+	}
+
+	secret := o.SecretMapping.FindRule(namespace, name)
+	err = kyamls.SetStringValue(node, path, "kubernetes-client.io/v1", "apiVersion")
+	if err != nil {
+		return results, err
+	}
+	err = kyamls.SetStringValue(node, path, "ExternalSecret", "kind")
+	if err != nil {
+		return results, err
+	}
+
+	if secret.BackendType == "" {
+		secret.BackendType = o.SecretMapping.Spec.Defaults.BackendType
+	}
+	err = kyamls.SetStringValue(node, path, string(secret.BackendType), "spec", "backendType")
+	if err != nil {
+		return results, err
+	}
+
+	if secret.RoleArn == "" {
+		secret.RoleArn = o.SecretMapping.Spec.Defaults.RoleArn
+	}
+	if secret.RoleArn != "" {
+		err = kyamls.SetStringValue(node, path, secret.RoleArn, "spec", "roleArn")
+		if err != nil {
+			return results, err
+		}
+	}
+	if secret.Region == "" {
+		secret.Region = o.SecretMapping.Spec.Defaults.Region
+	}
+	if secret.Region != "" {
+		err = kyamls.SetStringValue(node, path, secret.Region, "spec", "region")
+		if err != nil {
+			return results, err
+		}
+	}
+
+	switch secret.BackendType {
+	case v1alpha1.BackendTypeGSM:
+		if secret.GcpSecretsManager == nil {
+			secret.GcpSecretsManager = &v1alpha1.GcpSecretsManager{}
+		}
+		if secret.GcpSecretsManager.ProjectID != "" {
+			err = kyamls.SetStringValue(node, path, secret.GcpSecretsManager.ProjectID, "spec", "projectId")
+			if err != nil {
+				return results, err
+			}
+		} else if o.SecretMapping.Spec.Defaults.GcpSecretsManager.ProjectID != "" {
+			err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.Defaults.GcpSecretsManager.ProjectID, "spec", "projectId")
+			if err != nil {
+				return results, err
+			}
+		} else {
+			return results, errors.New("missing secret mapping secret.GcpSecretsManager.ProjectID")
+		}
+
+		// if we have a unique prefix for the specific secret or a default one then set it to use as a gsm secret prefix later
+		if secret.GcpSecretsManager.UniquePrefix != "" {
+			o.Prefix = secret.GcpSecretsManager.UniquePrefix
+		} else if o.SecretMapping.Spec.Defaults.GcpSecretsManager.UniquePrefix != "" {
+			o.Prefix = o.SecretMapping.Spec.Defaults.GcpSecretsManager.UniquePrefix
+		}
+
+	case v1alpha1.BackendTypeVault:
+		if o.VaultMountPoint != "" {
+			err = kyamls.SetStringValue(node, path, o.VaultMountPoint, "spec", "vaultMountPoint")
+			if err != nil {
+				return results, err
+			}
+		}
+		if o.VaultRole != "" {
+			err = kyamls.SetStringValue(node, path, o.VaultRole, "spec", "vaultRole")
+			if err != nil {
+				return results, err
+			}
+		}
+
+	case v1alpha1.BackendTypeAzure:
+		if secret.AzureKeyVaultConfig == nil {
+			secret.AzureKeyVaultConfig = &v1alpha1.AzureKeyVaultConfig{}
+		}
+		if secret.AzureKeyVaultConfig.KeyVaultName != "" {
+			err = kyamls.SetStringValue(node, path, secret.AzureKeyVaultConfig.KeyVaultName, "spec", "keyVaultName")
+			if err != nil {
+				return results, err
+			}
+		} else if o.SecretMapping.Spec.Defaults.AzureKeyVaultConfig != nil && o.SecretMapping.Spec.Defaults.AzureKeyVaultConfig.KeyVaultName != "" {
+			err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.Defaults.AzureKeyVaultConfig.KeyVaultName, "spec", "keyVaultName")
+			if err != nil {
+				return results, err
+			}
+		} else {
+			return results, errors.New("missing secret mapping secret.AzureKeyVaultConfig.KeyVaultName")
+		}
+
+	}
+
+	flag, err := o.convertData(node, path, secret.BackendType)
+	if err != nil {
+		return results, err
+	}
+	flag, err = o.moveMetadataToTemplate(node, path)
+	if err != nil {
+		return results, err
+	}
+
+	// lets make sure the helm secret dir exists
+	if namespace == "" {
+		namespace = secret.Namespace
+		if namespace == "" {
+			namespace = o.DefaultNamespace
+		}
+	}
+	results.Namespace = namespace
+	results.Name = name
+	results.Modified = flag
+	return results, nil
 }
 
 // hasSecretData returns true if the node has secret data fields

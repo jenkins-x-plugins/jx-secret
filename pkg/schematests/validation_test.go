@@ -1,13 +1,14 @@
 package schematests
 
 import (
+	"io/ioutil"
+	"path/filepath"
+	"testing"
+
 	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x/jx-api/v4/pkg/util"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
-	"path/filepath"
 	"sigs.k8s.io/yaml"
-	"testing"
 )
 
 func TestValidateExternalSecret(t *testing.T) {
