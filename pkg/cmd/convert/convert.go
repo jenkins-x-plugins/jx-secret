@@ -49,13 +49,13 @@ var (
 // LabelOptions the options for the command
 type Options struct {
 	options.BaseOptions
-	Dir              string
-	DefaultNamespace string
+
+	VaultMountPoint  string `env:"JX_VAULT_MOUNT_POINT"`
+	VaultRole        string `env:"JX_VAULT_ROLE"`
+	Dir              string `env:"JX_DIR"`
+	DefaultNamespace string `env:"JX_DEFAULT_NAMESPACE"`
 	SourceDir        string
 	VersionStreamDir string
-	Backend          string
-	VaultMountPoint  string
-	VaultRole        string
 	HelmSecretFolder string
 	SecretMapping    *v1alpha1.SecretMapping
 
@@ -239,13 +239,17 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		}
 
 	case v1alpha1.BackendTypeVault:
-		err = kyamls.SetStringValue(node, path, o.VaultMountPoint, "spec", "vaultMountPoint")
-		if err != nil {
-			return results, err
+		if o.VaultMountPoint != "" {
+			err = kyamls.SetStringValue(node, path, o.VaultMountPoint, "spec", "vaultMountPoint")
+			if err != nil {
+				return results, err
+			}
 		}
-		err = kyamls.SetStringValue(node, path, o.VaultRole, "spec", "vaultRole")
-		if err != nil {
-			return results, err
+		if o.VaultRole != "" {
+			err = kyamls.SetStringValue(node, path, o.VaultRole, "spec", "vaultRole")
+			if err != nil {
+				return results, err
+			}
 		}
 
 	case v1alpha1.BackendTypeAzure:

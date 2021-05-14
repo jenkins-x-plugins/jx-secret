@@ -1,12 +1,15 @@
 package postrender
 
 import (
+	"context"
 	"fmt"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kyamls"
+	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 	"github.com/pkg/errors"
+	"github.com/sethvargo/go-envconfig"
 	"io/ioutil"
 	"os"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -36,9 +39,24 @@ var (
 
 // Options the options for the command
 type Options struct {
+	EnvOptions
+
 	ConvertOptions  convert.Options
 	PopulateOptions populate.Options
-	SecretCount     int
+
+	SecretCount int
+}
+
+type EnvOptions struct {
+	options.BaseOptions
+
+	VaultMountPoint  string `env:"JX_VAULT_MOUNT_POINT"`
+	VaultRole        string `env:"JX_VAULT_ROLE"`
+	Dir              string `env:"JX_DIR"`
+	DefaultNamespace string `env:"JX_DEFAULT_NAMESPACE"`
+
+	// DisablePopulate disables if external secrets are populated from the helm secret data if not populated already
+	DisablePopulate bool `env:"JX_NO_POPULATE"`
 }
 
 // NewCmdPostrender creates a command object for the command
@@ -65,7 +83,20 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to read standard input")
 	}
 
-	// TODO parse env vars...
+	ctx := context.TODO()
+	err = envconfig.Process(ctx, &o.EnvOptions)
+	if err != nil {
+		return errors.Wrapf(err, "failed to process environment options")
+	}
+
+	o.ConvertOptions.BaseOptions = o.EnvOptions.BaseOptions
+	o.ConvertOptions.BatchMode = true
+	o.ConvertOptions.DefaultNamespace = o.EnvOptions.DefaultNamespace
+	o.ConvertOptions.Dir = o.EnvOptions.Dir
+	o.ConvertOptions.VaultMountPoint = o.EnvOptions.VaultMountPoint
+	o.ConvertOptions.VaultRole = o.EnvOptions.VaultRole
+	o.PopulateOptions.Options.BaseOptions = o.EnvOptions.BaseOptions
+	o.PopulateOptions.Options.BatchMode = true
 	o.PopulateOptions.DisableSecretFolder = true
 
 	err = o.ConvertOptions.Validate()
@@ -93,7 +124,7 @@ func (o *Options) Run() error {
 		buf.WriteString(result)
 	}
 
-	if o.SecretCount > 0 {
+	if o.SecretCount > 0 && !o.DisablePopulate {
 		err = o.PopulateSecrets()
 		if err != nil {
 			return errors.Wrapf(err, "failed to ")

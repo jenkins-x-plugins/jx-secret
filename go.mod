@@ -9,16 +9,16 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.0
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/dimchansky/utfbom v1.1.1 // indirect
-	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.5.5
 	github.com/jenkins-x-plugins/secretfacade v0.0.9
 	github.com/jenkins-x/go-scm v1.8.2
 	github.com/jenkins-x/jx-api/v4 v4.0.33
-	github.com/jenkins-x/jx-helpers/v3 v3.0.113
+	github.com/jenkins-x/jx-helpers/v3 v3.0.114
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.6
 	github.com/pkg/errors v0.9.1
+	github.com/sethvargo/go-envconfig v0.3.2
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
