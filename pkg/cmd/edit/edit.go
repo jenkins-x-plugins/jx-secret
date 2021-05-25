@@ -158,6 +158,10 @@ func (o *Options) Run() error {
 					return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, key, name)
 				}
 
+				// fix issue where strings with newlines were being escaped when being marshalled later, so let's ensure newlines are used
+				// see https://stackoverflow.com/questions/32042989/go-lang-differentiate-n-and-line-break
+				value = strings.Replace(value, `\n`, "\n", -1)
+
 				keyProperties.Properties = append(keyProperties.Properties, editor.PropertyValue{
 					Property: property,
 					Value:    value,
