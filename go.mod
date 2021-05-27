@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.76.0
 	github.com/Azure/azure-sdk-for-go v50.1.0+incompatible
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.5
-	github.com/Masterminds/sprig/v3 v3.2.0
+	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -14,7 +14,7 @@ require (
 	github.com/jenkins-x-plugins/secretfacade v0.0.9
 	github.com/jenkins-x/go-scm v1.8.2
 	github.com/jenkins-x/jx-api/v4 v4.0.33
-	github.com/jenkins-x/jx-helpers/v3 v3.0.114
+	github.com/jenkins-x/jx-helpers/v3 v3.0.116
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.6
 	github.com/pkg/errors v0.9.1
@@ -26,8 +26,8 @@ require (
 	google.golang.org/genproto v0.0.0-20210202153253-cf70463f6119
 	gopkg.in/validator.v2 v2.0.0-20200605151824-2b28d334fa05
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
-	k8s.io/api v0.20.6
-	k8s.io/apimachinery v0.20.6
+	k8s.io/api v0.20.7
+	k8s.io/apimachinery v0.20.7
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/kustomize/kyaml v0.10.6
 	sigs.k8s.io/structured-merge-diff/v4 v4.0.3 // indirect
@@ -35,6 +35,10 @@ require (
 )
 
 replace (
+	// helm dependencies
+	github.com/docker/distribution => github.com/docker/distribution v0.0.0-20191216044856-a8371794149d
+	github.com/docker/docker => github.com/moby/moby v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible
+
 	k8s.io/api => k8s.io/api v0.20.2
 	k8s.io/apimachinery => k8s.io/apimachinery v0.20.2
 	k8s.io/client-go => k8s.io/client-go v0.20.2
