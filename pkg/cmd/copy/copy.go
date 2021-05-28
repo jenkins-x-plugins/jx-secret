@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
+
 	"k8s.io/apimachinery/pkg/fields"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
@@ -22,6 +24,8 @@ import (
 )
 
 var (
+	info = termcolor.ColorInfo
+
 	cmdLong = templates.LongDesc(`
 		Copies secrets with the given selector or name to a destination namespace
 `)
@@ -37,12 +41,13 @@ var (
 
 // Options the options for the command
 type Options struct {
-	Namespace       string
-	ToNamespace     string
-	Selector        string
-	Name            string
-	CreateNamespace bool
-	KubeClient      kubernetes.Interface
+	Namespace              string
+	ToNamespace            string
+	Selector               string
+	Name                   string
+	CreateNamespace        bool
+	IgnoreMissingNamespace bool
+	KubeClient             kubernetes.Interface
 }
 
 // NewCmdCopy creates a command object for the command
@@ -64,6 +69,7 @@ func NewCmdCopy() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.ToNamespace, "to", "t", "", "the namespace to copy the secrets to")
 	cmd.Flags().StringVarP(&o.Selector, "selector", "l", "", "the label selector to find the secrets to copy")
 	cmd.Flags().BoolVarP(&o.CreateNamespace, "create-namespace", "", false, "create the to Namespace if it does not already exist")
+	cmd.Flags().BoolVarP(&o.IgnoreMissingNamespace, "ignore-missing-to", "", false, "ignore this command if the target namespace does not exist")
 	return cmd, o
 }
 
@@ -82,7 +88,17 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to create kube client")
 	}
 
-	if o.CreateNamespace {
+	if o.IgnoreMissingNamespace {
+		ctx := context.TODO()
+		_, err := o.KubeClient.CoreV1().Namespaces().Get(ctx, o.ToNamespace, metav1.GetOptions{})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				log.Logger().Infof("not copying secrets as the namespace %s does not exist", info(o.ToNamespace))
+				return nil
+			}
+			log.Logger().Warnf("could not check if namespace %s exists: %s", o.ToNamespace, err.Error())
+		}
+	} else if o.CreateNamespace {
 		err = jxenv.EnsureNamespaceCreated(o.KubeClient, o.ToNamespace, nil, nil)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create namespace %s", o.ToNamespace)
