@@ -25,7 +25,11 @@
           "type": "string"
         },
         "time": {
-          "$ref": "#/definitions/Time"
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
         }
       },
       "additionalProperties": false,
@@ -74,7 +78,11 @@
           "type": "integer"
         },
         "deletionTimestamp": {
-          "$ref": "#/definitions/Time"
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
         },
         "finalizers": {
           "items": {
