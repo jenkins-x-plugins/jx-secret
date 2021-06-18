@@ -526,10 +526,12 @@ github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NH
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
-github.com/jenkins-x-plugins/secretfacade v0.0.9 h1:bBhYaizm1Om9ojzE+r1sKpqQbrJqj94XZX4n5GF7U+U=
-github.com/jenkins-x-plugins/secretfacade v0.0.9/go.mod h1:VQIYuGYpkd9FnYj1KencibWDBS8UgMlsHcdV60MRovA=
+github.com/jenkins-x-plugins/secretfacade v0.0.11 h1:KgVgBTigxLKutNj+P+jYLqxtdo5b+ILBHzg70Tn1Zjc=
+github.com/jenkins-x-plugins/secretfacade v0.0.11/go.mod h1:PG8a3Y0dVpVPKOGySobjFpL/kw5V6qFU3SkD3iTQ+nM=
 github.com/jenkins-x/go-scm v1.8.2 h1:GMEUz6ap0pAeyUkwWP3SQxJoz/qN+tJmCkr9sWvbXs4=
 github.com/jenkins-x/go-scm v1.8.2/go.mod h1:z7xTO9/VzqW3xEbEMH2z5cpOGrZ8+nOHOWfU1ngFGxs=
+github.com/jenkins-x/go-scm v1.9.2 h1:2ahJTAowVNdRQMohjUi/Px30JKnzInEc9GUcKn1GAxU=
+github.com/jenkins-x/go-scm v1.9.2/go.mod h1:z7xTO9/VzqW3xEbEMH2z5cpOGrZ8+nOHOWfU1ngFGxs=
 github.com/jenkins-x/jx-api/v4 v4.0.33 h1:a5yikWzisk79+tNZJ68lvZmEWo1ai9GvCBVAUtqNMeQ=
 github.com/jenkins-x/jx-api/v4 v4.0.33/go.mod h1:VRrNCBPQu9pP0tDXlRcPiGMuyeI6g8RTfWolNsX01+M=
 github.com/jenkins-x/jx-helpers/v3 v3.0.116 h1:9Gey9H+u7yFHwFWvfmor4/z0EZr2A6XKwlV93HsyeFE=
