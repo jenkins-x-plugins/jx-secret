@@ -90,6 +90,8 @@ type SecretRule struct {
 	AzureKeyVaultConfig *AzureKeyVaultConfig `json:"azureKeyVault,omitempty"`
 	// GcpSecretsManager config
 	GcpSecretsManager *GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
+	// AwsSecretsManager config
+	AwsSecretsManager *AwsSecretsManager `json:"secretsManager,omitempty"`
 }
 
 // BackendType describes a secrets backend

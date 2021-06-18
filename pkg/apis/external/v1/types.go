@@ -66,7 +66,8 @@ type ExternalSecretSpec struct {
 	VaultRole       string `json:"vaultRole,omitempty" yaml:"vaultRole,omitempty"`
 	ProjectID       string `json:"projectId,omitempty" yaml:"projectId,omitempty"`
 	KeyVaultName    string `json:"keyVaultName,omitempty" yaml:"keyVaultName,omitempty"`
-
+	Region          string `json:"region,omitempty" yaml:"region,omitempty"`
+	RoleArn         string `json:"roleArn,omitempty" yaml:"roleArn,omitempty"`
 	// Data the data for each entry in the Secret
 	Data []Data `json:"data,omitempty" yaml:"data,omitempty"`
 
