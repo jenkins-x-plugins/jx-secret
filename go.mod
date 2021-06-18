@@ -5,6 +5,8 @@ go 1.15
 require (
 	cloud.google.com/go v0.76.0
 	github.com/Azure/azure-sdk-for-go v50.1.0+incompatible
+	github.com/Azure/go-autorest/autorest v0.11.19 // indirect
+	github.com/Azure/go-autorest/autorest/adal v0.9.14 // indirect
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.5
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/cpuguy83/go-md2man v1.0.10
@@ -26,8 +28,8 @@ require (
 	google.golang.org/genproto v0.0.0-20210202153253-cf70463f6119
 	gopkg.in/validator.v2 v2.0.0-20200605151824-2b28d334fa05
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
-	k8s.io/api v0.20.7
-	k8s.io/apimachinery v0.20.7
+	k8s.io/api v0.20.8
+	k8s.io/apimachinery v0.20.8
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/kustomize/kyaml v0.10.6
 	sigs.k8s.io/structured-merge-diff/v4 v4.0.3 // indirect
