@@ -13,8 +13,8 @@ require (
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.5.5
-	github.com/jenkins-x-plugins/secretfacade v0.0.9
-	github.com/jenkins-x/go-scm v1.8.2
+	github.com/jenkins-x-plugins/secretfacade v0.0.11
+	github.com/jenkins-x/go-scm v1.9.2
 	github.com/jenkins-x/jx-api/v4 v4.0.33
 	github.com/jenkins-x/jx-helpers/v3 v3.0.116
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
