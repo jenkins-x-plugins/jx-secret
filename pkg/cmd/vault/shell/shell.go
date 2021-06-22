@@ -2,6 +2,7 @@ package shell
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
@@ -21,6 +22,10 @@ var (
 
 	cmdExample = templates.Examples(`
 		%s vault shell
+
+		%[1]s vault shell bash
+
+		%[1]s vault shell -- bash -i
 	`)
 )
 
@@ -44,12 +49,14 @@ func NewCmdVaultShell() (*cobra.Command, *Options) {
 		Long:    cmdLong,
 		Example: fmt.Sprintf(cmdExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				o.Shell = args[0]
+				o.ShellArgs = args[1:]
+			}
 			err := o.Run()
 			helper.CheckErr(err)
 		},
 	}
-	cmd.Flags().StringVarP(&o.Shell, "shell", "s", "bash", "the command line shell to execute")
-	cmd.Flags().StringArrayVarP(&o.ShellArgs, "args", "", nil, "the arguments to pass to the shell command")
 
 	o.Options.AddFlags(cmd)
 	return cmd, o
@@ -99,11 +106,21 @@ func (o *Options) Run() error {
 	// lets add the vault binary to the PATH...
 	log.Logger().Infof("using vault binary %s", vaultBin)
 
+	if len(o.Shell) == 0 {
+		o.Shell = os.Getenv("SHELL")
+		if len(o.Shell) == 0 {
+			o.Shell = "bash"
+		}
+	}
+
 	// lets verify we can list the secrets
 	cmd := &cmdrunner.Command{
 		Name: o.Shell,
 		Args: o.ShellArgs,
 		Env:  o.Env,
+		In:   os.Stdin,
+		Out:  os.Stdout,
+		Err:  os.Stderr,
 	}
 	_, err = o.CommandRunner(cmd)
 	if err != nil {
