@@ -1,4 +1,4 @@
-FROM gcr.io/jenkinsxio/jx-cli-base:0.0.10
+FROM ghcr.io/jenkins-x/jx-boot:latest
 
 ENTRYPOINT ["jx-secret"]
 
