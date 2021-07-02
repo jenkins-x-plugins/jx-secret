@@ -299,7 +299,7 @@ func createSecretValue(backendType v1alpha1.BackendType, values []editor.Propert
 	}
 
 	switch backendType {
-	case v1alpha1.BackendTypeGSM, v1alpha1.BackendTypeAzure:
+	case v1alpha1.BackendTypeGSM, v1alpha1.BackendTypeAzure, v1alpha1.BackendTypeAWSSecretsManager:
 		if len(values) == 1 && values[0].Property == "" {
 			return secretstore.SecretValue{Value: values[0].Value}
 		}
