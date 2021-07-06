@@ -130,6 +130,26 @@ string
 </tr>
 <tr>
 <td>
+<code>region</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>roleArn</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
 <code>data</code></br>
 <em>
 <a href="#kubernetes-client.io/v1.Data">
@@ -305,6 +325,26 @@ string
 </tr>
 <tr>
 <td>
+<code>region</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>roleArn</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
 <code>data</code></br>
 <em>
 <a href="#kubernetes-client.io/v1.Data">
@@ -430,5 +470,5 @@ Refer to the Kubernetes API documentation for the fields of the
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>f018899</code>.
+on git commit <code>718502c</code>.
 </em></p>
