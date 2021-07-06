@@ -2,9 +2,9 @@ package wait
 
 import (
 	"fmt"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults/vaultcli"
 	"time"
 
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/vault"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
@@ -113,7 +113,7 @@ func (o *Options) waitForEditor() error {
 	endTime := o.Start.Add(o.WaitDuration)
 
 	for {
-		_, err := vault.NewEditor(o.CommandRunner, o.QuietCommandRunner, o.KubeClient)
+		err := vaultcli.WaitForVault(o.CommandRunner, o.QuietCommandRunner, o.KubeClient)
 		if err == nil {
 			log.Logger().Infof("managed to verify we can connect to vault")
 			return nil
