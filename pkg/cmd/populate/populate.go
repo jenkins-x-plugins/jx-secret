@@ -299,12 +299,6 @@ func createSecretValue(backendType v1alpha1.BackendType, values []editor.Propert
 	}
 
 	switch backendType {
-	case v1alpha1.BackendTypeGSM, v1alpha1.BackendTypeAzure, v1alpha1.BackendTypeAWSSecretsManager:
-		if len(values) == 1 && values[0].Property == "" {
-			return secretstore.SecretValue{Value: values[0].Value}
-		}
-		return secretstore.SecretValue{PropertyValues: formatValues(values)}
-
 	case v1alpha1.BackendTypeVault:
 		return secretstore.SecretValue{PropertyValues: formatValues(values)}
 	case v1alpha1.BackendTypeLocal:
@@ -313,8 +307,12 @@ func createSecretValue(backendType v1alpha1.BackendType, values []editor.Propert
 		sv.Annotations = annotations
 		sv.SecretType = secretType
 		return sv
+	default:
+		if len(values) == 1 && values[0].Property == "" {
+			return secretstore.SecretValue{Value: values[0].Value}
+		}
+		return secretstore.SecretValue{PropertyValues: formatValues(values)}
 	}
-	return secretstore.SecretValue{}
 }
 
 func GetExternalSecretLocation(extsec *v1.ExternalSecret) string {
