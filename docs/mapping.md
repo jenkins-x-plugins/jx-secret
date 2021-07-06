@@ -604,5 +604,5 @@ AwsSecretsManager
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>718502c</code>.
+on git commit <code>e93a93e</code>.
 </em></p>
