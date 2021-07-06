@@ -258,7 +258,7 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 
 				labels := r.ExternalSecret.Spec.Template.Metadata.Labels
 				secretType := corev1.SecretType(r.ExternalSecret.Spec.Template.Type)
-				sv := createSecretValue(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), keyProperties.Properties, annotations, labels, secretType)
+				sv := CreateSecretValue(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), keyProperties.Properties, annotations, labels, secretType)
 				err = secretManager.SetSecret(GetExternalSecretLocation(&r.ExternalSecret), GetSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), r.ExternalSecret.Name, key), &sv)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
@@ -285,7 +285,7 @@ func GetSecretKey(backendType v1alpha1.BackendType, externalSecretName string, k
 	return keyName
 }
 
-func createSecretValue(backendType v1alpha1.BackendType, values []editor.PropertyValue, annotations map[string]string, labels map[string]string, secretType corev1.SecretType) secretstore.SecretValue {
+func CreateSecretValue(backendType v1alpha1.BackendType, values []editor.PropertyValue, annotations map[string]string, labels map[string]string, secretType corev1.SecretType) secretstore.SecretValue {
 	formatValues := func(values []editor.PropertyValue) map[string]string {
 		properties := map[string]string{}
 		for _, p := range values {

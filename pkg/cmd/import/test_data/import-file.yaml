@@ -1,8 +1,0 @@
-secret:
-  pipelineUser:
-    username: jenkins-x-labs-bot
-    email: jenkins-x@googlegroups.com
-    token: dummyPipelineUser
-  adminUser:
-    username: admin
-    password: dummyAdminPassword
