@@ -3,7 +3,6 @@ package secretfacade
 import (
 	"context"
 
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
@@ -13,9 +12,6 @@ import (
 
 // Load loads the secret pairs
 func (o *Options) Load() ([]*SecretPair, error) {
-	if o.EditorCache == nil {
-		o.EditorCache = map[string]editor.Interface{}
-	}
 	var answer []*SecretPair
 	var err error
 

@@ -4,8 +4,6 @@ import (
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/copy"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/edit"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/export"
-	importcmd "github.com/jenkins-x-plugins/jx-secret/pkg/cmd/import"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/plugins"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/replicate"
@@ -39,8 +37,6 @@ func Main() *cobra.Command {
 	cmd.AddCommand(cobras.SplitCommand(convert.NewCmdSecretConvert()))
 	cmd.AddCommand(cobras.SplitCommand(copy.NewCmdCopy()))
 	cmd.AddCommand(cobras.SplitCommand(edit.NewCmdEdit()))
-	cmd.AddCommand(cobras.SplitCommand(export.NewCmdExport()))
-	cmd.AddCommand(cobras.SplitCommand(importcmd.NewCmdImport()))
 	cmd.AddCommand(helper.RetryOnErrorCommand(cobras.SplitCommand(populate.NewCmdPopulate()), helper.RegexRetryFunction(secretRetriableErrors)))
 	cmd.AddCommand(cobras.SplitCommand(replicate.NewCmdReplicate()))
 	cmd.AddCommand(cobras.SplitCommand(verify.NewCmdVerify()))

@@ -8,7 +8,6 @@ import (
 	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	schema "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore/factory"
@@ -32,9 +31,6 @@ type Options struct {
 
 	// ExternalSecrets the loaded secrets
 	ExternalSecrets []*v1.ExternalSecret
-
-	// EditorCache the optional cache of editors
-	EditorCache map[string]editor.Interface
 }
 
 type ExternalSecretLocation string

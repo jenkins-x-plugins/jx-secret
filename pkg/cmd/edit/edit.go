@@ -7,8 +7,6 @@ import (
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 
-	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/gsm"
-
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 
 	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
@@ -107,20 +105,10 @@ func (o *Options) Run() error {
 		}
 	}
 
-	// verify client CLIs are installed
-	for _, r := range results {
-		if r.ExternalSecret.Spec.BackendType == string(v1alpha1.BackendTypeGSM) {
-			err := gsm.VerifyGcloudInstalled()
-			if err != nil {
-				return errors.Wrap(err, "failed verifying gloud")
-			}
-			break
-		}
-	}
 	for i := range results {
 		r := results[i]
 		name := r.ExternalSecret.Name
-		secEditor, err := factory.NewEditor(o.EditorCache, &r.ExternalSecret, o.CommandRunner, o.QuietCommandRunner, o.KubeClient)
+		secEditor, err := factory.NewEditor(&r.ExternalSecret, o.SecretStoreManagerFactory, o.KubeClient)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
 		}
