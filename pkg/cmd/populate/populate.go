@@ -323,6 +323,8 @@ func GetExternalSecretLocation(extsec *v1.ExternalSecret) string {
 		return extsec.Spec.KeyVaultName
 	case v1alpha1.BackendTypeVault:
 		return os.Getenv("VAULT_ADDR")
+	case v1alpha1.BackendTypeAWSSecretsManager:
+		return extsec.Spec.Region
 	case v1alpha1.BackendTypeLocal:
 		return extsec.Namespace
 	}
