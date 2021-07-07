@@ -307,6 +307,8 @@ func CreateSecretValue(backendType v1alpha1.BackendType, values []editor.Propert
 		sv.Annotations = annotations
 		sv.SecretType = secretType
 		return sv
+	case v1alpha1.BackendTypeAWSSecretsManager:
+		return secretstore.SecretValue{PropertyValues: formatValues(values)}
 	default:
 		if len(values) == 1 && values[0].Property == "" {
 			return secretstore.SecretValue{Value: values[0].Value}
