@@ -7,7 +7,7 @@ require (
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.5
-	github.com/jenkins-x-plugins/secretfacade v0.1.0
+	github.com/jenkins-x-plugins/secretfacade v0.1.2
 	github.com/jenkins-x/go-scm v1.10.7
 	github.com/jenkins-x/jx-api/v4 v4.0.33
 	github.com/jenkins-x/jx-helpers/v3 v3.0.123
