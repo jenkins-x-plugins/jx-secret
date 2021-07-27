@@ -8,9 +8,9 @@ require (
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.5
 	github.com/jenkins-x-plugins/secretfacade v0.1.2
-	github.com/jenkins-x/go-scm v1.10.7
-	github.com/jenkins-x/jx-api/v4 v4.0.33
-	github.com/jenkins-x/jx-helpers/v3 v3.0.123
+	github.com/jenkins-x/go-scm v1.10.9
+	github.com/jenkins-x/jx-api/v4 v4.1.3
+	github.com/jenkins-x/jx-helpers/v3 v3.0.125
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.6
 	github.com/pkg/errors v0.9.1

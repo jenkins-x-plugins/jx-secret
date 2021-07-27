@@ -1,0 +1,19 @@
+# Source: bucketrepo/templates/config-secret.yaml
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: bucketrepo-config
+  namespace: jx
+spec:
+  backendType: vault
+  vaultMountPoint: kubernetes
+  vaultRole: jx-vault
+  data:
+    - name: config.yaml
+      key: secret/data/bucketrepo/config
+      property: config.yaml
+  template:
+    metadata:
+      annotations:
+        config/checksum: c41b5c22daadb25e478a6d0f1ccf4d8fd388a3851bc559a9adf789d902fe80b0
+    type: Opaque
