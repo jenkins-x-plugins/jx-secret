@@ -49,7 +49,6 @@ func LoadSchemaFile(fileName string) (*v1alpha1.Schema, error) {
 // LoadSchemaObjectFromFiles loads a list of schema files and finds the schema object for the given name
 func LoadSchemaObjectFromFiles(name string, fileNames []string) (*v1alpha1.Object, error) {
 	var answer *v1alpha1.Object
-	firstFileName := ""
 	for _, f := range fileNames {
 		schema, err := LoadSchemaFile(f)
 		if err != nil {
@@ -59,12 +58,7 @@ func LoadSchemaObjectFromFiles(name string, fileNames []string) (*v1alpha1.Objec
 		if object == nil {
 			continue
 		}
-		if answer == nil {
-			answer = object
-			firstFileName = f
-			continue
-		}
-		return nil, errors.Errorf("duplicate object definition from file %s and %s", firstFileName, f)
+		answer = object
 	}
 	return answer, nil
 }
