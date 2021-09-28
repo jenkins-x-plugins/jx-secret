@@ -452,7 +452,8 @@ func (o *Options) secretCommandRunner(_ string) (cmdrunner.CommandRunner, cmdrun
 func (o *Options) getSecretManager(backendType string) (secretstore.Interface, error) {
 	store := GetSecretStore(v1alpha1.BackendType(backendType))
 
-	if store == secretstore.SecretStoreTypeVault {
+	isExternalVault := os.Getenv("EXTERNAL_VAULT")
+	if store == secretstore.SecretStoreTypeVault && isExternalVault != "true" {
 		envMap, err := vaultcli.CreateVaultEnv(o.KubeClient)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error creating vault env vars")
