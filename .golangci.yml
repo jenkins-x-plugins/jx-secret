@@ -37,8 +37,6 @@ linters-settings:
   gocyclo:
     min-complexity: 15
   goimports:
-  golint:
-    min-confidence: 0
   gofmt:
     simplify: true
   gomnd:
@@ -97,7 +95,7 @@ linters:
     - unparam
     - unused
     - varcheck
-    - golint
+    - revive
     - gocritic
     - govet
 #    - lll

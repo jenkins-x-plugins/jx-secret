@@ -7,13 +7,4 @@ then
   exit 0
 fi
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-if ! [ -x "$(command -v golangci-lint)" ]; then
-	echo "Installing GolangCI-Lint"
-	${DIR}/install_golint.sh -b $GOPATH/bin v1.30.0
-fi
-
-export GO111MODULE=on
-golangci-lint run --verbose --deadline 15m0s
-
+docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.42.1 golangci-lint run --verbose --deadline 15m0s
