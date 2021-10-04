@@ -429,30 +429,13 @@ func (o *Options) loadGenerators() {
 	o.Generators["gitOperator.password"] = generators.SecretEntry(o.KubeClient, ns, "jx-boot", "password")
 }
 
-// secretCommandRunner should we use `kubectl exec` into a side car to execute the commands?
-// if we are in the boot job we should
-func (o *Options) secretCommandRunner(_ string) (cmdrunner.CommandRunner, cmdrunner.CommandRunner, error) {
-	podName := os.Getenv("POD_NAME")
-	if podName == "" {
-		podName = os.Getenv("HOSTNAME")
-	}
-	sidecar := os.Getenv("JX_SECRET_SIDECAR")
-	if o.CommandRunner == nil {
-		o.CommandRunner = cmdrunner.DefaultCommandRunner
-	}
-	if o.QuietCommandRunner == nil {
-		o.QuietCommandRunner = cmdrunner.QuietCommandRunner
-	}
-	if sidecar == "" || podName == "" {
-		return o.CommandRunner, o.QuietCommandRunner, nil
-	}
-	return KubectlExecRunner(podName, sidecar, o.CommandRunner), KubectlExecRunner(podName, sidecar, o.QuietCommandRunner), nil
-}
-
 func (o *Options) getSecretManager(backendType string) (secretstore.Interface, error) {
 	store := GetSecretStore(v1alpha1.BackendType(backendType))
 
 	isExternalVault := os.Getenv("EXTERNAL_VAULT")
+	if isExternalVault == "true" {
+		log.Logger().Infof("connecting to external vault")
+	}
 	if store == secretstore.SecretStoreTypeVault && isExternalVault != "true" {
 		envMap, err := vaultcli.CreateVaultEnv(o.KubeClient)
 		if err != nil {
