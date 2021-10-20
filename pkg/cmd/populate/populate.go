@@ -164,6 +164,8 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 		name := r.ExternalSecret.Name
 		backendType := r.ExternalSecret.Spec.BackendType
 
+		// Check if the secret backend is external vault
+		isExternalVault := os.Getenv("EXTERNAL_VAULT")
 		localReplica := false
 		if backendType == "local" {
 			ann := r.ExternalSecret.Annotations
@@ -180,15 +182,14 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 
 		// lets wait until the backend is available
 		if !waited[backendType] {
-			err := o.waitForBackend(backendType)
+			err := o.waitForBackend(backendType, isExternalVault)
 			if err != nil {
 				return errors.Wrapf(err, "failed to wait for backend type %s", backendType)
 			}
 			waited[backendType] = true
 		}
 
-		secretManager, err := o.getSecretManager(backendType)
-
+		secretManager, err := o.getSecretManager(backendType, isExternalVault)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create a secret manager for ExternalSecret %s", name)
 		}
@@ -387,10 +388,16 @@ func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, pr
 	return value, nil
 }
 
-func (o *Options) waitForBackend(backendType string) error {
+func (o *Options) waitForBackend(backendType, isExternalVault string) error {
 	if backendType != "vault" {
 		return nil
 	}
+
+	if isExternalVault == "true" {
+		log.Logger().Infof("disabling waiting for external vault")
+		return nil
+	}
+
 	if o.NoWait {
 		log.Logger().Infof("disabling waiting for vault pod to be ready")
 		return nil
@@ -429,12 +436,10 @@ func (o *Options) loadGenerators() {
 	o.Generators["gitOperator.password"] = generators.SecretEntry(o.KubeClient, ns, "jx-boot", "password")
 }
 
-func (o *Options) getSecretManager(backendType string) (secretstore.Interface, error) {
+func (o *Options) getSecretManager(backendType, isExternalVault string) (secretstore.Interface, error) {
 	store := GetSecretStore(v1alpha1.BackendType(backendType))
-
-	isExternalVault := os.Getenv("EXTERNAL_VAULT")
 	if isExternalVault == "true" {
-		log.Logger().Infof("connecting to external vault")
+		log.Logger().Debug("connecting to external vault")
 	}
 	if store == secretstore.SecretStoreTypeVault && isExternalVault != "true" {
 		envMap, err := vaultcli.CreateVaultEnv(o.KubeClient)
