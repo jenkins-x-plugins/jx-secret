@@ -7,9 +7,8 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.16 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/cpuguy83/go-md2man v1.0.10
-	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/google/go-cmp v0.5.5
-	github.com/jenkins-x-plugins/secretfacade v0.1.3
+	github.com/jenkins-x-plugins/secretfacade v0.2.0
 	github.com/jenkins-x/go-scm v1.10.10
 	github.com/jenkins-x/jx-api/v4 v4.1.5
 	github.com/jenkins-x/jx-helpers/v3 v3.0.130
@@ -21,7 +20,7 @@ require (
 	github.com/spf13/cobra v1.2.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
+	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/validator.v2 v2.0.0-20200605151824-2b28d334fa05
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
