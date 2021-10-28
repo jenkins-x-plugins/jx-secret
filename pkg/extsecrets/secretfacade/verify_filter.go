@@ -152,8 +152,8 @@ func (a SchemaTemplateOrder) Less(i, j int) bool {
 }
 
 func containsTemplate(properties []v1alpha1.Property) bool {
-	for _, p := range properties {
-		if p.Template != "" {
+	for k := range properties {
+		if properties[k].Template != "" {
 			return true
 		}
 	}

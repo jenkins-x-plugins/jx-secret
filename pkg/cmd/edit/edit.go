@@ -201,9 +201,7 @@ func (o *Options) chooseSecrets(results []*secretfacade.SecretPair) ([]*secretfa
 	}
 	var answer []*secretfacade.SecretPair
 	for _, name := range names {
-		for _, s := range m[name] {
-			answer = append(answer, s)
-		}
+		answer = append(answer, m[name]...)
 	}
 	return answer, nil
 }

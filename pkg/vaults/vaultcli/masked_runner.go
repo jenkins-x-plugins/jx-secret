@@ -2,10 +2,11 @@ package vaultcli
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
-	"strings"
 )
 
 // MaskedCommandRunner mask the command line arguments when logging

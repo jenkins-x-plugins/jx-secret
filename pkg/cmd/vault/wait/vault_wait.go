@@ -2,8 +2,9 @@ package wait
 
 import (
 	"fmt"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults/vaultcli"
 	"time"
+
+	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults/vaultcli"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults"

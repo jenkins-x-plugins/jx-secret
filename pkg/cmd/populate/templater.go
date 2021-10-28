@@ -252,7 +252,7 @@ func CreateRequirementsMap(req *jxcore.RequirementsConfig) (map[string]interface
 	return requirementsMap, nil
 }
 
-func (o *Options) getExternalSecretValue(lookupSecretName string, lookupKey string, namespace string, retryTemplate bool) string {
+func (o *Options) getExternalSecretValue(lookupSecretName, lookupKey, namespace string, retryTemplate bool) string {
 	var secret string
 	lookupSecret, ns := ResolveResourceNames(lookupSecretName, namespace)
 
@@ -272,6 +272,11 @@ func (o *Options) getExternalSecretValue(lookupSecretName string, lookupKey stri
 
 	storeType := GetSecretStore(v1alpha1.BackendType(externalSecret.Spec.BackendType))
 	secretManager, err := o.SecretStoreManagerFactory.NewSecretManager(storeType)
+	if err != nil {
+		// ToDo: Refactor to return error from this function
+		log.Logger().Infof("unable to get secret manager %s", err.Error())
+		return ""
+	}
 
 	key := externalSecretKey
 	if storeType == secretstore.SecretStoreTypeKubernetes {
@@ -310,7 +315,7 @@ func (o *Options) getExternalSecretValue(lookupSecretName string, lookupKey stri
 }
 
 // ResolveResourceNames if the secret name contains a dot then assume its namespace.name otherwise return the name in the current namespace
-func ResolveResourceNames(name string, currentNamespace string) (string, string) {
+func ResolveResourceNames(name, currentNamespace string) (string, string) {
 	idx := strings.Index(name, ".")
 	if idx < 0 {
 		return name, currentNamespace

@@ -127,6 +127,7 @@ func (o *Options) Run() error {
 	}
 
 	modifyFn := func(node *yaml.RNode, path string) (bool, error) {
+		var err error
 		results, err := o.ModifyYAML(node, path)
 		if err != nil {
 			return results.Modified, err
@@ -272,11 +273,13 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 
 	}
 
-	flag, err := o.convertData(node, path, secret.BackendType)
+	// ToDo: what are we doing here?
+	flag, err := o.convertData(node, path, secret.BackendType) //nolint:ineffassign,staticcheck
 	if err != nil {
 		return results, err
 	}
-	flag, err = o.moveMetadataToTemplate(node, path)
+	// ToDo: Why is this also named flag?
+	flag, err = o.moveMetadataToTemplate(node, path) //nolint:ineffassign,staticcheck
 	if err != nil {
 		return results, err
 	}
@@ -412,10 +415,10 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	return true, nil
 }
 
-func (o *Options) modifyVault(node *yaml.RNode, rNode *yaml.RNode, field, secretName, path string) error {
+func (o *Options) modifyVault(node, rNode *yaml.RNode, field, secretName, path string) error {
 	prefix := kyamls.GetStringField(node, path, "metadata", "annotations", "secret.jenkins-x.io/prefix")
 	if prefix != "" {
-		prefix = prefix + "/"
+		prefix += "/"
 	} else {
 		prefix = ""
 	}

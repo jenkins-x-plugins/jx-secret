@@ -26,8 +26,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, folder string, secretLocation string, mavenSecretName string, nexusSecretName string, extSecrets map[string]*secretstore.SecretValue, useSecretNameForKey bool, assertionFunc func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string)) {
-
+func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, folder, secretLocation, mavenSecretName, nexusSecretName string, extSecrets map[string]*secretstore.SecretValue, useSecretNameForKey bool, assertionFunc func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string)) {
 	ns := "jx"
 	expectedMavenSettingsFile := filepath.Join("test_data", "populate", "expected", "jenkins-maven-settings", "settings.xml", "nexus.xml")
 	require.FileExists(t, expectedMavenSettingsFile)
@@ -153,7 +152,8 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, f
 	err = fakeStore.SetSecret(secretLocation, nexusSecretName, &secretstore.SecretValue{
 		PropertyValues: map[string]string{
 			"password": "my-new-nexus-password",
-		}})
+		},
+	})
 	assert.NoError(t, err)
 	err = o.Run()
 	require.NoError(t, err, "failed to invoke Run()")
@@ -163,7 +163,6 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, f
 	assert.NoError(t, err)
 	assert.NotEmpty(t, secondMavenSettingsSecret)
 	assert.NotEqual(t, firstMavenSettingsSecret, secondMavenSettingsSecret)
-
 }
 
 func TestPopulate(t *testing.T) {
@@ -181,7 +180,8 @@ func TestPopulate(t *testing.T) {
 	azureLocation := "azureSuperSecretVault"
 	kubeLocation := "jx"
 	for _, folder := range []testCase{
-		{"vaultsecrets",
+		{
+			"vaultsecrets",
 			vaultLocation,
 			"secret/data/jx/mavenSettings",
 			"secret/data/nexus",
@@ -206,9 +206,10 @@ func TestPopulate(t *testing.T) {
 				fakeStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
 				fakeStore.AssertHasValue(t, vaultLocation, "secret/data/knative/docker/user/pass", "password")
 				fakeStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/mavenSettings", "settingsXml", mavenSettings)
-
-			}},
-		{"gsmsecrets",
+			},
+		},
+		{
+			"gsmsecrets",
 			gcpLocation,
 			"jx-maven-settings",
 			"nexus",
@@ -233,9 +234,10 @@ func TestPopulate(t *testing.T) {
 				fakeStore.AssertValueEquals(t, gcpLocation, "jx-pipeline-user", "token", "gitoperatorpassword")
 				fakeStore.AssertHasValue(t, gcpLocation, "knative-docker-user-pass", "password")
 				fakeStore.AssertValueEquals(t, gcpLocation, "jx-maven-settings", "settingsXml", mavenSettings)
-
-			}},
-		{"azuresecrets",
+			},
+		},
+		{
+			"azuresecrets",
 			azureLocation,
 			"jx-maven-settings",
 			"nexus",
@@ -260,8 +262,10 @@ func TestPopulate(t *testing.T) {
 				fakeStore.AssertValueEquals(t, azureLocation, "jx-pipeline-user", "token", "gitoperatorpassword")
 				fakeStore.AssertHasValue(t, azureLocation, "knative-docker-user-pass", "password")
 				fakeStore.AssertValueEquals(t, azureLocation, "jx-maven-settings", "settingsXml", mavenSettings)
-			}},
-		{"kubesecrets",
+			},
+		},
+		{
+			"kubesecrets",
 			kubeLocation,
 			"jenkins-maven-settings",
 			"nexus",
@@ -286,7 +290,8 @@ func TestPopulate(t *testing.T) {
 				fakeStore.AssertValueEquals(t, kubeLocation, "lighthouse-oauth-token", "token", "gitoperatorpassword")
 				fakeStore.AssertHasValue(t, kubeLocation, "knative-docker-user-pass", "password")
 				fakeStore.AssertValueEquals(t, kubeLocation, "jenkins-maven-settings", "settingsXml", mavenSettings)
-			}},
+			},
+		},
 	} {
 		runPopulateTestCases(t, secretstore.SecretStoreTypeVault, folder.backendTypePath, folder.secretLocation, folder.mavenSecretName, folder.nexusSecretName, folder.extSecrets, folder.useSecretNameForKey, folder.assertionFunc)
 	}
@@ -323,6 +328,7 @@ func TestPopulateFromFileSystem(t *testing.T) {
 
 	secretStore := fakeFactory.GetSecretStore()
 	secret, err := secretStore.GetSecret(vaultLocation, "secret/data/jx/pipelineUser", "token")
+	assert.NoError(t, err)
 	secretStore.AssertHasValue(t, vaultLocation, "secret/data/jx/pipelineUser", "token")
 	secretStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
 	assert.Equal(t, "gitoperatorpassword", secret)
@@ -331,7 +337,6 @@ func TestPopulateFromFileSystem(t *testing.T) {
 func TestPopulateFromHelmSecrets(t *testing.T) {
 	ns := "jx"
 	secretLocation := "azureSuperSecretVault"
-	//secretLocation := "jx"
 
 	_, o := populate.NewCmdPopulate()
 	o.Dir = "test_data/populate_helm_secrets"

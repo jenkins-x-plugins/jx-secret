@@ -37,33 +37,35 @@ func (r *Runner) Run(t *testing.T) {
 	runner := &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run
 
-	for _, tc := range r.TestCases {
-		kubeObjects := append(r.KubeObjects, tc.KubeObjects...)
-		o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
+	for k := range r.TestCases {
+		testcase := r.TestCases[k]
+		r.KubeObjects = append(r.KubeObjects, testcase.KubeObjects...)
+		o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(r.KubeObjects...)...)
 
 		fakeFactory := &secretstorefake.FakeSecretManagerFactory{}
 		o.SecretStoreManagerFactory = fakeFactory
 
-		_, err = fakeFactory.NewSecretManager(tc.ExternalSecretStorageType)
+		_, err = fakeFactory.NewSecretManager(testcase.ExternalSecretStorageType)
 		assert.NoError(t, err)
 
 		fakeStore := fakeFactory.GetSecretStore()
 
 		o.Options.ExternalSecrets = []*v1.ExternalSecret{}
-		for _, p := range tc.ExternalSecrets {
+		for k := range testcase.ExternalSecrets {
+			p := testcase.ExternalSecrets[k]
 			es := p.ExternalSecret
 			o.Options.ExternalSecrets = append(o.Options.ExternalSecrets, &es)
 			err := fakeStore.SetSecret(p.Location, p.Name, &p.Value)
 			assert.NoError(t, err)
 		}
 
-		objName := tc.ObjectName
-		if tc.Requirements != nil {
-			o.Requirements = tc.Requirements
+		objName := testcase.ObjectName
+		if testcase.Requirements != nil {
+			o.Requirements = testcase.Requirements
 		}
 		if o.Requirements == nil {
-			if tc.Dir != "" {
-				o.Dir = tc.Dir
+			if testcase.Dir != "" {
+				o.Dir = testcase.Dir
 			}
 			if o.Dir == "" {
 				o.Dir = r.Dir
@@ -73,7 +75,7 @@ func (r *Runner) Run(t *testing.T) {
 		object := schema.Spec.FindObject(objName)
 		require.NotNil(t, object, "could not find schema for object name %s", objName)
 
-		propName := tc.Property
+		propName := testcase.Property
 		property := object.FindProperty(propName)
 		require.NotNil(t, property, "could not find property for object %s name %s", objName, propName)
 
@@ -83,10 +85,10 @@ func (r *Runner) Run(t *testing.T) {
 		text, err := o.EvaluateTemplate(r.Namespace, objName, propName, templateText, false)
 		require.NoError(t, err, "failed to evaluate template for object %s property name %s", objName, propName)
 
-		message := fmt.Sprintf("test %s for object %s property name %s", tc.TestName, objName, propName)
+		message := fmt.Sprintf("test %s for object %s property name %s", testcase.TestName, objName, propName)
 		require.NotEmpty(t, text, message)
 
-		format := tc.Format
+		format := testcase.Format
 		if format == "" {
 			format = "txt"
 		}
@@ -98,31 +100,9 @@ func (r *Runner) Run(t *testing.T) {
 		}
 
 		expectedDir := filepath.Join("test_data", "template", "expected", objName, propName)
-		expectedFile := filepath.Join(expectedDir, tc.TestName+"."+format)
+		expectedFile := filepath.Join(expectedDir, testcase.TestName+"."+format)
 
-		if tc.GenerateTestOutput {
-			err = os.MkdirAll(expectedDir, files.DefaultDirWritePermissions)
-			require.NoError(t, err, "failed to create dir %s", expectedDir)
-
-			err = ioutil.WriteFile(expectedFile, []byte(text), files.DefaultFileWritePermissions)
-			require.NoError(t, err, "failed to save file %s", expectedFile)
-
-			t.Logf("generated %s\n", expectedFile)
-
-		} else {
-			require.FileExists(t, expectedFile, "for expected output")
-
-			expected, err := ioutil.ReadFile(expectedFile)
-			require.NoError(t, err, "failed to load %s", expectedFile)
-
-			if tc.VerifyFn != nil {
-				tc.VerifyFn(t, text)
-			} else if assert.Equal(t, string(expected), text, "generated template for %s", message) {
-				t.Logf("got expected file %s for %s\n", expectedFile, message)
-			} else {
-				t.Logf("generated for %s:\n%s\n", message, text)
-			}
-		}
+		generateTestOut(t, &testcase, expectedDir, expectedFile, text, message)
 	}
 }
 
@@ -142,9 +122,10 @@ func (r *Runner) Populate(t *testing.T) {
 	runner := &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run
 
-	for _, tc := range r.TestCases {
-		kubeObjects := append(r.KubeObjects, tc.KubeObjects...)
-		o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
+	for k := range r.TestCases {
+		tc := r.TestCases[k]
+		r.KubeObjects = append(r.KubeObjects, tc.KubeObjects...)
+		o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(r.KubeObjects...)...)
 
 		fakeFactory := &secretstorefake.FakeSecretManagerFactory{}
 		o.SecretStoreManagerFactory = fakeFactory
@@ -155,7 +136,8 @@ func (r *Runner) Populate(t *testing.T) {
 		fakeStore := fakeFactory.GetSecretStore()
 
 		o.Options.ExternalSecrets = []*v1.ExternalSecret{}
-		for _, p := range tc.ExternalSecrets {
+		for k := range tc.ExternalSecrets {
+			p := tc.ExternalSecrets[k]
 			es := p.ExternalSecret
 			o.Options.ExternalSecrets = append(o.Options.ExternalSecrets, &es)
 			err := fakeStore.SetSecret(p.Location, p.Name, &p.Value)
@@ -218,28 +200,33 @@ func (r *Runner) Populate(t *testing.T) {
 		expectedDir := filepath.Join("test_data", "template", "expected", objName, propName)
 		expectedFile := filepath.Join(expectedDir, tc.TestName+"."+format)
 
-		if tc.GenerateTestOutput {
-			err = os.MkdirAll(expectedDir, files.DefaultDirWritePermissions)
-			require.NoError(t, err, "failed to create dir %s", expectedDir)
+		generateTestOut(t, &tc, expectedDir, expectedFile, text, message)
+	}
+}
 
-			err = ioutil.WriteFile(expectedFile, []byte(text), files.DefaultFileWritePermissions)
-			require.NoError(t, err, "failed to save file %s", expectedFile)
+func generateTestOut(t *testing.T, tc *TestCase, expectedDir, expectedFile, text, message string) {
+	var err error
+	if tc.GenerateTestOutput {
+		err = os.MkdirAll(expectedDir, files.DefaultDirWritePermissions)
+		require.NoError(t, err, "failed to create dir %s", expectedDir)
 
-			t.Logf("generated %s\n", expectedFile)
+		err = ioutil.WriteFile(expectedFile, []byte(text), files.DefaultFileWritePermissions)
+		require.NoError(t, err, "failed to save file %s", expectedFile)
 
+		t.Logf("generated %s\n", expectedFile)
+
+	} else {
+		require.FileExists(t, expectedFile, "for expected output")
+
+		expected, err := ioutil.ReadFile(expectedFile)
+		require.NoError(t, err, "failed to load %s", expectedFile)
+
+		if tc.VerifyFn != nil {
+			tc.VerifyFn(t, text)
+		} else if assert.Equal(t, string(expected), text, "generated template for %s", message) {
+			t.Logf("got expected file %s for %s\n", expectedFile, message)
 		} else {
-			require.FileExists(t, expectedFile, "for expected output")
-
-			expected, err := ioutil.ReadFile(expectedFile)
-			require.NoError(t, err, "failed to load %s", expectedFile)
-
-			if tc.VerifyFn != nil {
-				tc.VerifyFn(t, text)
-			} else if assert.Equal(t, string(expected), text, "generated template for %s", message) {
-				t.Logf("got expected file %s for %s\n", expectedFile, message)
-			} else {
-				t.Logf("generated for %s:\n%s\n", message, text)
-			}
+			t.Logf("generated for %s:\n%s\n", message, text)
 		}
 	}
 }

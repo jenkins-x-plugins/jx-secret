@@ -90,7 +90,7 @@ func (o *Options) Run() error {
 
 	if o.IgnoreMissingNamespace {
 		ctx := context.TODO()
-		_, err := o.KubeClient.CoreV1().Namespaces().Get(ctx, o.ToNamespace, metav1.GetOptions{})
+		_, err = o.KubeClient.CoreV1().Namespaces().Get(ctx, o.ToNamespace, metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				log.Logger().Infof("not copying secrets as the namespace %s does not exist", info(o.ToNamespace))
