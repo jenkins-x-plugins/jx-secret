@@ -15,7 +15,7 @@ type client struct {
 	vaultBin           string
 }
 
-func WaitForVault(commandRunner cmdrunner.CommandRunner, quietCommandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Interface) error {
+func WaitForVault(commandRunner, quietCommandRunner cmdrunner.CommandRunner, kubeClient kubernetes.Interface) error {
 	if commandRunner == nil {
 		commandRunner = MaskedCommandRunner
 	}

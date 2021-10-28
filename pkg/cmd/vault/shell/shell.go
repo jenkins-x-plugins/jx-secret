@@ -106,9 +106,9 @@ func (o *Options) Run() error {
 	// lets add the vault binary to the PATH...
 	log.Logger().Infof("using vault binary %s", vaultBin)
 
-	if len(o.Shell) == 0 {
+	if o.Shell == "" {
 		o.Shell = os.Getenv("SHELL")
-		if len(o.Shell) == 0 {
+		if o.Shell == "" {
 			o.Shell = "bash"
 		}
 	}
@@ -127,5 +127,4 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to access vault. are you sure you are running the 'jx-secret vault portforward' command? command failed: %s", cmdrunner.CLI(cmd))
 	}
 	return nil
-
 }

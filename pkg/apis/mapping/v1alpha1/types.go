@@ -197,7 +197,7 @@ func (c *SecretMapping) FindSecret(secretName string) *SecretRule {
 	return nil
 }
 
-func (c *SecretMapping) IsSecretKeyUnsecured(secretName string, keyName string) bool {
+func (c *SecretMapping) IsSecretKeyUnsecured(secretName, keyName string) bool {
 	secret := c.FindSecret(secretName)
 	if secret == nil {
 		return false

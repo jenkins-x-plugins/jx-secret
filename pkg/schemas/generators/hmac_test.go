@@ -1,9 +1,10 @@
 package generators_test
 
 import (
+	"testing"
+
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas/generators"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestHMAC(t *testing.T) {

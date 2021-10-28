@@ -17,7 +17,6 @@ import (
 )
 
 func TestCmdSecretsMappingEdit(t *testing.T) {
-
 	tests := []struct {
 		name     string
 		args     []string
@@ -37,7 +36,6 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 
 				assert.Equal(t, "foo", sm.Spec.Defaults.GcpSecretsManager.ProjectID, "sm.Spec.Defaults.GcpSecretsManager.ProjectID")
 				assert.Equal(t, "bar", sm.Spec.Defaults.GcpSecretsManager.UniquePrefix, "secret.GcpSecretsManager.UniquePrefix")
-
 			},
 		},
 		{
@@ -71,14 +69,14 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 		require.NoError(t, err, "failed to copy %s to %s", localSecretsFile, dir)
 
 		cmd, _ := edit.NewCmdSecretMappingEdit()
-		args := append(tt.args, "--dir", dir)
+		tt.args = append(tt.args, "--dir", dir)
 
-		err := cmd.ParseFlags(args)
-		require.NoError(t, err, "failed to parse arguments %#v for test %s", args, tt.name)
+		err := cmd.ParseFlags(tt.args)
+		require.NoError(t, err, "failed to parse arguments %#v for test %s", tt.args, tt.name)
 
 		old := os.Args
-		os.Args = args
-		err = cmd.RunE(cmd, args)
+		os.Args = tt.args
+		err = cmd.RunE(cmd, tt.args)
 		if err != nil {
 			if tt.fail {
 				t.Logf("got exected failure for test %s: %s", tt.name, err.Error())

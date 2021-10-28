@@ -120,6 +120,7 @@ func (o *Options) Run() error {
 
 	if !o.DisableLoadResults {
 		// get a list of external secrets which do not have corresponding k8s secret data populated
+		var err error
 		results, err := o.VerifyAndFilter()
 		if err != nil {
 			return errors.Wrap(err, "failed to verify secrets")
@@ -245,7 +246,8 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 			})
 		}
 		for key, keyProperties := range m {
-			if newValueMap[key] && len(keyProperties.Properties) > 0 {
+			// ToDo: Refactor/Simplify with tests
+			if newValueMap[key] && len(keyProperties.Properties) > 0 { //nolint:gocritic
 				annotations := r.ExternalSecret.Spec.Template.Metadata.Annotations
 
 				// handle replicate to annotation for local secrets so that we also copy the secret to other namespaces
@@ -279,14 +281,14 @@ func GetSecretStore(backendType v1alpha1.BackendType) secretstore.SecretStoreTyp
 	}
 }
 
-func GetSecretKey(backendType v1alpha1.BackendType, externalSecretName string, keyName string) string {
+func GetSecretKey(backendType v1alpha1.BackendType, externalSecretName, keyName string) string {
 	if backendType == v1alpha1.BackendTypeLocal {
 		return externalSecretName
 	}
 	return keyName
 }
 
-func CreateSecretValue(backendType v1alpha1.BackendType, values []editor.PropertyValue, annotations map[string]string, labels map[string]string, secretType corev1.SecretType) secretstore.SecretValue {
+func CreateSecretValue(backendType v1alpha1.BackendType, values []editor.PropertyValue, annotations, labels map[string]string, secretType corev1.SecretType) secretstore.SecretValue {
 	formatValues := func(values []editor.PropertyValue) map[string]string {
 		properties := map[string]string{}
 		for _, p := range values {
@@ -502,7 +504,7 @@ func (o *Options) helmSecretValue(s *secretfacade.SecretPair, entryName string) 
 	return values[entryName], nil
 }
 
-func KubectlExecRunner(podName string, sidecar string, runner cmdrunner.CommandRunner) func(c *cmdrunner.Command) (string, error) {
+func KubectlExecRunner(podName, sidecar string, runner cmdrunner.CommandRunner) func(c *cmdrunner.Command) (string, error) {
 	return func(c *cmdrunner.Command) (string, error) {
 		kc := *c
 		kc.Name = "kubectl"
