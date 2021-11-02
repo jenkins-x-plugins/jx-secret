@@ -2,6 +2,7 @@ package edit
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -47,6 +48,7 @@ type Options struct {
 	Interactive          bool
 	InteractiveMultiple  bool
 	InteractiveSelectAll bool
+	ExternalVault        string
 	Input                input.Interface
 	Results              []*secretfacade.SecretPair
 	CommandRunner        cmdrunner.CommandRunner
@@ -73,6 +75,7 @@ func NewCmdEdit() (*cobra.Command, *Options) {
 	cmd.Flags().BoolVarP(&o.Interactive, "interactive", "i", false, "interactive mode asks the user for the Secret name and the properties to edit")
 	cmd.Flags().BoolVarP(&o.InteractiveMultiple, "multiple", "m", false, "for interactive mode do you want to select multiple secrets to edit. If not defaults to just picking a single secret")
 	cmd.Flags().BoolVarP(&o.InteractiveSelectAll, "all", "", false, "for interactive mode do you want to select all of the properties to edit by default. Otherwise none are selected and you choose to select the properties to change")
+	cmd.Flags().StringVarP(&o.ExternalVault, "external-vault", "", os.Getenv("EXTERNAL_VAULT"), "specify whether we are using external vault or not")
 	return cmd, o
 }
 
@@ -108,7 +111,7 @@ func (o *Options) Run() error {
 	for i := range results {
 		r := results[i]
 		name := r.ExternalSecret.Name
-		secEditor, err := factory.NewEditor(&r.ExternalSecret, o.SecretStoreManagerFactory, o.KubeClient)
+		secEditor, err := factory.NewEditor(&r.ExternalSecret, o.SecretStoreManagerFactory, o.KubeClient, o.ExternalVault)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
 		}

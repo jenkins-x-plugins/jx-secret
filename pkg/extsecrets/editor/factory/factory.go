@@ -23,12 +23,12 @@ type secretFacadeEditor struct {
 }
 
 // NewEditor create a new editor using the secret store
-func NewEditor(secret *v1.ExternalSecret, secretStoreManagerFactory secretstore.FactoryInterface, kubeClient kubernetes.Interface) (editor.Interface, error) {
+func NewEditor(secret *v1.ExternalSecret, secretStoreManagerFactory secretstore.FactoryInterface, kubeClient kubernetes.Interface, externalVault string) (editor.Interface, error) {
 	if secretStoreManagerFactory == nil {
 		secretStoreManagerFactory = &factory.SecretManagerFactory{}
 	}
 	storeType := populate.GetSecretStore(v1alpha1.BackendType(secret.Spec.BackendType))
-	if storeType == secretstore.SecretStoreTypeVault {
+	if storeType == secretstore.SecretStoreTypeVault && externalVault != "true" {
 		envMap, err := vaultcli.CreateVaultEnv(kubeClient)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error creating vault env vars")
