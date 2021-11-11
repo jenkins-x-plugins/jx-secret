@@ -117,7 +117,7 @@ func CopySecretToNamespace(kubeClient kubernetes.Interface, ns string, fromSecre
 func DefaultHelmSecretFolder() string {
 	answer := os.Getenv("JX_HELM_SECRET_FOLDER")
 	if answer == "" {
-		answer, _ = filepath.Abs(filepath.Join("tmp", "secrets", "jx-helm"))
+		answer = filepath.Join(os.TempDir(), "secrets", "jx-helm")
 	}
 	return answer
 }
