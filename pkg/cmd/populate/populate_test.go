@@ -26,7 +26,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, folder, secretLocation, mavenSecretName, nexusSecretName string, extSecrets map[string]*secretstore.SecretValue, useSecretNameForKey bool, assertionFunc func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string)) {
+func runPopulateTestCases(t *testing.T, storeType secretstore.Type, folder, secretLocation, mavenSecretName, nexusSecretName string, extSecrets map[string]*secretstore.SecretValue, useSecretNameForKey bool, assertionFunc func(t *testing.T, fakeStore *secretstorefake.SecretStore, mavenSettings string)) {
 	ns := "jx"
 	expectedMavenSettingsFile := filepath.Join("test_data", "populate", "expected", "jenkins-maven-settings", "settings.xml", "nexus.xml")
 	require.FileExists(t, expectedMavenSettingsFile)
@@ -56,7 +56,7 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.SecretStoreType, f
 	o.Namespace = ns
 	o.BootSecretNamespace = ns
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
-	fakeFactory := secretstorefake.FakeSecretManagerFactory{}
+	fakeFactory := secretstorefake.SecretManagerFactory{}
 	o.SecretStoreManagerFactory = &fakeFactory
 	_, err = fakeFactory.NewSecretManager(storeType)
 	assert.NoError(t, err)
@@ -173,7 +173,7 @@ func TestPopulate(t *testing.T) {
 		nexusSecretName     string
 		extSecrets          map[string]*secretstore.SecretValue
 		useSecretNameForKey bool
-		assertionFunc       func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string)
+		assertionFunc       func(t *testing.T, fakeStore *secretstorefake.SecretStore, mavenSettings string)
 	}
 	gcpLocation := "123456"
 	vaultLocation := "https://127.0.0.1:8200"
@@ -199,7 +199,7 @@ func TestPopulate(t *testing.T) {
 				},
 			},
 			false,
-			func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string) {
+			func(t *testing.T, fakeStore *secretstorefake.SecretStore, mavenSettings string) {
 				fakeStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/adminUser", "username", "admin")
 				fakeStore.AssertHasValue(t, vaultLocation, "secret/data/jx/adminUser", "password")
 				fakeStore.AssertHasValue(t, vaultLocation, "secret/data/lighthouse/hmac", "hmac")
@@ -227,7 +227,7 @@ func TestPopulate(t *testing.T) {
 				},
 			},
 			false,
-			func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string) {
+			func(t *testing.T, fakeStore *secretstorefake.SecretStore, mavenSettings string) {
 				fakeStore.AssertValueEquals(t, gcpLocation, "jx-admin-user", "username", "admin")
 				fakeStore.AssertHasValue(t, gcpLocation, "jx-admin-user", "password")
 				fakeStore.AssertHasValue(t, gcpLocation, "lighthouse-hmac", "")
@@ -255,7 +255,7 @@ func TestPopulate(t *testing.T) {
 				},
 			},
 			false,
-			func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string) {
+			func(t *testing.T, fakeStore *secretstorefake.SecretStore, mavenSettings string) {
 				fakeStore.AssertValueEquals(t, azureLocation, "jx-admin-user", "username", "admin")
 				fakeStore.AssertHasValue(t, azureLocation, "jx-admin-user", "password")
 				fakeStore.AssertHasValue(t, azureLocation, "lighthouse-hmac", "")
@@ -283,7 +283,7 @@ func TestPopulate(t *testing.T) {
 				},
 			},
 			true,
-			func(t *testing.T, fakeStore *secretstorefake.FakeSecretStore, mavenSettings string) {
+			func(t *testing.T, fakeStore *secretstorefake.SecretStore, mavenSettings string) {
 				fakeStore.AssertValueEquals(t, kubeLocation, "jenkins-x-bucketrepo", "username", "admin")
 				fakeStore.AssertHasValue(t, kubeLocation, "jenkins-x-bucketrepo", "password")
 				fakeStore.AssertHasValue(t, kubeLocation, "lighthouse-hmac-token", "hmac")
@@ -319,7 +319,7 @@ func TestPopulateFromFileSystem(t *testing.T) {
 	o.Namespace = ns
 	o.BootSecretNamespace = ns
 	o.Source = "filesystem"
-	fakeFactory := secretstorefake.FakeSecretManagerFactory{}
+	fakeFactory := secretstorefake.SecretManagerFactory{}
 	o.SecretStoreManagerFactory = &fakeFactory
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
 
@@ -343,7 +343,7 @@ func TestPopulateFromHelmSecrets(t *testing.T) {
 	o.NoWait = true
 	o.Namespace = ns
 	o.BootSecretNamespace = ns
-	fakeFactory := secretstorefake.FakeSecretManagerFactory{}
+	fakeFactory := secretstorefake.SecretManagerFactory{}
 	o.SecretStoreManagerFactory = &fakeFactory
 	o.KubeClient = fake.NewSimpleClientset()
 

@@ -42,7 +42,7 @@ func (r *Runner) Run(t *testing.T) {
 		r.KubeObjects = append(r.KubeObjects, testcase.KubeObjects...)
 		o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(r.KubeObjects...)...)
 
-		fakeFactory := &secretstorefake.FakeSecretManagerFactory{}
+		fakeFactory := &secretstorefake.SecretManagerFactory{}
 		o.SecretStoreManagerFactory = fakeFactory
 
 		_, err = fakeFactory.NewSecretManager(testcase.ExternalSecretStorageType)
@@ -127,7 +127,7 @@ func (r *Runner) Populate(t *testing.T) {
 		r.KubeObjects = append(r.KubeObjects, tc.KubeObjects...)
 		o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(r.KubeObjects...)...)
 
-		fakeFactory := &secretstorefake.FakeSecretManagerFactory{}
+		fakeFactory := &secretstorefake.SecretManagerFactory{}
 		o.SecretStoreManagerFactory = fakeFactory
 
 		_, err = fakeFactory.NewSecretManager(tc.ExternalSecretStorageType)

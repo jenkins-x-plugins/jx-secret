@@ -70,7 +70,7 @@ type TestCase struct {
 
 	ExternalSecrets []ExternalSecret
 
-	ExternalSecretStorageType secretstore.SecretStoreType
+	ExternalSecretStorageType secretstore.Type
 
 	// Secret is the underlying secret for the first external secret if using Populate loop testing
 	Secret *corev1.Secret

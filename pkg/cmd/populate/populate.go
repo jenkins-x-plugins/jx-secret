@@ -272,12 +272,12 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 	return nil
 }
 
-func GetSecretStore(backendType v1alpha1.BackendType) secretstore.SecretStoreType {
+func GetSecretStore(backendType v1alpha1.BackendType) secretstore.Type {
 	switch backendType {
 	case v1alpha1.BackendTypeLocal:
 		return secretstore.SecretStoreTypeKubernetes
 	default:
-		return secretstore.SecretStoreType(backendType)
+		return secretstore.Type(backendType)
 	}
 }
 

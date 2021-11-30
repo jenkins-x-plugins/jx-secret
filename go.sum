@@ -1023,8 +1023,8 @@ github.com/jefferai/isbadcipher v0.0.0-20190226160619-51d2077c035f h1:E87tDTVS5W
 github.com/jefferai/isbadcipher v0.0.0-20190226160619-51d2077c035f/go.mod h1:3J2qVK16Lq8V+wfiL2lPeDZ7UWMxk5LemerHa1p6N00=
 github.com/jefferai/jsonx v1.0.0 h1:Xoz0ZbmkpBvED5W9W1B5B/zc3Oiq7oXqiW7iRV3B6EI=
 github.com/jefferai/jsonx v1.0.0/go.mod h1:OGmqmi2tTeI/PS+qQfBDToLHHJIy/RMp24fPo8vFvoQ=
-github.com/jenkins-x-plugins/secretfacade v0.2.0 h1:k4lMNac0izRqok4Ohp1IpMhD93HahvE5ThWYrbAKeQ0=
-github.com/jenkins-x-plugins/secretfacade v0.2.0/go.mod h1:ZE9JzhWWR8uIkCO/zuGUEiEfSvnQ/hm9x2qNKaATztY=
+github.com/jenkins-x-plugins/secretfacade v0.2.1 h1:dbpiL8UfJrk/S644FqhKzjLi3JaTRFGuVlksvcDiu+I=
+github.com/jenkins-x-plugins/secretfacade v0.2.1/go.mod h1:ZE9JzhWWR8uIkCO/zuGUEiEfSvnQ/hm9x2qNKaATztY=
 github.com/jenkins-x/gen-crd-api-reference-docs v0.1.6 h1:jV0THW6KeMYC0rcawdPeix7+ZmDZMR0UMU+QJr5gU6Y=
 github.com/jenkins-x/gen-crd-api-reference-docs v0.1.6/go.mod h1:a4dzSf/nNLMMMqultm6IlV/04xq26uICEYPkSTOahWQ=
 github.com/jenkins-x/go-scm v1.10.10 h1:Fuxje/9mHONI7+AQ32N/S9CXWt/0hVStbj8dBVraQz4=
