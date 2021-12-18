@@ -58,6 +58,9 @@ type Defaults struct {
 
 	// GcpSecretsManager config
 	GcpSecretsManager *GcpSecretsManager `json:"gcpSecretsManager,omitempty"`
+
+	// AwsSecretsManager config
+	AwsSecretsManager *AwsSecretsManager `json:"secretsManager,omitempty"`
 }
 
 // SecretMappingList contains a list of SecretMapping

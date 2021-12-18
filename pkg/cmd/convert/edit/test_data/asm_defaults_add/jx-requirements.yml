@@ -1,0 +1,13 @@
+apiVersion: core.jenkins-x.io/v4beta1
+kind: Requirements
+spec:
+  autoUpdate:
+    enabled: false
+    schedule: ""
+  cluster:
+    region: us-east-2
+  ingress:
+    domain: ""
+    externalDNS: false
+    namespaceSubDomain: ""
+  vault: {}

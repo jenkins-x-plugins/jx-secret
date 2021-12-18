@@ -70,5 +70,4 @@ func TestUnmarshalFailure(t *testing.T) {
 
 	require.NotNil(t, es.Status, "es.Status")
 	assert.Equal(t, "ERROR, Status 404", es.Status.Status, "es.Status.Status")
-
 }

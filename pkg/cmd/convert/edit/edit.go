@@ -32,11 +32,11 @@ type Options struct {
 
 var (
 	cmdLong = templates.LongDesc(`
-		Edits the local 'secret-mappings.yaml' file 
+		Edits the local 'secret-mappings.yaml' file
 `)
 
 	cmdExample = templates.Examples(`
-		# edits the local 'secret-mappings.yaml' file 
+		# edits the local 'secret-mappings.yaml' file
 		%s secretsmapping edit --gcp-project-id foo --cluster-name
 `)
 )
@@ -147,6 +147,23 @@ func (o *Options) applyDefaults() error {
 			}
 		}
 	}
+
+	if s.Spec.Defaults.BackendType == v1alpha1.BackendTypeAWSSecretsManager {
+		s.Spec.Defaults.AwsSecretsManager, err = o.applyASMDefaults(s.Spec.Defaults.AwsSecretsManager)
+		if err != nil {
+			return errors.Wrapf(err, "failed to apply defaults to AwsSecretsManager")
+		}
+	}
+
+	for k := range s.Spec.Secrets {
+		secret := &s.Spec.Secrets[k]
+		if secret.BackendType == v1alpha1.BackendTypeAWSSecretsManager {
+			secret.AwsSecretsManager, err = o.applyASMDefaults(secret.AwsSecretsManager)
+			if err != nil {
+				return errors.Wrapf(err, "failed to apply defaults to AwsSecretsManager for secret %s", secret.Name)
+			}
+		}
+	}
 	return nil
 }
 
@@ -183,4 +200,17 @@ func (o *Options) applyAzureKeyVaultDefaults(akvConfig *v1alpha1.AzureKeyVaultCo
 		akvConfig.KeyVaultName = o.requirements.Cluster.AzureConfig.AzureSecretStorageConfig.KeyVaultName
 	}
 	return akvConfig, nil
+}
+
+func (o *Options) applyASMDefaults(asmConfig *v1alpha1.AwsSecretsManager) (*v1alpha1.AwsSecretsManager, error) {
+	if asmConfig == nil {
+		asmConfig = &v1alpha1.AwsSecretsManager{}
+	}
+	if asmConfig.Region == "" {
+		if o.requirements.Cluster.Region == "" {
+			return asmConfig, errors.New("found an empty aws region and no requirements.Cluster.Region")
+		}
+		asmConfig.Region = o.requirements.Cluster.Region
+	}
+	return asmConfig, nil
 }
