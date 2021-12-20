@@ -431,7 +431,6 @@ func TestAWSSecretsManager(t *testing.T) {
 
 	eo.SecretMapping, _, err = secretmapping.LoadSecretMapping(sourceData, true)
 	require.NoError(t, err, "failed to load secret mapping")
-
 	assert.Equal(t, v1alpha1.BackendTypeAWSSecretsManager, eo.SecretMapping.Spec.Secrets[0].BackendType)
 	assert.Equal(t, v1alpha1.BackendTypeAWSSecretsManager, eo.SecretMapping.Spec.Secrets[1].BackendType)
 	assert.Equal(t, v1alpha1.BackendTypeAWSSecretsManager, eo.SecretMapping.Spec.Secrets[2].BackendType)

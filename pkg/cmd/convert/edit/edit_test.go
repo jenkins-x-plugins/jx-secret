@@ -49,6 +49,17 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 				assert.Equal(t, "latest", sm.Spec.Secrets[1].GcpSecretsManager.Version, "secret.GcpSecretsManager.Version")
 			},
 		},
+		{
+			name: "asm_defaults_add",
+			callback: func(t *testing.T, sm *v1alpha1.SecretMapping) {
+				assert.Equal(t, 2, len(sm.Spec.Secrets), "should have found 2 mappings")
+				for _, secret := range sm.Spec.Secrets {
+					assert.Equal(t, "us-east-2", secret.AwsSecretsManager.Region, "secret.AwsSecretsManager.Region")
+				}
+
+				assert.Equal(t, "us-east-2", sm.Spec.Defaults.AwsSecretsManager.Region, "sm.Spec.Defaults.AwsSecretsManager.Region")
+			},
+		},
 	}
 	tmpDir, err := ioutil.TempDir("", "jx-cmd-sec-")
 	require.NoError(t, err, "failed to create temp dir")
@@ -67,7 +78,6 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 		localSecretsFile := filepath.Join("test_data", tt.name)
 		err = files.CopyDir(localSecretsFile, dir, true)
 		require.NoError(t, err, "failed to copy %s to %s", localSecretsFile, dir)
-
 		cmd, _ := edit.NewCmdSecretMappingEdit()
 		tt.args = append(tt.args, "--dir", dir)
 

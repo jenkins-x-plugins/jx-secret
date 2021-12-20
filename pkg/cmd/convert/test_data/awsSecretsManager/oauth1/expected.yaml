@@ -10,7 +10,7 @@ metadata:
     heritage: "Helm"
 spec:
   backendType: secretsManager
-  roleArn: acs:ram::{UID}:role/custom
+  roleArn: acs:ram::{UID}:role/demo
   region: us-east-2
   data:
     - name: username

@@ -271,6 +271,24 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 			return results, errors.New("missing secret mapping secret.AzureKeyVaultConfig.KeyVaultName")
 		}
 
+	case v1alpha1.BackendTypeAWSSecretsManager:
+		if secret.AwsSecretsManager == nil {
+			secret.AwsSecretsManager = &v1alpha1.AwsSecretsManager{}
+		}
+		if secret.AwsSecretsManager.Region != "" {
+			err = kyamls.SetStringValue(node, path, secret.AwsSecretsManager.Region, "spec", "region")
+			if err != nil {
+				return results, err
+			}
+		} else if o.SecretMapping.Spec.Defaults.AwsSecretsManager.Region != "" {
+			err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.Defaults.AwsSecretsManager.Region, "spec", "region")
+			if err != nil {
+				return results, err
+			}
+		} else {
+			return results, errors.New("missing secret mapping secret.AwsSecretsManager.Region")
+		}
+
 	}
 
 	// ToDo: what are we doing here?
