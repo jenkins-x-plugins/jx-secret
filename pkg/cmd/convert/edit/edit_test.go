@@ -2,7 +2,6 @@ package edit_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -61,9 +60,7 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 			},
 		},
 	}
-	tmpDir, err := ioutil.TempDir("", "jx-cmd-sec-")
-	require.NoError(t, err, "failed to create temp dir")
-	require.DirExists(t, tmpDir, "could not create temp dir for running tests")
+	tmpDir := t.TempDir()
 
 	for i, tt := range tests {
 		if tt.name == "" {
@@ -72,7 +69,7 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 		t.Logf("running test %s", tt.name)
 		dir := filepath.Join(tmpDir)
 
-		err = os.MkdirAll(dir, files.DefaultDirWritePermissions)
+		err := os.MkdirAll(dir, files.DefaultDirWritePermissions)
 		require.NoError(t, err, "failed to create dir %s", dir)
 
 		localSecretsFile := filepath.Join("test_data", tt.name)
@@ -81,7 +78,7 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 		cmd, _ := edit.NewCmdSecretMappingEdit()
 		tt.args = append(tt.args, "--dir", dir)
 
-		err := cmd.ParseFlags(tt.args)
+		err = cmd.ParseFlags(tt.args)
 		require.NoError(t, err, "failed to parse arguments %#v for test %s", tt.args, tt.name)
 
 		old := os.Args

@@ -1,7 +1,6 @@
 package replicate_test
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -33,12 +32,11 @@ func TestReplicateBySelector(t *testing.T) {
 }
 
 func AssertReplicate(t *testing.T, callback func(o *replicate.Options)) {
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
 	sourceData := filepath.Join("test_data")
 
-	err = files.CopyDirOverwrite(sourceData, tmpDir)
+	err := files.CopyDirOverwrite(sourceData, tmpDir)
 	require.NoError(t, err, "failed to copy generated crds at %s to %s", sourceData, tmpDir)
 
 	_, o := replicate.NewCmdReplicate()
