@@ -28,8 +28,7 @@ func TestToExtSecrets(t *testing.T) {
 	fileNames, err := ioutil.ReadDir(sourceData)
 	assert.NoError(t, err)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
 	type testCase struct {
 		SourceFile   string
@@ -98,8 +97,7 @@ func TestToNamespaceSpecificExtSecrets(t *testing.T) {
 	fileNames, err := ioutil.ReadDir(sourceData)
 	assert.NoError(t, err)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
 	type testCase struct {
 		SourceFile   string
@@ -168,8 +166,7 @@ func TestToUnsecuredSecrets(t *testing.T) {
 	fileNames, err := ioutil.ReadDir(sourceData)
 	assert.NoError(t, err)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
 	type testCase struct {
 		SourceFile   string
@@ -238,8 +235,7 @@ func TestMultipleBackendTypes(t *testing.T) {
 	fileNames, err := ioutil.ReadDir(sourceData)
 	assert.NoError(t, err)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
 	type testCase struct {
 		SourceFile   string
@@ -307,8 +303,7 @@ func TestAlicloud(t *testing.T) {
 	fileNames, err := ioutil.ReadDir(sourceData)
 	assert.NoError(t, err)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
 	type testCase struct {
 		SourceFile   string
@@ -390,8 +385,7 @@ func TestAWSSecretsManager(t *testing.T) {
 	fileNames, err := ioutil.ReadDir(sourceData)
 	assert.NoError(t, err)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
 	type testCase struct {
 		SourceFile   string
@@ -472,8 +466,7 @@ func TestAWSParameterStore(t *testing.T) {
 	fileNames, err := ioutil.ReadDir(sourceData)
 	assert.NoError(t, err)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
 	type testCase struct {
 		SourceFile   string
@@ -555,8 +548,7 @@ func TestIBMSecretsManager(t *testing.T) {
 	fileNames, err := ioutil.ReadDir(sourceData)
 	assert.NoError(t, err)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
 	type testCase struct {
 		SourceFile   string
@@ -638,8 +630,7 @@ func TestAzureKeyVault(t *testing.T) {
 	fileNames, err := ioutil.ReadDir(sourceData)
 	assert.NoError(t, err)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
 	type testCase struct {
 		SourceFile   string
@@ -713,10 +704,9 @@ func TestConvertAndSchemaEnrich(t *testing.T) {
 	sourceData := filepath.Join("test_data", "schema")
 	require.DirExists(t, sourceData)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
-	err = files.CopyDir(sourceData, tmpDir, true)
+	err := files.CopyDir(sourceData, tmpDir, true)
 	require.NoError(t, err, "failed to copy %s to %s", sourceData, tmpDir)
 
 	_, eo := convert.NewCmdSecretConvert()
@@ -787,10 +777,9 @@ func TestConvertAndSchemaEnrichWithLocalSchemas(t *testing.T) {
 	sourceData := filepath.Join("test_data", "local-schema")
 	require.DirExists(t, sourceData)
 
-	tmpDir, err := ioutil.TempDir("", "")
-	require.NoError(t, err, "could not create temp dir")
+	tmpDir := t.TempDir()
 
-	err = files.CopyDir(sourceData, tmpDir, true)
+	err := files.CopyDir(sourceData, tmpDir, true)
 	require.NoError(t, err, "failed to copy %s to %s", sourceData, tmpDir)
 
 	_, eo := convert.NewCmdSecretConvert()
