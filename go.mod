@@ -7,9 +7,9 @@ require (
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/google/go-cmp v0.5.6
 	github.com/jenkins-x-plugins/secretfacade v0.2.3
-	github.com/jenkins-x/go-scm v1.10.11
-	github.com/jenkins-x/jx-api/v4 v4.3.4
-	github.com/jenkins-x/jx-helpers/v3 v3.0.130
+	github.com/jenkins-x/go-scm v1.11.5
+	github.com/jenkins-x/jx-api/v4 v4.3.5
+	github.com/jenkins-x/jx-helpers/v3 v3.2.5
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.2
 	github.com/jenkins-x/jx-logging/v3 v3.0.6
 	github.com/pkg/errors v0.9.1
