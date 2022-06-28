@@ -2,7 +2,6 @@ package templatertesting
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -210,7 +209,7 @@ func generateTestOut(t *testing.T, tc *TestCase, expectedDir, expectedFile, text
 		err = os.MkdirAll(expectedDir, files.DefaultDirWritePermissions)
 		require.NoError(t, err, "failed to create dir %s", expectedDir)
 
-		err = ioutil.WriteFile(expectedFile, []byte(text), files.DefaultFileWritePermissions)
+		err = os.WriteFile(expectedFile, []byte(text), files.DefaultFileWritePermissions)
 		require.NoError(t, err, "failed to save file %s", expectedFile)
 
 		t.Logf("generated %s\n", expectedFile)
@@ -218,7 +217,7 @@ func generateTestOut(t *testing.T, tc *TestCase, expectedDir, expectedFile, text
 	} else {
 		require.FileExists(t, expectedFile, "for expected output")
 
-		expected, err := ioutil.ReadFile(expectedFile)
+		expected, err := os.ReadFile(expectedFile)
 		require.NoError(t, err, "failed to load %s", expectedFile)
 
 		if tc.VerifyFn != nil {

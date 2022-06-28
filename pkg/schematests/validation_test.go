@@ -1,7 +1,7 @@
 package schematests
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -15,7 +15,7 @@ func TestValidateExternalSecret(t *testing.T) {
 	t.Parallel()
 
 	path := filepath.Join("test_data", "es.yaml")
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	require.NoError(t, err, "failed to load %s", path)
 
 	deploy := &v1.ExternalSecret{}

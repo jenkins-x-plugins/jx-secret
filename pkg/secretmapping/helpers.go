@@ -2,7 +2,7 @@ package secretmapping
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
@@ -54,7 +54,7 @@ func LoadSecretMapping(dir string, failIfMissing bool) (*v1alpha1.SecretMapping,
 func LoadSecretMappingFile(fileName string) (*v1alpha1.SecretMapping, error) {
 	config := &v1alpha1.SecretMapping{}
 
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load file %s due to %s", fileName, err)
 	}

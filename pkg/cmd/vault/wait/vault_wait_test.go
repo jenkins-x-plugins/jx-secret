@@ -69,7 +69,7 @@ func TestVaultWait(t *testing.T) {
 	runner := &fakerunner.FakeRunner{
 		CommandRunner: func(cmd *cmdrunner.Command) (string, error) {
 			args := cmd.Args
-			if len(args) > 2 && args[0] == "kv" && args[1] == "list" {
+			if len(args) == 1 && args[0] == "status" {
 				return "ok", nil
 			}
 			return "", nil

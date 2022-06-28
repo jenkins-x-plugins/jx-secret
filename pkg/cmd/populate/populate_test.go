@@ -2,7 +2,7 @@ package populate_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -30,7 +30,7 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.Type, folder, secr
 	ns := "jx"
 	expectedMavenSettingsFile := filepath.Join("test_data", "populate", "expected", "jenkins-maven-settings", "settings.xml", "nexus.xml")
 	require.FileExists(t, expectedMavenSettingsFile)
-	expectedMaveSettingsData, err := ioutil.ReadFile(expectedMavenSettingsFile)
+	expectedMaveSettingsData, err := os.ReadFile(expectedMavenSettingsFile)
 	require.NoError(t, err, "failed to load file %s", expectedMavenSettingsFile)
 
 	schemaFile := filepath.Join("test_data", "populate", "secret-schema.yaml")

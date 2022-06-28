@@ -3,7 +3,7 @@ package schemas
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
@@ -30,7 +30,7 @@ func LoadSchemaFile(fileName string) (*v1alpha1.Schema, error) {
 		return config, nil
 	}
 
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load file %s due to %s", fileName, err)
 	}
