@@ -34,7 +34,7 @@ func TestReplicateBySelector(t *testing.T) {
 func AssertReplicate(t *testing.T, callback func(o *replicate.Options)) {
 	tmpDir := t.TempDir()
 
-	sourceData := filepath.Join("test_data")
+	sourceData := "test_data"
 
 	err := files.CopyDirOverwrite(sourceData, tmpDir)
 	require.NoError(t, err, "failed to copy generated crds at %s to %s", sourceData, tmpDir)

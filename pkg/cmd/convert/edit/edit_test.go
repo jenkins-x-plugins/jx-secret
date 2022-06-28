@@ -67,7 +67,7 @@ func TestCmdSecretsMappingEdit(t *testing.T) {
 			tt.name = fmt.Sprintf("test%d", i)
 		}
 		t.Logf("running test %s", tt.name)
-		dir := filepath.Join(tmpDir)
+		dir := tmpDir
 
 		err := os.MkdirAll(dir, files.DefaultDirWritePermissions)
 		require.NoError(t, err, "failed to create dir %s", dir)

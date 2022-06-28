@@ -1,7 +1,7 @@
 package testsecrets
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -29,7 +29,7 @@ func LoadExtSecretFiles(t *testing.T, ns string, fileNames ...string) []runtime.
 
 // LoadExtSecretDir loads the given YAML files in the given directory as external secrets for a test case
 func LoadExtSecretDir(t *testing.T, ns, dir string) []runtime.Object {
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	require.NoError(t, err, "failed to read dir %s", dir)
 	var extSecrets []string
 	for _, f := range files {

@@ -48,10 +48,15 @@ func (c *client) initialise() error {
 
 	log.Logger().Infof("verifying we can connect to vault...")
 
-	// lets verify we can list the secrets
+	// lets verify we can connect to vault by running vault status
+	// The exit code reflects the seal status:
+	// 0 - unsealed
+	// 1 - error
+	// 2 - sealed
+	// Source: https://www.vaultproject.io/docs/commands/status
 	cmd := &cmdrunner.Command{
 		Name: c.vaultBin,
-		Args: []string{"kv", "list", "secret"},
+		Args: []string{"status"},
 		Env:  c.env,
 	}
 	_, err = c.commandRunner(cmd)

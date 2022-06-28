@@ -1,7 +1,7 @@
 package convert_test
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -25,7 +25,7 @@ var generateTestOutput = false
 
 func TestToExtSecrets(t *testing.T) {
 	sourceData := filepath.Join("test_data", "simple")
-	fileNames, err := ioutil.ReadDir(sourceData)
+	fileNames, err := os.ReadDir(sourceData)
 	assert.NoError(t, err)
 
 	tmpDir := t.TempDir()
@@ -73,10 +73,10 @@ func TestToExtSecrets(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	for _, tc := range testCases {
-		resultData, err := ioutil.ReadFile(tc.ResultFile)
+		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
 
-		expectData, err := ioutil.ReadFile(tc.ExpectedFile)
+		expectData, err := os.ReadFile(tc.ExpectedFile)
 		require.NoError(t, err, "failed to load results %s", tc.ExpectedFile)
 
 		result := strings.TrimSpace(string(resultData))
@@ -94,7 +94,7 @@ func TestToExtSecrets(t *testing.T) {
 
 func TestToNamespaceSpecificExtSecrets(t *testing.T) {
 	sourceData := filepath.Join("test_data", "namespace-vault")
-	fileNames, err := ioutil.ReadDir(sourceData)
+	fileNames, err := os.ReadDir(sourceData)
 	assert.NoError(t, err)
 
 	tmpDir := t.TempDir()
@@ -142,10 +142,10 @@ func TestToNamespaceSpecificExtSecrets(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	for _, tc := range testCases {
-		resultData, err := ioutil.ReadFile(tc.ResultFile)
+		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
 
-		expectData, err := ioutil.ReadFile(tc.ExpectedFile)
+		expectData, err := os.ReadFile(tc.ExpectedFile)
 		require.NoError(t, err, "failed to load results %s", tc.ExpectedFile)
 
 		result := strings.TrimSpace(string(resultData))
@@ -163,7 +163,7 @@ func TestToNamespaceSpecificExtSecrets(t *testing.T) {
 
 func TestToUnsecuredSecrets(t *testing.T) {
 	sourceData := filepath.Join("test_data", "unsecureSecrets")
-	fileNames, err := ioutil.ReadDir(sourceData)
+	fileNames, err := os.ReadDir(sourceData)
 	assert.NoError(t, err)
 
 	tmpDir := t.TempDir()
@@ -215,10 +215,10 @@ func TestToUnsecuredSecrets(t *testing.T) {
 
 		require.FileExists(t, tc.ExpectedFile)
 
-		resultData, err := ioutil.ReadFile(tc.ResultFile)
+		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
 
-		expectData, err := ioutil.ReadFile(tc.ExpectedFile)
+		expectData, err := os.ReadFile(tc.ExpectedFile)
 		require.NoError(t, err, "failed to load results %s", tc.ExpectedFile)
 
 		result := strings.TrimSpace(string(resultData))
@@ -232,7 +232,7 @@ func TestToUnsecuredSecrets(t *testing.T) {
 
 func TestMultipleBackendTypes(t *testing.T) {
 	sourceData := filepath.Join("test_data", "backend_types")
-	fileNames, err := ioutil.ReadDir(sourceData)
+	fileNames, err := os.ReadDir(sourceData)
 	assert.NoError(t, err)
 
 	tmpDir := t.TempDir()
@@ -284,9 +284,9 @@ func TestMultipleBackendTypes(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	for _, tc := range testCases {
-		resultData, err := ioutil.ReadFile(tc.ResultFile)
+		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
-		expectData, err := ioutil.ReadFile(tc.ExpectedFile)
+		expectData, err := os.ReadFile(tc.ExpectedFile)
 		require.NoError(t, err, "failed to load results %s", tc.ExpectedFile)
 
 		result := strings.TrimSpace(string(resultData))
@@ -300,7 +300,7 @@ func TestMultipleBackendTypes(t *testing.T) {
 
 func TestAlicloud(t *testing.T) {
 	sourceData := filepath.Join("test_data", "alicloud")
-	fileNames, err := ioutil.ReadDir(sourceData)
+	fileNames, err := os.ReadDir(sourceData)
 	assert.NoError(t, err)
 
 	tmpDir := t.TempDir()
@@ -355,19 +355,19 @@ func TestAlicloud(t *testing.T) {
 		if generateTestOutput {
 			generatedFile := tc.ResultFile
 			expectedPath := tc.ExpectedFile
-			data, err := ioutil.ReadFile(generatedFile)
+			data, err := os.ReadFile(generatedFile)
 			require.NoError(t, err, "failed to load %s", generatedFile)
 
-			err = ioutil.WriteFile(expectedPath, data, 0600)
+			err = os.WriteFile(expectedPath, data, 0o600)
 			require.NoError(t, err, "failed to save file %s", expectedPath)
 
 			t.Logf("saved file %s\n", expectedPath)
 			continue
 		}
 
-		resultData, err := ioutil.ReadFile(tc.ResultFile)
+		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
-		expectData, err := ioutil.ReadFile(tc.ExpectedFile)
+		expectData, err := os.ReadFile(tc.ExpectedFile)
 		require.NoError(t, err, "failed to load results %s", tc.ExpectedFile)
 
 		result := strings.TrimSpace(string(resultData))
@@ -382,7 +382,7 @@ func TestAlicloud(t *testing.T) {
 
 func TestAWSSecretsManager(t *testing.T) {
 	sourceData := filepath.Join("test_data", "awsSecretsManager")
-	fileNames, err := ioutil.ReadDir(sourceData)
+	fileNames, err := os.ReadDir(sourceData)
 	assert.NoError(t, err)
 
 	tmpDir := t.TempDir()
@@ -436,19 +436,19 @@ func TestAWSSecretsManager(t *testing.T) {
 		if generateTestOutput {
 			generatedFile := tc.ResultFile
 			expectedPath := tc.ExpectedFile
-			data, err := ioutil.ReadFile(generatedFile)
+			data, err := os.ReadFile(generatedFile)
 			require.NoError(t, err, "failed to load %s", generatedFile)
 
-			err = ioutil.WriteFile(expectedPath, data, 0600)
+			err = os.WriteFile(expectedPath, data, 0o600)
 			require.NoError(t, err, "failed to save file %s", expectedPath)
 
 			t.Logf("saved file %s\n", expectedPath)
 			continue
 		}
 
-		resultData, err := ioutil.ReadFile(tc.ResultFile)
+		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
-		expectData, err := ioutil.ReadFile(tc.ExpectedFile)
+		expectData, err := os.ReadFile(tc.ExpectedFile)
 		require.NoError(t, err, "failed to load results %s", tc.ExpectedFile)
 
 		result := strings.TrimSpace(string(resultData))
@@ -463,7 +463,7 @@ func TestAWSSecretsManager(t *testing.T) {
 
 func TestAWSParameterStore(t *testing.T) {
 	sourceData := filepath.Join("test_data", "awsParameterStore")
-	fileNames, err := ioutil.ReadDir(sourceData)
+	fileNames, err := os.ReadDir(sourceData)
 	assert.NoError(t, err)
 
 	tmpDir := t.TempDir()
@@ -518,19 +518,19 @@ func TestAWSParameterStore(t *testing.T) {
 		if generateTestOutput {
 			generatedFile := tc.ResultFile
 			expectedPath := tc.ExpectedFile
-			data, err := ioutil.ReadFile(generatedFile)
+			data, err := os.ReadFile(generatedFile)
 			require.NoError(t, err, "failed to load %s", generatedFile)
 
-			err = ioutil.WriteFile(expectedPath, data, 0600)
+			err = os.WriteFile(expectedPath, data, 0o600)
 			require.NoError(t, err, "failed to save file %s", expectedPath)
 
 			t.Logf("saved file %s\n", expectedPath)
 			continue
 		}
 
-		resultData, err := ioutil.ReadFile(tc.ResultFile)
+		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
-		expectData, err := ioutil.ReadFile(tc.ExpectedFile)
+		expectData, err := os.ReadFile(tc.ExpectedFile)
 		require.NoError(t, err, "failed to load results %s", tc.ExpectedFile)
 
 		result := strings.TrimSpace(string(resultData))
@@ -545,7 +545,7 @@ func TestAWSParameterStore(t *testing.T) {
 
 func TestIBMSecretsManager(t *testing.T) {
 	sourceData := filepath.Join("test_data", "ibmSecretsManager")
-	fileNames, err := ioutil.ReadDir(sourceData)
+	fileNames, err := os.ReadDir(sourceData)
 	assert.NoError(t, err)
 
 	tmpDir := t.TempDir()
@@ -600,19 +600,19 @@ func TestIBMSecretsManager(t *testing.T) {
 		if generateTestOutput {
 			generatedFile := tc.ResultFile
 			expectedPath := tc.ExpectedFile
-			data, err := ioutil.ReadFile(generatedFile)
+			data, err := os.ReadFile(generatedFile)
 			require.NoError(t, err, "failed to load %s", generatedFile)
 
-			err = ioutil.WriteFile(expectedPath, data, 0600)
+			err = os.WriteFile(expectedPath, data, 0o600)
 			require.NoError(t, err, "failed to save file %s", expectedPath)
 
 			t.Logf("saved file %s\n", expectedPath)
 			continue
 		}
 
-		resultData, err := ioutil.ReadFile(tc.ResultFile)
+		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
-		expectData, err := ioutil.ReadFile(tc.ExpectedFile)
+		expectData, err := os.ReadFile(tc.ExpectedFile)
 		require.NoError(t, err, "failed to load results %s", tc.ExpectedFile)
 
 		result := strings.TrimSpace(string(resultData))
@@ -627,7 +627,7 @@ func TestIBMSecretsManager(t *testing.T) {
 
 func TestAzureKeyVault(t *testing.T) {
 	sourceData := filepath.Join("test_data", "azure_key_vault")
-	fileNames, err := ioutil.ReadDir(sourceData)
+	fileNames, err := os.ReadDir(sourceData)
 	assert.NoError(t, err)
 
 	tmpDir := t.TempDir()
@@ -679,9 +679,9 @@ func TestAzureKeyVault(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	for _, tc := range testCases {
-		resultData, err := ioutil.ReadFile(tc.ResultFile)
+		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
-		expectData, err := ioutil.ReadFile(tc.ExpectedFile)
+		expectData, err := os.ReadFile(tc.ExpectedFile)
 		require.NoError(t, err, "failed to load results %s", tc.ExpectedFile)
 
 		result := strings.TrimSpace(string(resultData))
