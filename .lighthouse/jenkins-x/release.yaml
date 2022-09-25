@@ -6,7 +6,7 @@ metadata:
 spec:
   pipelineSpec:
     tasks:
-    - name: chart
+    - name: jx-pipeline-release
       resources: {}
       taskSpec:
         metadata: {}
@@ -25,13 +25,20 @@ spec:
           resources: {}
         - name: release-binary
           resources: {}
-        - name: build-and-push-image
-          resources: {}
+        - image: uses:jenkins-x/jx3-pipeline-catalog/tasks/build-scan-push/build-scan-push.yaml@versionStream
+          name: build-container
+        - image: uses:jenkins-x/jx3-pipeline-catalog/tasks/build-scan-push/build-scan-push.yaml@versionStream
+          name: push-container
         - name: chart-docs
           resources: {}
         - name: release-chart
           resources: {}
         - name: changelog
+          resources: {}
+        - image: uses:jenkins-x/jx3-pipeline-catalog/tasks/supply-chain-security/task.yaml@versionStream
+          name: download-syft
+        - image: uses:jenkins-x/jx3-pipeline-catalog/tasks/supply-chain-security/task.yaml@versionStream
+          name: build-and-push-sbom
           resources: {}
         - name: upload-binaries
           resources: {}
