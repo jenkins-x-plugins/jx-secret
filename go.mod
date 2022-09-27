@@ -1,12 +1,12 @@
 module github.com/jenkins-x-plugins/jx-secret
 
-go 1.17
+go 1.18
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/google/go-cmp v0.5.6
-	github.com/jenkins-x-plugins/secretfacade v0.2.3
+	github.com/jenkins-x-plugins/secretfacade v0.2.6
 	github.com/jenkins-x/go-scm v1.11.5
 	github.com/jenkins-x/jx-api/v4 v4.3.5
 	github.com/jenkins-x/jx-helpers/v3 v3.2.5
@@ -20,8 +20,8 @@ require (
 	golang.org/x/crypto v0.0.0-20220208050332-20e1d8d225ab
 	gopkg.in/validator.v2 v2.0.0-20200605151824-2b28d334fa05
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
-	k8s.io/api v0.22.2
-	k8s.io/apimachinery v0.22.2
+	k8s.io/api v0.22.15
+	k8s.io/apimachinery v0.22.15
 	k8s.io/client-go v11.0.0+incompatible
 	sigs.k8s.io/kustomize/kyaml v0.10.15
 	sigs.k8s.io/yaml v1.2.0
@@ -53,7 +53,6 @@ require (
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
-	github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32 // indirect
@@ -110,6 +109,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
@@ -147,13 +147,13 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/klog/v2 v2.9.0 // indirect
-	k8s.io/kube-openapi v0.0.0-20210421082810-95288971da7e // indirect
-	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
+	k8s.io/kube-openapi v0.0.0-20211109043538-20434351676c // indirect
+	k8s.io/utils v0.0.0-20211116205334-6203023598ed // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
 
 replace (
-	k8s.io/api => k8s.io/api v0.20.6
-	k8s.io/apimachinery => k8s.io/apimachinery v0.20.6
-	k8s.io/client-go => k8s.io/client-go v0.20.6
+	k8s.io/api => k8s.io/api v0.22.15
+	k8s.io/apimachinery => k8s.io/apimachinery v0.22.15
+	k8s.io/client-go => k8s.io/client-go v0.22.15
 )
