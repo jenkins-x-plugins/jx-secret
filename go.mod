@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/google/go-cmp v0.5.6
-	github.com/jenkins-x-plugins/secretfacade v0.2.6
+	github.com/jenkins-x-plugins/secretfacade v0.2.7
 	github.com/jenkins-x/go-scm v1.11.6
 	github.com/jenkins-x/jx-api/v4 v4.6.2
 	github.com/jenkins-x/jx-helpers/v3 v3.4.4
