@@ -391,6 +391,9 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 				case v1alpha1.BackendTypeLocal:
 					err = o.modifyLocal(rNode, field, secretName, path)
 
+				case v1alpha1.BackendTypeAWSSecretsManager:
+					err = o.modifyASM(rNode, field, secretName, path)
+
 				default:
 					err = o.modifyDefault(rNode, field, secretName, path, complexSecretType)
 				}
@@ -637,6 +640,10 @@ func (o *Options) modifyGSM(rNode *yaml.RNode, field, secretName, path string) e
 		return err
 	}
 	return nil
+}
+
+func (o *Options) modifyASM(rNode *yaml.RNode, field, secretName, path string) error {
+	return o.modifyDefault(rNode, field, secretName, path, true)
 }
 
 func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, error) {
