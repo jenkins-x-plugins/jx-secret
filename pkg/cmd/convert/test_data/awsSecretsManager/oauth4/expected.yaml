@@ -15,6 +15,7 @@ spec:
   data:
     - name: password
       key: unspecified-simple-type
+      property: password
       versionStage: AWSPREVIOUS
   template:
     metadata:

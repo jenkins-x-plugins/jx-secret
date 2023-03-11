@@ -15,6 +15,7 @@ spec:
   data:
     - name: azure.json
       key: azure-secret-name
+      property: azure.json
       versionStage: AWSPREVIOUS
   template:
     metadata:
