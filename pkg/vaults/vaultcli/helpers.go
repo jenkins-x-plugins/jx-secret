@@ -2,7 +2,6 @@ package vaultcli
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -64,7 +63,7 @@ func CreateVaultEnv(kubeClient kubernetes.Interface) (map[string]string, error) 
 
 	caCertFile := os.Getenv("VAULT_CACERT")
 	if caCertFile == "" {
-		tmpDir, err := ioutil.TempDir("", "jx-secret-vault-") //nolint:govet
+		tmpDir, err := os.MkdirTemp("", "jx-secret-vault-") //nolint:govet
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to create temp dir")
 		}
