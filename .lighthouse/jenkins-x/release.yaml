@@ -42,11 +42,7 @@ spec:
           resources: {}
         - name: upload-binaries
           resources: {}
-        - command:
-          - jx-updatebot
-          - pr
-          image: ghcr.io/jenkins-x/jx-updatebot:0.1.3
-          name: promote-release
+        - name: promote-release
           resources: {}
   podTemplate: {}
   serviceAccountName: tekton-bot
