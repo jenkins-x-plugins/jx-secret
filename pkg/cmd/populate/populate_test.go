@@ -352,7 +352,7 @@ func TestPopulateFromHelmSecrets(t *testing.T) {
 	scheme := runtime.NewScheme()
 
 	o.HelmSecretFolder = filepath.Join(o.Dir, "fake-helm-secrets")
-	require.NotEmpty(t, dynObjects, "failed to load ExternaSecrets from dir %s", extSecretsDir)
+	require.NotEmpty(t, dynObjects, "failed to load ExternalSecrets from dir %s", extSecretsDir)
 	fakeDynClient := testsecrets.NewFakeDynClient(scheme, dynObjects...)
 
 	var err error
