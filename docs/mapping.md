@@ -111,6 +111,7 @@ Defaults
 </h3>
 <p>
 (<em>Appears on:</em>
+<a href="#secret.jenkins-x.io/v1alpha1.Defaults">Defaults</a>, 
 <a href="#secret.jenkins-x.io/v1alpha1.SecretRule">SecretRule</a>)
 </p>
 <p>
@@ -283,6 +284,19 @@ GcpSecretsManager
 </td>
 <td>
 <p>GcpSecretsManager config</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretsManager</code></br>
+<em>
+<a href="#secret.jenkins-x.io/v1alpha1.AwsSecretsManager">
+AwsSecretsManager
+</a>
+</em>
+</td>
+<td>
+<p>AwsSecretsManager config</p>
 </td>
 </tr>
 </tbody>
@@ -604,5 +618,5 @@ AwsSecretsManager
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>e93a93e</code>.
+on git commit <code>fddbf8d</code>.
 </em></p>

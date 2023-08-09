@@ -18,7 +18,7 @@ ROOT_PACKAGE := github.com/$(ORG_REPO)
 # This does not reflect the go binary version which was used to build the jx binary, and also does not reflect the version in the catalog.
 # The sole purpose of this variable is to build a new binary if we ever need to build a new jx binary with a new go version with no code change.
 # If you notice that this version is not the same as the catalog version, please open a PR, the maintainers are happy to review it.
-DUMMY_GO_VERSION := 1.18.6
+DUMMY_GO_VERSION := 1.19
 
 GO_VERSION := $(shell $(GO) version | sed -e 's/^[^0-9.]*\([0-9.]*\).*/\1/')
 GO_DEPENDENCIES := $(call rwildcard,pkg/,*.go) $(call rwildcard,cmd/j,*.go)
@@ -35,6 +35,8 @@ GOTEST := $(GO) test
 
 # set dev version unless VERSION is explicitly set via environment
 VERSION ?= $(shell echo "$$(git for-each-ref refs/tags/ --count=1 --sort=-version:refname --format='%(refname:short)' 2>/dev/null)-dev+$(REV)" | sed 's/^v//')
+
+GOHOME ?= ${GOPATH}
 
 # Build flags for setting build-specific configuration at build time - defaults to empty
 #BUILD_TIME_CONFIG_FLAGS ?= ""
@@ -178,10 +180,10 @@ lint: ## Lint the code
 .PHONY: all
 all: fmt build lint test
 
-install-refdocs:
-	$(GO) get github.com/jenkins-x/gen-crd-api-reference-docs
+$(GOHOME)/bin/gen-crd-api-reference-docs:
+	$(GO) install github.com/jenkins-x/gen-crd-api-reference-docs@latest
 
-generate-refdocs: install-refdocs
+generate-refdocs: $(GOHOME)/bin/gen-crd-api-reference-docs
 	${GOHOME}/bin/gen-crd-api-reference-docs -config "hack/configdocs/config.json" \
 	-template-dir hack/configdocs/templates \
     -api-dir "./pkg/apis/external/v1" \
