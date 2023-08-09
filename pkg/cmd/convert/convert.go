@@ -40,15 +40,12 @@ var (
 		# converts all the Secret resources into ExternalSecret resources so they can be checked into git
 		%s convert --source-dir=config-root
 	`)
-
-	secretFilter = kyamls.Filter{
-		Kinds: []string{"v1/Secret"},
-	}
 )
 
 // LabelOptions the options for the command
 type Options struct {
 	options.BaseOptions
+	kyamls.Filter
 
 	VaultMountPoint  string `env:"JX_VAULT_MOUNT_POINT"`
 	VaultRole        string `env:"JX_VAULT_ROLE"`
@@ -69,7 +66,7 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 	cmd := &cobra.Command{
 		Use:     "convert",
 		Aliases: []string{"secretmappings", "sm", "secretmapping"},
-		Short:   "Converts all Secret resources in the path to ExternalSecret resources so they can be checked into git",
+		Short:   "Converts Secret resources in the path to ExternalSecret resources so they can be checked into git",
 		Long:    labelLong,
 		Example: fmt.Sprintf(labelExample, rootcmd.BinaryName),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -78,6 +75,7 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 		},
 	}
 	o.BaseOptions.AddBaseFlags(cmd)
+	o.Filter.AddSelectorFlags(cmd)
 
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the secret mapping files and version stream")
 	cmd.Flags().StringVarP(&o.SourceDir, "source-dir", "", "", "the source directory to recursively look for the *.yaml or *.yml files to convert. If not specified defaults to 'config-root' in the dir")
@@ -96,6 +94,7 @@ func (o *Options) Validate() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to validate options")
 	}
+	o.Filter.Kinds = []string{"v1/Secret"}
 	dir := o.Dir
 
 	if o.SourceDir == "" {
@@ -147,7 +146,7 @@ func (o *Options) Run() error {
 		return true, nil
 	}
 
-	err = kyamls.ModifyFiles(o.SourceDir, modifyFn, secretFilter)
+	err = kyamls.ModifyFiles(o.SourceDir, modifyFn, o.Filter)
 	if err != nil {
 		return errors.Wrapf(err, "failed to modify files")
 	}
