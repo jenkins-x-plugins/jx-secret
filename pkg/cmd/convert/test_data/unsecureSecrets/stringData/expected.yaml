@@ -1,19 +1,36 @@
 # Source: bucketrepo/templates/config-secret.yaml
-apiVersion: kubernetes-client.io/v1
-kind: ExternalSecret
+apiVersion: v1
+kind: Secret
 metadata:
   name: bucketrepo-config
   namespace: jx
-spec:
-  backendType: vault
-  vaultMountPoint: kubernetes
-  vaultRole: jx-vault
-  data:
-    - name: config.yaml
-      key: secret/data/bucketrepo/config
-      property: config.yaml
-  template:
-    metadata:
-      annotations:
-        config/checksum: c41b5c22daadb25e478a6d0f1ccf4d8fd388a3851bc559a9adf789d902fe80b0
-    type: Opaque
+  annotations:
+    config/checksum: c41b5c22daadb25e478a6d0f1ccf4d8fd388a3851bc559a9adf789d902fe80b0
+    secret.jenkins-x.io/convert-exclude: "true"
+type: Opaque
+stringData:
+  config.yaml: |
+    http:
+        addr: ":8080"
+        username: "todo"
+        password: "todo"
+        chartPath: "charts"
+    
+    storage:
+        bucket_url: ""
+    
+    cache:
+        base_dir: "/tmp/bucketrepo"
+    
+    repositories:
+        - url: "https://repo.maven.org/maven2"
+        - url: "https://repo1.maven.org/maven2"
+        - url: "https://services.gradle.org/distributions/"
+        - url: "https://plugins.gradle.org/m2/"
+        - url: "https://repo.jenkins-ci.org/public/"
+        - url: "https://repo.jenkins-ci.org/releases/"
+        - url: "https://jitpack.io/"
+        - url: "https://registry.npmjs.org/"
+        - url: "https://repo.spring.io/milestone/"
+        - url: "https://repo.spring.io/release/"
+        - url: "http://uk.maven.org/maven2/"
