@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/cpuguy83/go-md2man v1.0.10
 	github.com/google/go-cmp v0.5.9
-	github.com/jenkins-x-plugins/secretfacade v0.2.7
+	github.com/jenkins-x-plugins/secretfacade v0.2.8
 	github.com/jenkins-x/go-scm v1.14.9
 	github.com/jenkins-x/jx-api/v4 v4.7.0
 	github.com/jenkins-x/jx-helpers/v3 v3.6.0
@@ -126,7 +126,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rawlingsj/jsonschema v0.0.0-20210511142122-a9c2cfdb7dcf // indirect
 	github.com/rickar/props v0.0.0-20170718221555-0b06aeb2f037 // indirect
-	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
