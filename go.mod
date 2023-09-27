@@ -126,7 +126,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rawlingsj/jsonschema v0.0.0-20210511142122-a9c2cfdb7dcf // indirect
 	github.com/rickar/props v0.0.0-20170718221555-0b06aeb2f037 // indirect
-	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
