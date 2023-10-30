@@ -6,9 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
-
+	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
+	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
 
 	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	schemaapi "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
@@ -85,6 +86,13 @@ func (o *Options) Run() error {
 	if err != nil {
 		return errors.Wrap(err, "error validating options")
 	}
+	// it only makes sense to choose secrets from all namespaces when not having -f or -i., ie when you want to set all unset properties
+	if o.Namespace == "" && (o.Filter != "" || o.Interactive) {
+		o.Namespace, err = kubeclient.CurrentNamespace()
+		if err != nil {
+			log.Logger().Warnf("failed to get current namespace, defaulting to all: %s", err.Error())
+		}
+	}
 	// get a list of external secrets which do not have corresponding k8s secret data populated
 	results, err := o.VerifyAndFilter()
 	if err != nil {
@@ -127,6 +135,17 @@ func (o *Options) Run() error {
 				d := &data[i]
 				key := populate.GetSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), name, d.Key)
 				property := d.Property
+
+				var value string
+				value, err = o.askForSecretValue(r, d)
+				if err != nil {
+					if errors.Is(err, terminal.InterruptErr) {
+						// interpreting interrupt (i.e. ctrl+c) as skipping property
+						log.Logger().Infof("skipping property %s", property)
+						continue
+					}
+					return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, key, name)
+				}
 				keyProperties := m[key]
 				if keyProperties == nil {
 					keyProperties = &editor.KeyProperties{
@@ -141,12 +160,6 @@ func (o *Options) Run() error {
 					}
 
 					m[key] = keyProperties
-				}
-
-				var value string
-				value, err = o.askForSecretValue(r, d)
-				if err != nil {
-					return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, key, name)
 				}
 
 				// fix issue where strings with newlines were being escaped when being marshalled later, so let's ensure newlines are used
@@ -320,4 +333,47 @@ func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1.Data {
 		}
 	}
 	return results
+}
+
+func (o *Options) VerifyAndFilter() ([]*secretfacade.SecretPair, error) {
+	secrets, err := o.Verify()
+	if err != nil {
+		return secrets, err
+	}
+
+	// let's filter out any secrets with same locations...
+	destinations := map[string][]*secretfacade.SecretPair{}
+
+	for _, s := range secrets {
+		es := s.ExternalSecret
+		for _, property := range es.Spec.Data {
+			destination := property.SecretLocation(es.Spec.BackendType)
+			destinations[destination] = append(destinations[destination], s)
+		}
+	}
+
+	filterKeys := map[string]bool{}
+	for destination, secretsForDestination := range destinations {
+		if len(secretsForDestination) < 2 {
+			continue
+		}
+
+		secretfacade.SortSecretsInSchemaOrder(secretsForDestination)
+		for i := 1; i < len(secretsForDestination); i++ {
+			key := secretsForDestination[i].Key()
+			if !filterKeys[key] {
+				log.Logger().Debugf("filtering out Secret %s/%s as %s/%s is better for schema editing and it uses the same destination %s", secretsForDestination[i].Namespace(), secretsForDestination[i].Name(), secretsForDestination[0].Namespace(), secretsForDestination[0].Name(), destination)
+				filterKeys[key] = true
+			}
+		}
+	}
+
+	var answer []*secretfacade.SecretPair
+	for _, s := range secrets {
+		key := s.Key()
+		if !filterKeys[key] {
+			answer = append(answer, s)
+		}
+	}
+	return answer, nil
 }

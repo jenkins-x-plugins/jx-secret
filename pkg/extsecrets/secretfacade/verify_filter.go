@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// VerifyAndFilter loads the secrets and verifies which are valid to aid the edit/populate operations
+// VerifyAndFilter loads the secrets and verifies which are valid to aid the populate operations
 // then filters out any duplicate entries which are using the same underlying secret mappings.
 //
 // e.g. if 2 secrets are populated to the same actual location then we can omit one of them since there's no need
@@ -104,10 +104,18 @@ func (a SchemaOrder) Less(i, j int) bool {
 			return true
 		}
 	}
-	if len(s1.ExternalSecret.Spec.Data) > len(s2.ExternalSecret.Spec.Data) {
+	es1 := s1.ExternalSecret
+	es2 := s2.ExternalSecret
+	if len(es1.Spec.Data) > len(es2.Spec.Data) {
 		return true
 	}
-	return s1.ExternalSecret.Name < s2.ExternalSecret.Name
+	if len(es1.Namespace) < len(es2.Namespace) {
+		return true
+	}
+	if es1.Name == es2.Name {
+		return es1.Namespace < es2.Namespace
+	}
+	return es1.Name < es2.Name
 }
 
 // SortSecretsInSchemaOrder sorts the secrets in schema order with the entry with a schema with the most properties being first
