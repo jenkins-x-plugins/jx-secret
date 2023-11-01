@@ -9,7 +9,7 @@ require (
 	github.com/jenkins-x-plugins/secretfacade v0.2.8
 	github.com/jenkins-x/go-scm v1.14.9
 	github.com/jenkins-x/jx-api/v4 v4.7.0
-	github.com/jenkins-x/jx-helpers/v3 v3.6.0
+	github.com/jenkins-x/jx-helpers/v3 v3.6.1
 	github.com/jenkins-x/jx-kube-client/v3 v3.0.4
 	github.com/jenkins-x/jx-logging/v3 v3.0.11
 	github.com/pkg/errors v0.9.1
