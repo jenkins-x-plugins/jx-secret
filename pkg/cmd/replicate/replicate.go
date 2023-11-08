@@ -70,7 +70,7 @@ func NewCmdReplicate() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.File, "file", "f", "t", "the ExternalSecret to replicate")
 	cmd.Flags().StringVarP(&o.Selector, "selector", "s", "", "defines the label selector to find the ExternalSecret resources to replicate")
 	cmd.Flags().StringArrayVarP(&o.Name, "name", "n", nil, "specifies the names of the ExternalSecrets to replicate if not using a selector")
-	cmd.Flags().StringVarP(&o.From, "from", "", "", "one or more Namespaces to replicate the ExternalSecret to")
+	cmd.Flags().StringVarP(&o.From, "from", "", "", "one or more Namespaces to replicate the ExternalSecret from")
 	cmd.Flags().StringArrayVarP(&o.To, "to", "t", nil, "one or more Namespaces to replicate the ExternalSecret to")
 	cmd.Flags().StringVarP(&o.OutputDir, "output-dir", "o", "", "the output directory which defaults to 'config-root' in the directory")
 	return cmd, o
