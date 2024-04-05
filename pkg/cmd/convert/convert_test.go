@@ -204,6 +204,9 @@ func TestToUnsecuredSecrets(t *testing.T) {
 	eo.Dir = tmpDir
 	eo.HelmSecretFolder = filepath.Join(tmpDir, "helm-secrets")
 	eo.SourceDir = tmpDir
+	eo.Filter.Selector = map[string]string{"secret.jenkins-x.io/convert-exclude": "true"}
+	eo.Filter.SelectTarget = "metadata.annotations"
+	eo.Filter.InvertSelector = true
 
 	eo.SecretMapping, _, err = secretmapping.LoadSecretMapping(sourceData, true)
 	require.NoError(t, err, "failed to load secret mapping")

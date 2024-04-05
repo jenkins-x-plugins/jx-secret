@@ -6,6 +6,7 @@ metadata:
   namespace: jx
   annotations:
     config/checksum: c41b5c22daadb25e478a6d0f1ccf4d8fd388a3851bc559a9adf789d902fe80b0
+    secret.jenkins-x.io/convert-exclude: "true"
 type: Opaque
 stringData:
   config.yaml: |

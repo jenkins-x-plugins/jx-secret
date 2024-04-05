@@ -107,6 +107,11 @@ type Data struct {
 	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 }
 
+// SecretLocation is the string representation of this unique property
+func (d Data) SecretLocation(backend string) string {
+	return fmt.Sprintf("%s/%s/%s/%s", backend, d.Key, d.Property, d.Version)
+}
+
 // Template the template data
 type Template struct {
 	// Type the type of the secret
