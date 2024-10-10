@@ -26,7 +26,11 @@ spec:
         - name: build-make-test
           resources: {}
         - name: build-container-build
-          resources: {}
+          resources:
+            # override requests for the pod here
+            requests:
+              cpu: 1400m
+              memory: 600Mi
   podTemplate: {}
   serviceAccountName: tekton-bot
   timeout: 2h0m0s
