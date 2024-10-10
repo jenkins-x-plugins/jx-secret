@@ -12,9 +12,9 @@ spec:
   backendType: azureKeyVault
   keyVaultName: mangroveSwamp
   data:
-    - name: azure.json
-      key: azure-secret-name
-      property: customProperty
+  - name: azure.json
+    key: azure-secret-name
+    property: customProperty
   template:
     metadata:
       labels:

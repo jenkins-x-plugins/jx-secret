@@ -12,9 +12,9 @@ spec:
   backendType: alicloudSecretsManager
   roleArn: acs:ram::{UID}:role/demo
   data:
-    - name: password
-      key: unspecified-simple-type
-      versionStage: ACSCurrent
+  - name: password
+    key: unspecified-simple-type
+    versionStage: ACSCurrent
   template:
     metadata:
       labels:

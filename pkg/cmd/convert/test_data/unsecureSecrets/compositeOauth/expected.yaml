@@ -23,6 +23,6 @@ spec:
         heritage: "Helm"
     type: Opaque
   data:
-    - name: anotherkey
-      key: secret/data/lighthouse/oauth/token
-      property: anotherkey
+  - name: anotherkey
+    key: secret/data/lighthouse/oauth/token
+    property: anotherkey

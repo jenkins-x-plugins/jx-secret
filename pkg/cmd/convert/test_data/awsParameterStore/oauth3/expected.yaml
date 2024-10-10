@@ -13,12 +13,12 @@ spec:
   roleArn: acs:ram::{UID}:role/demo
   region: us-east-1
   data:
-    - name: hmac
-      key: unspecified-complex-type
-      property: hmac
-    - name: git_token
-      key: unspecified-complex-type
-      property: git_token
+  - name: hmac
+    key: unspecified-complex-type
+    property: hmac
+  - name: git_token
+    key: unspecified-complex-type
+    property: git_token
   template:
     metadata:
       labels:

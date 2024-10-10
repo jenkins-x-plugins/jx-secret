@@ -13,9 +13,9 @@ spec:
   vaultMountPoint: kubernetes
   vaultRole: jx-vault
   data:
-    - name: hmac
-      key: secret/data/lighthouse/hmac/token
-      property: hmac
+  - name: hmac
+    key: secret/data/lighthouse/hmac/token
+    property: hmac
   template:
     metadata:
       labels:

@@ -13,9 +13,9 @@ spec:
   roleArn: acs:ram::{UID}:role/demo
   region: us-east-1
   data:
-    - name: azure.json
-      key: azure-secret-name
-      property: customProperty
+  - name: azure.json
+    key: azure-secret-name
+    property: customProperty
   template:
     metadata:
       labels:
