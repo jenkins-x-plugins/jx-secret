@@ -78,21 +78,22 @@ func (o *Options) RunWithChannel(stop chan struct{}) error {
 		log.Logger().Infof("Watching for Secret resources in namespace %s", ns)
 		listWatch := cache.NewListWatchFromClient(o.KubeClient.CoreV1().RESTClient(), "secrets", ns, fields.Everything())
 		kube.SortListWatchByName(listWatch)
-		_, ctrl := cache.NewInformer(
-			listWatch,
-			secret,
-			time.Minute*10,
-			cache.ResourceEventHandlerFuncs{
-				AddFunc: func(obj interface{}) {
-					o.onSecret(ns, obj)
+		_, ctrl := cache.NewInformerWithOptions(
+			cache.InformerOptions{
+				ListerWatcher: listWatch,
+				ObjectType:    secret,
+				Handler: cache.ResourceEventHandlerFuncs{
+					AddFunc: func(obj interface{}) {
+						o.onSecret(ns, obj)
+					},
+					UpdateFunc: func(oldObj, newObj interface{}) {
+						o.onSecret(ns, newObj)
+					},
+					DeleteFunc: func(obj interface{}) {
+					},
 				},
-				UpdateFunc: func(oldObj, newObj interface{}) {
-					o.onSecret(ns, newObj)
-				},
-				DeleteFunc: func(obj interface{}) {
-				},
-			},
-		)
+				ResyncPeriod: time.Minute * 10,
+			})
 		go ctrl.Run(stop)
 	}
 	return nil
