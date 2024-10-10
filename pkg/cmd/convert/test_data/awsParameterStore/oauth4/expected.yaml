@@ -13,8 +13,8 @@ spec:
   roleArn: acs:ram::{UID}:role/demo
   region: us-east-1
   data:
-    - name: password
-      key: unspecified-simple-type
+  - name: password
+    key: unspecified-simple-type
   template:
     metadata:
       labels:

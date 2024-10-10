@@ -13,13 +13,13 @@ spec:
   roleArn: acs:ram::{UID}:role/custom
   region: us-east-2
   data:
-    - name: username
-      key: secretSquirrel
-      property: username
-    - name: password
-      key: secretSquirrel
-      property: password
-      versionStage: CustomVersion
+  - name: username
+    key: secretSquirrel
+    property: username
+  - name: password
+    key: secretSquirrel
+    property: password
+    versionStage: CustomVersion
   template:
     metadata:
       labels:

@@ -13,14 +13,14 @@ spec:
   roleArn: acs:ram::{UID}:role/demo
   region: us-east-2
   data:
-    - name: username
-      key: secretSquirrel
-      property: username
-      versionStage: AWSPREVIOUS
-    - name: password
-      key: secretSquirrel
-      property: password
-      versionStage: CustomVersion
+  - name: username
+    key: secretSquirrel
+    property: username
+    versionStage: AWSPREVIOUS
+  - name: password
+    key: secretSquirrel
+    property: password
+    versionStage: CustomVersion
   template:
     metadata:
       labels:

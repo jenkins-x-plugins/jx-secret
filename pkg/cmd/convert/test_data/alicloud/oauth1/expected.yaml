@@ -12,14 +12,14 @@ spec:
   backendType: alicloudSecretsManager
   roleArn: acs:ram::{UID}:role/custom
   data:
-    - name: username
-      key: secretSquirrel
-      property: username
-      versionStage: ACSCurrent
-    - name: password
-      key: secretSquirrel
-      property: password
-      versionStage: CustomVersion
+  - name: username
+    key: secretSquirrel
+    property: username
+    versionStage: ACSCurrent
+  - name: password
+    key: secretSquirrel
+    property: password
+    versionStage: CustomVersion
   template:
     metadata:
       labels:

@@ -12,8 +12,8 @@ spec:
   backendType: azureKeyVault
   keyVaultName: bananaPalm
   data:
-    - name: azure.json
-      key: azure-secret-name
+  - name: azure.json
+    key: azure-secret-name
   template:
     metadata:
       labels:

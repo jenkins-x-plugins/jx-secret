@@ -12,12 +12,12 @@ spec:
   backendType: azureKeyVault
   keyVaultName: appleTree
   data:
-    - name: username
-      key: secretSquirrel
-      property: username
-    - name: password
-      key: secretSquirrel
-      property: password
+  - name: username
+    key: secretSquirrel
+    property: username
+  - name: password
+    key: secretSquirrel
+    property: password
   template:
     metadata:
       labels:
