@@ -11,8 +11,8 @@ metadata:
 spec:
   backendType: ibmcloudSecretsManager
   data:
-    - name: azure.json
-      key: azure-secret-name
+  - name: azure.json
+    key: azure-secret-name
   template:
     metadata:
       labels:

@@ -81,8 +81,8 @@ func TestToExtSecrets(t *testing.T) {
 
 		result := strings.TrimSpace(string(resultData))
 		expectedText := strings.TrimSpace(string(expectData))
-		if d := cmp.Diff(result, expectedText); d != "" {
-			t.Errorf("Generated Pipeline for file %s did not match expected: %s", tc.SourceFile, d)
+		if d := cmp.Diff(expectedText, result); d != "" {
+			t.Errorf("generated external secret for file %s did not match expected: %s", tc.SourceFile, d)
 		}
 		t.Logf("generated for file %s file\n%s\n", tc.SourceFile, result)
 	}
@@ -150,8 +150,8 @@ func TestToNamespaceSpecificExtSecrets(t *testing.T) {
 
 		result := strings.TrimSpace(string(resultData))
 		expectedText := strings.TrimSpace(string(expectData))
-		if d := cmp.Diff(result, expectedText); d != "" {
-			t.Errorf("Generated Pipeline for file %s did not match expected: %s", tc.SourceFile, d)
+		if d := cmp.Diff(expectedText, result); d != "" {
+			t.Errorf("generated external secret for file %s did not match expected: %s", tc.SourceFile, d)
 		}
 		t.Logf("generated for file %s file\n%s\n", tc.SourceFile, result)
 	}
@@ -226,10 +226,10 @@ func TestToUnsecuredSecrets(t *testing.T) {
 
 		result := strings.TrimSpace(string(resultData))
 		expectedText := strings.TrimSpace(string(expectData))
-		if d := cmp.Diff(result, expectedText); d != "" {
-			t.Errorf("Generated Pipeline for file %s did not match expected: %s", tc.SourceFile, d)
+		if d := cmp.Diff(expectedText, result); d != "" {
+			t.Errorf("generated secret for file %s did not match expected: %s", tc.SourceFile, d)
 		}
-		t.Logf("generated external secret for file %s file\n%s\n", tc.SourceFile, result)
+		t.Logf("generated secret for file %s file\n%s\n", tc.SourceFile, result)
 	}
 }
 
@@ -294,7 +294,7 @@ func TestMultipleBackendTypes(t *testing.T) {
 
 		result := strings.TrimSpace(string(resultData))
 		expectedText := strings.TrimSpace(string(expectData))
-		if d := cmp.Diff(result, expectedText); d != "" {
+		if d := cmp.Diff(expectedText, result); d != "" {
 			t.Errorf("Generated external secret for file %s did not match expected: %s", tc.SourceFile, d)
 		}
 		t.Logf("generated for file %s file\n%s\n", tc.SourceFile, result)
@@ -376,7 +376,7 @@ func TestAlicloud(t *testing.T) {
 		result := strings.TrimSpace(string(resultData))
 		expectedText := strings.TrimSpace(string(expectData))
 
-		if d := cmp.Diff(result, expectedText); d != "" {
+		if d := cmp.Diff(expectedText, result); d != "" {
 			t.Errorf("Generated external secret for file %s did not match expected: %s", tc.SourceFile, d)
 		}
 		t.Logf("generated for file %s file\n%s\n", tc.SourceFile, result)
@@ -457,7 +457,7 @@ func TestAWSSecretsManager(t *testing.T) {
 		result := strings.TrimSpace(string(resultData))
 		expectedText := strings.TrimSpace(string(expectData))
 
-		if d := cmp.Diff(result, expectedText); d != "" {
+		if d := cmp.Diff(expectedText, result); d != "" {
 			t.Errorf("Generated external secret for file %s did not match expected: %s", tc.SourceFile, d)
 		}
 		t.Logf("generated for file %s file\n%s\n", tc.SourceFile, result)
@@ -539,7 +539,7 @@ func TestAWSParameterStore(t *testing.T) {
 		result := strings.TrimSpace(string(resultData))
 		expectedText := strings.TrimSpace(string(expectData))
 
-		if d := cmp.Diff(result, expectedText); d != "" {
+		if d := cmp.Diff(expectedText, result); d != "" {
 			t.Errorf("Generated external secret for file %s did not match expected: %s", tc.SourceFile, d)
 		}
 		t.Logf("generated for file %s file\n%s\n", tc.SourceFile, result)
@@ -621,7 +621,7 @@ func TestIBMSecretsManager(t *testing.T) {
 		result := strings.TrimSpace(string(resultData))
 		expectedText := strings.TrimSpace(string(expectData))
 
-		if d := cmp.Diff(result, expectedText); d != "" {
+		if d := cmp.Diff(expectedText, result); d != "" {
 			t.Errorf("Generated external secret for file %s did not match expected: %s", tc.SourceFile, d)
 		}
 		t.Logf("generated for file %s file\n%s\n", tc.SourceFile, result)
@@ -689,7 +689,7 @@ func TestAzureKeyVault(t *testing.T) {
 
 		result := strings.TrimSpace(string(resultData))
 		expectedText := strings.TrimSpace(string(expectData))
-		if d := cmp.Diff(result, expectedText); d != "" {
+		if d := cmp.Diff(expectedText, result); d != "" {
 			t.Errorf("Generated external secret for file %s did not match expected: %s", tc.SourceFile, d)
 		}
 		t.Logf("generated for file %s file\n%s\n", tc.SourceFile, result)

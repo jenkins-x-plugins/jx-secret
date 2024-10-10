@@ -9,9 +9,9 @@ spec:
   vaultMountPoint: kubernetes
   vaultRole: jx-vault
   data:
-    - name: config.yaml
-      key: secret/data/bucketrepo/config
-      property: config.yaml
+  - name: config.yaml
+    key: secret/data/bucketrepo/config
+    property: config.yaml
   template:
     metadata:
       annotations:
