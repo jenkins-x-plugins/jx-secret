@@ -16,7 +16,7 @@ func MaskedCommandRunner(c *cmdrunner.Command) (string, error) {
 
 	result, err := c.RunWithoutRetry()
 	if result != "" {
-		log.Logger().Infof(termcolor.ColorStatus(result))
+		log.Logger().Info(termcolor.ColorStatus(result))
 	}
 	return result, err
 }
