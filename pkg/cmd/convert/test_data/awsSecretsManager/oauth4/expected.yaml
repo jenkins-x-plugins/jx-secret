@@ -13,10 +13,10 @@ spec:
   roleArn: acs:ram::{UID}:role/demo
   region: us-east-1
   data:
-    - name: password
-      key: unspecified-simple-type
-      property: password
-      versionStage: AWSPREVIOUS
+  - name: password
+    key: unspecified-simple-type
+    property: password
+    versionStage: AWSPREVIOUS
   template:
     metadata:
       labels:

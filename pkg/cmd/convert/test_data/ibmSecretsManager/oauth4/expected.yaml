@@ -11,8 +11,8 @@ metadata:
 spec:
   backendType: ibmcloudSecretsManager
   data:
-    - name: password
-      key: unspecified-simple-type
+  - name: password
+    key: unspecified-simple-type
   template:
     metadata:
       labels:

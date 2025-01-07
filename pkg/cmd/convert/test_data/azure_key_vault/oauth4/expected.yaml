@@ -12,8 +12,8 @@ spec:
   backendType: azureKeyVault
   keyVaultName: twilightSparkle
   data:
-    - name: password
-      key: unspecified-simple-type
+  - name: password
+    key: unspecified-simple-type
   template:
     metadata:
       labels:

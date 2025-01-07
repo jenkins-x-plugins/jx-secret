@@ -13,9 +13,9 @@ spec:
   vaultMountPoint: kubernetes
   vaultRole: jx-vault
   data:
-    - name: oauth
-      key: secret/data/jx/pipelineUser
-      property: token
+  - name: oauth
+    key: secret/data/jx/pipelineUser
+    property: token
   template:
     metadata:
       labels:

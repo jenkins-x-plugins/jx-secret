@@ -12,10 +12,10 @@ spec:
   backendType: alicloudSecretsManager
   roleArn: acs:ram::{UID}:role/demo
   data:
-    - name: azure.json
-      key: azure-secret-name
-      property: customProperty
-      versionStage: ACSCurrent
+  - name: azure.json
+    key: azure-secret-name
+    property: customProperty
+    versionStage: ACSCurrent
   template:
     metadata:
       labels:

@@ -12,9 +12,9 @@ spec:
   backendType: azureKeyVault
   keyVaultName: appleTree
   data:
-    - name: azure.json
-      key: azure-secret-name
-      property: azure.json
+  - name: azure.json
+    key: azure-secret-name
+    property: azure.json
   template:
     metadata:
       labels:

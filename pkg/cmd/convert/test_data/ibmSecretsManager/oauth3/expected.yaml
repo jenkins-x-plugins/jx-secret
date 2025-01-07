@@ -11,12 +11,12 @@ metadata:
 spec:
   backendType: ibmcloudSecretsManager
   data:
-    - name: hmac
-      key: unspecified-complex-type
-      property: hmac
-    - name: git_token
-      key: unspecified-complex-type
-      property: git_token
+  - name: hmac
+    key: unspecified-complex-type
+    property: hmac
+  - name: git_token
+    key: unspecified-complex-type
+    property: git_token
   template:
     metadata:
       labels:
