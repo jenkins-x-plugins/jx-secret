@@ -25,7 +25,9 @@ var secretRetriableErrors = []string{
 // Main creates the new command
 func Main() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   rootcmd.TopLevelCommand,
+		Annotations: map[string]string{
+			cobra.CommandDisplayNameAnnotation: rootcmd.TopLevelCommand,
+		},
 		Short: "commands for working with Secrets, ExternalSecrets and external secret stores",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()
