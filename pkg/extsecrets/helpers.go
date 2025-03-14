@@ -20,7 +20,7 @@ import (
 
 var (
 	// ExternalSecretsResource the schema group version resource
-	ExternalSecretsResource = schema.GroupVersionResource{Group: "kubernetes-client.io", Version: "v1", Resource: "externalsecrets"}
+	ExternalSecretsResource = schema.GroupVersionResource{Group: "external-secrets.io", Version: "v1beta1", Resource: "externalsecrets"}
 
 	info = termcolor.ColorInfo
 )
