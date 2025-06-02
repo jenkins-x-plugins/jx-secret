@@ -12,7 +12,7 @@ import (
 
 var resourceKinds = []schemagen.ResourceKind{
 	{
-		APIVersion: "kubernetes-client.io/v1",
+		APIVersion: "external-secrets.io/v1beta1",
 		Name:       "externalsecret",
 		Resource:   &v1.ExternalSecret{},
 	},
