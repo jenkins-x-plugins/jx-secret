@@ -8,6 +8,7 @@ spec:
     tasks:
     - name: from-build-pack
       resources: {}
+      timeout: 24h0m0s
       taskSpec:
         metadata: {}
         stepTemplate:
@@ -29,5 +30,5 @@ spec:
           resources: {}
   podTemplate: {}
   serviceAccountName: tekton-bot
-  timeout: 2h0m0s
+  timeout: 24h0m0s
 status: {}
