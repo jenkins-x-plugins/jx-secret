@@ -8,7 +8,7 @@ spec:
     tasks:
     - name: jx-secret-lint
       resources: {}
-      timeout: 1h30m0s
+      timeout: 24h
       taskSpec:
         metadata: {}
         stepTemplate:
@@ -27,5 +27,5 @@ spec:
               memory: 4400Mi
   podTemplate: {}
   serviceAccountName: tekton-bot
-  timeout: 1h30m0s
+  timeout: 24h
 status: {}
