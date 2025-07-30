@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert/edit"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
@@ -42,6 +44,12 @@ var (
 	`)
 )
 
+const (
+	// This is deprecated, kept here only for backwards compatibility, to be removed soon
+	kubernetesExternalSecretsAPIVersion = "kubernetes-client.io/v1"
+	externalSecretsAPIVersion           = "external-secrets.io/v1beta1"
+)
+
 // LabelOptions the options for the command
 type Options struct {
 	options.BaseOptions
@@ -55,6 +63,7 @@ type Options struct {
 	VersionStreamDir string
 	HelmSecretFolder string
 	SecretMapping    *v1alpha1.SecretMapping
+	kubeClient       kubernetes.Interface
 
 	Prefix string
 }
@@ -125,6 +134,11 @@ func (o *Options) Run() error {
 		return errors.Wrapf(err, "failed to validate options")
 	}
 
+	o.kubeClient, err = kube.LazyCreateKubeClient(o.kubeClient)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create kubeclient")
+	}
+
 	modifyFn := func(node *yaml.RNode, path string) (bool, error) {
 		var err error
 		results, err := o.ModifyYAML(node, path)
@@ -176,7 +190,8 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 	}
 
 	secret := o.SecretMapping.FindRule(namespace, name)
-	err = kyamls.SetStringValue(node, path, "kubernetes-client.io/v1", "apiVersion")
+	fmt.Println(secret.Name)
+	err = kyamls.SetStringValue(node, path, kubernetesExternalSecretsAPIVersion, "apiVersion")
 	if err != nil {
 		return results, err
 	}

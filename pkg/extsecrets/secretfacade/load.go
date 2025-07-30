@@ -26,7 +26,7 @@ func (o *Options) Load() ([]*SecretPair, error) {
 	}
 	o.ExternalSecrets = resources
 
-	log.Logger().Debugf("found %d ExternalSecret resources", len(resources))
+	log.Logger().Infof("found %d ExternalSecret resources", len(resources))
 
 	for _, r := range resources {
 		if r == nil {
