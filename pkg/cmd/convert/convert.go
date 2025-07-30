@@ -176,7 +176,7 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 	}
 
 	secret := o.SecretMapping.FindRule(namespace, name)
-	err = kyamls.SetStringValue(node, path, "kubernetes-client.io/v1", "apiVersion")
+	err = kyamls.SetStringValue(node, path, "external-secrets.io/v1beta1", "apiVersion")
 	if err != nil {
 		return results, err
 	}
