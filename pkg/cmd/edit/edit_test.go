@@ -37,6 +37,7 @@ func TestEditLocal(t *testing.T) {
 	}
 
 	o.Namespace = ns
+	o.Dir = filepath.Join("test_data", "local")
 	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
 
 	var err error

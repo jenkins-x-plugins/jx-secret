@@ -1,5 +1,5 @@
 # Source: lighthouse/templates/oauthsecret.yaml
-apiVersion: kubernetes-client.io/v1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: my-kubernetes-secret-name
@@ -9,18 +9,21 @@ metadata:
     release: "lighthouse"
     heritage: "Helm"
 spec:
-  backendType: gcpSecretsManager
-  projectId: foo
+  secretStoreRef:
+    name: jx-secret-store
+    kind: ClusterSecretStore
   data:
-  - name: oauth
-    key: bar-my-gsm-secret-name
-    property: gsm-secret-property
-    version: 1
-  template:
-    metadata:
-      labels:
-        app: lighthouse-lighthouse
-        chart: "lighthouse-0.0.633"
-        release: "lighthouse"
-        heritage: "Helm"
-    type: Opaque
+  - secretKey: oauth
+    remoteRef:
+      key: bar-my-gsm-secret-name
+      property: gsm-secret-property
+      version: 1
+  target:
+    template:
+      metadata:
+        labels:
+          app: lighthouse-lighthouse
+          chart: "lighthouse-0.0.633"
+          release: "lighthouse"
+          heritage: "Helm"
+      type: Opaque

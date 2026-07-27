@@ -11,7 +11,6 @@ import (
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert/edit"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/vaults"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
@@ -28,6 +27,19 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+// DefaultSecretStoreName is the name of the (Cluster)SecretStore that every
+// ExternalSecret emitted by `jx-secret convert` references. This is the
+// contract the jx3-versions ESO chart ships: a single ClusterSecretStore per
+// cluster with a stable name that carries the backend-specific config.
+const DefaultSecretStoreName = "jx-secret-store"
+
+// DefaultSecretStoreKind is the kind of the (Cluster)SecretStore that every
+// emitted ExternalSecret references.
+const DefaultSecretStoreKind = "ClusterSecretStore"
+
+// APIVersion is the ESO v1 API version stamped onto every emitted ExternalSecret.
+const APIVersion = "external-secrets.io/v1"
 
 var (
 	info = termcolor.ColorInfo
@@ -47,8 +59,6 @@ type Options struct {
 	options.BaseOptions
 	kyamls.Filter
 
-	VaultMountPoint  string `env:"JX_VAULT_MOUNT_POINT"`
-	VaultRole        string `env:"JX_VAULT_ROLE"`
 	Dir              string `env:"JX_DIR"`
 	DefaultNamespace string `env:"JX_DEFAULT_NAMESPACE"`
 	SourceDir        string
@@ -80,8 +90,6 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.Dir, "dir", "d", ".", "the directory to look for the secret mapping files and version stream")
 	cmd.Flags().StringVarP(&o.SourceDir, "source-dir", "", "", "the source directory to recursively look for the *.yaml or *.yml files to convert. If not specified defaults to 'config-root' in the dir")
 	cmd.Flags().StringVarP(&o.VersionStreamDir, "version-stream-dir", "", "", "the directory containing the version stream. If not specified defaults to the 'versionStream' folder in the dir")
-	cmd.Flags().StringVarP(&o.VaultMountPoint, "vault-mount-point", "m", "kubernetes", "the vault authentication mount point")
-	cmd.Flags().StringVarP(&o.VaultRole, "vault-role", "r", vaults.DefaultVaultNamespace, "the vault role that will be used to fetch the secrets. This role will need to be bound to kubernetes-external-secret's ServiceAccount; see Vault's documentation: https://www.vaultproject.io/docs/auth/kubernetes.html")
 	cmd.Flags().StringVarP(&o.HelmSecretFolder, "helm-secrets-dir", "", "", "the directory where the helm secrets live with a folder per namespace and a file with a '.yaml' extension for each secret name. Defaults to $JX_HELM_SECRET_FOLDER")
 	cmd.Flags().StringVarP(&o.DefaultNamespace, "default-namespace", "", "jx", "the default namespace if no namespace is specified in a Secret resource")
 
@@ -176,7 +184,7 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 	}
 
 	secret := o.SecretMapping.FindRule(namespace, name)
-	err = kyamls.SetStringValue(node, path, "kubernetes-client.io/v1", "apiVersion")
+	err = kyamls.SetStringValue(node, path, APIVersion, "apiVersion")
 	if err != nil {
 		return results, err
 	}
@@ -188,85 +196,43 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 	if secret.BackendType == "" {
 		secret.BackendType = o.SecretMapping.Spec.BackendType
 	}
-	err = kyamls.SetStringValue(node, path, string(secret.BackendType), "spec", "backendType")
+
+	// Emit the (Cluster)SecretStore reference. The referenced store carries
+	// the backend-specific config (backendType/roleArn/region/projectId/
+	// keyVaultName/vaultMountPoint/vaultRole) — the ExternalSecret itself
+	// no longer needs any of those.
+	err = kyamls.SetStringValue(node, path, DefaultSecretStoreName, "spec", "secretStoreRef", "name")
+	if err != nil {
+		return results, err
+	}
+	err = kyamls.SetStringValue(node, path, DefaultSecretStoreKind, "spec", "secretStoreRef", "kind")
 	if err != nil {
 		return results, err
 	}
 
-	if secret.RoleArn == "" {
-		secret.RoleArn = o.SecretMapping.Spec.RoleArn
-	}
-	if secret.RoleArn != "" {
-		err = kyamls.SetStringValue(node, path, secret.RoleArn, "spec", "roleArn")
-		if err != nil {
-			return results, err
-		}
-	}
-	if secret.Region == "" {
-		secret.Region = o.SecretMapping.Spec.Region
-	}
-	if secret.Region != "" {
-		err = kyamls.SetStringValue(node, path, secret.Region, "spec", "region")
-		if err != nil {
-			return results, err
-		}
-	}
-
+	// The switch below is preserved solely to set o.Prefix from the mapping —
+	// GSM's key naming reads it. No spec fields are set here any more.
 	switch secret.BackendType {
 	case v1alpha1.BackendTypeGSM:
 		if secret.GcpSecretsManager == nil {
 			secret.GcpSecretsManager = &v1alpha1.GcpSecretsManager{}
 		}
-		if secret.GcpSecretsManager.ProjectID != "" {
-			err = kyamls.SetStringValue(node, path, secret.GcpSecretsManager.ProjectID, "spec", "projectId")
-			if err != nil {
-				return results, err
-			}
-		} else if o.SecretMapping.Spec.GcpSecretsManager.ProjectID != "" {
-			err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.GcpSecretsManager.ProjectID, "spec", "projectId")
-			if err != nil {
-				return results, err
-			}
-		} else {
+		if secret.GcpSecretsManager.ProjectID == "" &&
+			o.SecretMapping.Spec.GcpSecretsManager.ProjectID == "" {
 			return results, errors.New("missing secret mapping secret.GcpSecretsManager.ProjectID")
 		}
-
-		// if we have a unique prefix for the specific secret or a default one then set it to use as a gsm secret prefix later
 		if secret.GcpSecretsManager.UniquePrefix != "" {
 			o.Prefix = secret.GcpSecretsManager.UniquePrefix
 		} else if o.SecretMapping.Spec.GcpSecretsManager.UniquePrefix != "" {
 			o.Prefix = o.SecretMapping.Spec.GcpSecretsManager.UniquePrefix
 		}
 
-	case v1alpha1.BackendTypeVault:
-		if o.VaultMountPoint != "" {
-			err = kyamls.SetStringValue(node, path, o.VaultMountPoint, "spec", "vaultMountPoint")
-			if err != nil {
-				return results, err
-			}
-		}
-		if o.VaultRole != "" {
-			err = kyamls.SetStringValue(node, path, o.VaultRole, "spec", "vaultRole")
-			if err != nil {
-				return results, err
-			}
-		}
-
 	case v1alpha1.BackendTypeAzure:
 		if secret.AzureKeyVaultConfig == nil {
 			secret.AzureKeyVaultConfig = &v1alpha1.AzureKeyVaultConfig{}
 		}
-		if secret.AzureKeyVaultConfig.KeyVaultName != "" {
-			err = kyamls.SetStringValue(node, path, secret.AzureKeyVaultConfig.KeyVaultName, "spec", "keyVaultName")
-			if err != nil {
-				return results, err
-			}
-		} else if o.SecretMapping.Spec.AzureKeyVaultConfig != nil && o.SecretMapping.Spec.AzureKeyVaultConfig.KeyVaultName != "" {
-			err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.AzureKeyVaultConfig.KeyVaultName, "spec", "keyVaultName")
-			if err != nil {
-				return results, err
-			}
-		} else {
+		if secret.AzureKeyVaultConfig.KeyVaultName == "" &&
+			(o.SecretMapping.Spec.AzureKeyVaultConfig == nil || o.SecretMapping.Spec.AzureKeyVaultConfig.KeyVaultName == "") {
 			return results, errors.New("missing secret mapping secret.AzureKeyVaultConfig.KeyVaultName")
 		}
 
@@ -274,34 +240,20 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		if secret.AwsSecretsManager == nil {
 			secret.AwsSecretsManager = &v1alpha1.AwsSecretsManager{}
 		}
-		if secret.AwsSecretsManager.Region != "" {
-			err = kyamls.SetStringValue(node, path, secret.AwsSecretsManager.Region, "spec", "region")
-			if err != nil {
-				return results, err
-			}
-		} else if o.SecretMapping.Spec.AwsSecretsManager.Region != "" {
-			err = kyamls.SetStringValue(node, path, o.SecretMapping.Spec.AwsSecretsManager.Region, "spec", "region")
-			if err != nil {
-				return results, err
-			}
-		} else {
+		if secret.AwsSecretsManager.Region == "" && o.SecretMapping.Spec.AwsSecretsManager.Region == "" {
 			return results, errors.New("missing secret mapping secret.AwsSecretsManager.Region")
 		}
-
 	}
 
-	// ToDo: what are we doing here?
-	flag, err := o.convertData(node, path, secret.BackendType) //nolint:ineffassign,staticcheck
+	_, err = o.convertData(node, path, secret.BackendType)
 	if err != nil {
 		return results, err
 	}
-	// ToDo: Why is this also named flag?
-	flag, err = o.moveMetadataToTemplate(node, path) //nolint:ineffassign,staticcheck
+	flag, err := o.moveMetadataToTemplate(node, path)
 	if err != nil {
 		return results, err
 	}
 
-	// lets make sure the helm secret dir exists
 	if namespace == "" {
 		namespace = secret.Namespace
 		if namespace == "" {
@@ -342,6 +294,15 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	var contents []*yaml.Node
 	style := node.Document().Style
 
+	// Unsecured (literal) fields collect into a single template.data map that
+	// eventually lands at spec.target.template.data — ESO v1 has no
+	// stringData distinction; literals go in the one map.
+	templateData := &yaml.Node{
+		Kind:  yaml.MappingNode,
+		Style: style,
+	}
+	rTemplateData := yaml.NewRNode(templateData)
+
 	for _, dataPath := range []string{"data", "stringData"} {
 		data, err := node.Pipe(yaml.Lookup(dataPath))
 		if err != nil {
@@ -356,17 +317,12 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 			}
 			complexSecretType := len(fields) > 1
 
-			templateNode := &yaml.Node{
-				Kind:  yaml.MappingNode,
-				Style: style,
-			}
-			rTemplateNode := yaml.NewRNode(templateNode)
 			for _, field := range fields {
 
 				if o.SecretMapping.IsSecretKeyUnsecured(secretName, field) {
 					secretValue := kyamls.GetStringField(data, "", field)
 
-					err = kyamls.SetStringValue(rTemplateNode, path, secretValue, field)
+					err = kyamls.SetStringValue(rTemplateData, path, secretValue, field)
 					if err != nil {
 						return false, errors.Wrapf(err, "failed to set string value for secret %s and key %s", secretName, field)
 					}
@@ -402,24 +358,24 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 				}
 				contents = append(contents, newNode)
 			}
-
-			if len(templateNode.Content) != 0 {
-				template, err := node.Pipe(yaml.LookupCreate(yaml.ScalarNode, "spec", "template", dataPath))
-				if err != nil {
-					return false, errors.Wrapf(err, "failed to lookup/create template for path %s", path)
-				}
-				template.SetYNode(&yaml.Node{
-					Kind:    yaml.MappingNode,
-					Content: templateNode.Content,
-					Style:   style,
-				})
-			}
 		}
 		err = node.PipeE(yaml.Clear(dataPath))
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to remove %s", dataPath)
 		}
+	}
 
+	// Stamp any literal / unsecured values into spec.target.template.data.
+	if len(templateData.Content) != 0 {
+		templateDataNode, err := node.Pipe(yaml.LookupCreate(yaml.MappingNode, "spec", "target", "template", "data"))
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to lookup/create template data for path %s", path)
+		}
+		templateDataNode.SetYNode(&yaml.Node{
+			Kind:    yaml.MappingNode,
+			Content: templateData.Content,
+			Style:   style,
+		})
 	}
 
 	data, err := node.Pipe(yaml.LookupCreate(yaml.SequenceNode, "spec", "data"))
@@ -435,12 +391,35 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	return true, nil
 }
 
+// setRemoteRef writes secretKey plus a nested remoteRef {key, property, ...}
+// onto a data entry rNode in the ESO v1 shape.
+func setRemoteRef(rNode *yaml.RNode, path, secretKey, key, property string, extra map[string]string) error {
+	if err := kyamls.SetStringValue(rNode, path, secretKey, "secretKey"); err != nil {
+		return err
+	}
+	if err := kyamls.SetStringValue(rNode, path, key, "remoteRef", "key"); err != nil {
+		return err
+	}
+	if property != "" {
+		if err := kyamls.SetStringValue(rNode, path, property, "remoteRef", "property"); err != nil {
+			return err
+		}
+	}
+	for field, value := range extra {
+		if value == "" {
+			continue
+		}
+		if err := kyamls.SetStringValue(rNode, path, value, "remoteRef", field); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (o *Options) modifyVault(node, rNode *yaml.RNode, field, secretName, path string) error {
 	prefix := kyamls.GetStringField(node, path, "metadata", "annotations", "secret.jenkins-x.io/prefix")
 	if prefix != "" {
 		prefix += "/"
-	} else {
-		prefix = ""
 	}
 	// trim the suffix from the name and use it on the property?
 	property := field
@@ -449,7 +428,9 @@ func (o *Options) modifyVault(node, rNode *yaml.RNode, field, secretName, path s
 	if len(names) > 1 && names[len(names)-1] == property {
 		secretPath = strings.Join(names[0:len(names)-1], "/")
 	}
-	key := "secret/data/" + prefix + secretPath
+	// ESO's vault provider takes the bare path — the KV mount lives on the
+	// ClusterSecretStore, so we no longer prepend "secret/data/".
+	key := prefix + secretPath
 
 	if o.SecretMapping != nil {
 		mapping := o.SecretMapping.Find(secretName, field)
@@ -463,19 +444,7 @@ func (o *Options) modifyVault(node, rNode *yaml.RNode, field, secretName, path s
 		}
 	}
 
-	err := kyamls.SetStringValue(rNode, path, field, "name")
-	if err != nil {
-		return err
-	}
-	err = kyamls.SetStringValue(rNode, path, key, "key")
-	if err != nil {
-		return err
-	}
-	err = kyamls.SetStringValue(rNode, path, property, "property")
-	if err != nil {
-		return err
-	}
-	return nil
+	return setRemoteRef(rNode, path, field, key, property, nil)
 }
 
 func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path string, complexType bool) error {
@@ -491,7 +460,6 @@ func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path strin
 		key = secretName
 	}
 
-	versionStage := ""
 	isBinary := false
 
 	if o.SecretMapping != nil {
@@ -503,13 +471,7 @@ func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path strin
 			if mapping.Property != "" {
 				property = mapping.Property
 			}
-			if mapping.VersionStage != "" {
-				versionStage = mapping.VersionStage
-			}
 			isBinary = mapping.IsBinary
-		}
-		if versionStage == "" {
-			versionStage = o.SecretMapping.Spec.VersionStage
 		}
 	}
 
@@ -517,33 +479,14 @@ func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path strin
 		return fmt.Errorf("no key found when mapping secret %s", secretName)
 	}
 
-	err := kyamls.SetStringValue(rNode, path, field, "name")
-	if err != nil {
-		return err
-	}
-	err = kyamls.SetStringValue(rNode, path, key, "key")
-	if err != nil {
-		return err
-	}
-	if property != "" {
-		err = kyamls.SetStringValue(rNode, path, property, "property")
-		if err != nil {
-			return err
-		}
-	}
-	if versionStage != "" {
-		err = kyamls.SetStringValue(rNode, path, versionStage, "versionStage")
-		if err != nil {
-			return err
-		}
-	}
+	extra := map[string]string{}
 	if isBinary {
-		err = kyamls.SetStringValue(rNode, path, "true", "isBinary")
-		if err != nil {
-			return err
-		}
+		// ESO's equivalent of KES's `isBinary: true` is
+		// `remoteRef.decodingStrategy: Base64`. KES's `versionStage` has no
+		// ESO equivalent — dropped per MIGRATION.md.
+		extra["decodingStrategy"] = "Base64"
 	}
-	return nil
+	return setRemoteRef(rNode, path, field, key, property, extra)
 }
 
 func (o *Options) modifyLocal(rNode *yaml.RNode, field, secretName, path string) error {
@@ -561,19 +504,7 @@ func (o *Options) modifyLocal(rNode *yaml.RNode, field, secretName, path string)
 		}
 	}
 
-	err := kyamls.SetStringValue(rNode, path, field, "name")
-	if err != nil {
-		return err
-	}
-	err = kyamls.SetStringValue(rNode, path, key, "key")
-	if err != nil {
-		return err
-	}
-	err = kyamls.SetStringValue(rNode, path, property, "property")
-	if err != nil {
-		return err
-	}
-	return nil
+	return setRemoteRef(rNode, path, field, key, property, nil)
 }
 
 func (o *Options) modifyGSM(rNode *yaml.RNode, field, secretName, path string) error {
@@ -600,7 +531,6 @@ func (o *Options) modifyGSM(rNode *yaml.RNode, field, secretName, path string) e
 			if mapping.Property != "" {
 				property = mapping.Property
 			}
-
 		}
 		secret := o.SecretMapping.FindSecret(secretName)
 		if secret != nil && secret.GcpSecretsManager != nil {
@@ -608,7 +538,6 @@ func (o *Options) modifyGSM(rNode *yaml.RNode, field, secretName, path string) e
 				version = secret.GcpSecretsManager.Version
 			}
 		}
-
 	}
 
 	key = strings.ToLower(key)
@@ -617,28 +546,10 @@ func (o *Options) modifyGSM(rNode *yaml.RNode, field, secretName, path string) e
 		return fmt.Errorf("no key found when mapping secret %s", secretName)
 	}
 
-	err := kyamls.SetStringValue(rNode, path, field, "name")
-	if err != nil {
-		return err
-	}
-	err = kyamls.SetStringValue(rNode, path, key, "key")
-	if err != nil {
-		return err
-	}
 	if property == "" {
 		property = field
 	}
-	if property != "" {
-		err = kyamls.SetStringValue(rNode, path, property, "property")
-		if err != nil {
-			return err
-		}
-	}
-	err = kyamls.SetStringValue(rNode, path, version, "version")
-	if err != nil {
-		return err
-	}
-	return nil
+	return setRemoteRef(rNode, path, field, key, property, map[string]string{"version": version})
 }
 
 func (o *Options) modifyASM(rNode *yaml.RNode, field, secretName, path string) error {
@@ -646,7 +557,9 @@ func (o *Options) modifyASM(rNode *yaml.RNode, field, secretName, path string) e
 }
 
 func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, error) {
-	// lets move annotations/labels/type  over to the template field
+	// Relocate the Secret's own type/annotations/labels onto
+	// spec.target.template so ESO stamps them onto the target Secret it
+	// creates.
 	typeValue := kyamls.GetStringField(node, path, "type")
 
 	labels, err := node.Pipe(yaml.Lookup("metadata", "labels"))
@@ -660,12 +573,12 @@ func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, e
 
 	if typeValue != "" || labels != nil || annotations != nil {
 		var templateNode *yaml.RNode
-		templateNode, err = node.Pipe(yaml.LookupCreate(yaml.MappingNode, "spec", "template"))
+		templateNode, err = node.Pipe(yaml.LookupCreate(yaml.MappingNode, "spec", "target", "template"))
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to set kind")
+			return false, errors.Wrapf(err, "failed to create spec.target.template")
 		}
 		if templateNode == nil {
-			return false, errors.Errorf("could not create spec.template")
+			return false, errors.Errorf("could not create spec.target.template")
 		}
 
 		if annotations != nil {
@@ -680,7 +593,7 @@ func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, e
 			var newLabels *yaml.RNode
 			newLabels, err = templateNode.Pipe(yaml.LookupCreate(yaml.MappingNode, "metadata", "labels"))
 			if err != nil {
-				return false, errors.Wrapf(err, "failed to set annotations on template")
+				return false, errors.Wrapf(err, "failed to set labels on template")
 			}
 			newLabels.SetYNode(labels.YNode())
 		}
@@ -718,7 +631,7 @@ func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, e
 			return false, errors.Wrapf(err, "failed to add mandatory annotation to file %s", path)
 		}
 
-		templateAnnotationsNode, err := node.Pipe(yaml.LookupCreate(yaml.MappingNode, "spec", "template", "metadata", "annotations"))
+		templateAnnotationsNode, err := node.Pipe(yaml.LookupCreate(yaml.MappingNode, "spec", "target", "template", "metadata", "annotations"))
 		if err != nil {
 			return false, errors.Wrapf(err, "failed to create the template annotations node")
 		}

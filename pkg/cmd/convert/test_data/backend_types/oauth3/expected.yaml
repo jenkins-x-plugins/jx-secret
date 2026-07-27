@@ -1,5 +1,5 @@
 # Source: lighthouse/templates/oauthsecret.yaml
-apiVersion: kubernetes-client.io/v1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: a-dns-type-secret
@@ -9,17 +9,20 @@ metadata:
     release: "external-dns"
     heritage: "Helm"
 spec:
-  backendType: azureKeyVault
-  keyVaultName: appleTree
+  secretStoreRef:
+    name: jx-secret-store
+    kind: ClusterSecretStore
   data:
-  - name: azure.json
-    key: azure-secret-name
-    property: azure.json
-  template:
-    metadata:
-      labels:
-        app: external-dns
-        chart: "external-dns-0.5.3"
-        release: "external-dns"
-        heritage: "Helm"
-    type: Opaque
+  - secretKey: azure.json
+    remoteRef:
+      key: azure-secret-name
+      property: azure.json
+  target:
+    template:
+      metadata:
+        labels:
+          app: external-dns
+          chart: "external-dns-0.5.3"
+          release: "external-dns"
+          heritage: "Helm"
+      type: Opaque

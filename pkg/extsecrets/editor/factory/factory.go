@@ -3,8 +3,7 @@ package factory
 import (
 	"os"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
@@ -18,16 +17,19 @@ import (
 )
 
 type secretFacadeEditor struct {
-	secret        *v1.ExternalSecret
+	secret        *esv1.ExternalSecret
 	secretManager secretstore.Interface
+	resolver      *extsecrets.BackendResolver
 }
 
-// NewEditor create a new editor using the secret store
-func NewEditor(secret *v1.ExternalSecret, secretStoreManagerFactory secretstore.FactoryInterface, kubeClient kubernetes.Interface, externalVault string) (editor.Interface, error) {
+// NewEditor create a new editor using the secret store. `resolver` reads
+// backend info from jx-secret's SecretMapping; a nil resolver resolves to
+// empty backend for every ExternalSecret (i.e. no-op behavior).
+func NewEditor(secret *esv1.ExternalSecret, resolver *extsecrets.BackendResolver, secretStoreManagerFactory secretstore.FactoryInterface, kubeClient kubernetes.Interface, externalVault string) (editor.Interface, error) {
 	if secretStoreManagerFactory == nil {
 		secretStoreManagerFactory = &factory.SecretManagerFactory{}
 	}
-	storeType := populate.GetSecretStore(v1alpha1.BackendType(secret.Spec.BackendType))
+	storeType := populate.GetSecretStore(resolver.Backend(secret))
 	if storeType == secretstore.SecretStoreTypeVault && externalVault != "true" {
 		envMap, err := vaultcli.CreateVaultEnv(kubeClient)
 		if err != nil {
@@ -52,13 +54,22 @@ func NewEditor(secret *v1.ExternalSecret, secretStoreManagerFactory secretstore.
 			return nil, errors.Wrapf(err, "error creating secret manager")
 		}
 	}
-	return &secretFacadeEditor{secret: secret, secretManager: secretManager}, nil
+	return &secretFacadeEditor{secret: secret, secretManager: secretManager, resolver: resolver}, nil
 }
 
 func (s *secretFacadeEditor) Write(keyProperties *editor.KeyProperties) error {
-	annotations := s.secret.Spec.Template.Metadata.Annotations
-
-	key := populate.GetSecretKey(v1alpha1.BackendType(s.secret.Spec.BackendType), s.secret.Name, keyProperties.Key)
+	var annotations map[string]string
+	var labels map[string]string
+	secretType := corev1.SecretType(corev1.SecretTypeOpaque)
+	if s.secret.Spec.Target.Template != nil {
+		annotations = s.secret.Spec.Target.Template.Metadata.Annotations
+		labels = s.secret.Spec.Target.Template.Metadata.Labels
+		if s.secret.Spec.Target.Template.Type != "" {
+			secretType = s.secret.Spec.Target.Template.Type
+		}
+	}
+	backend := s.resolver.Backend(s.secret)
+	key := populate.GetSecretKey(backend, s.secret.Name, keyProperties.Key)
 
 	// handle replicate to annotation for local secrets so that we also copy the secret to other namespaces
 	replicateTo := ""
@@ -66,13 +77,14 @@ func (s *secretFacadeEditor) Write(keyProperties *editor.KeyProperties) error {
 		replicateTo = s.secret.Annotations[extsecrets.ReplicateToAnnotation]
 	}
 	if replicateTo != "" {
+		if annotations == nil {
+			annotations = map[string]string{}
+		}
 		annotations[extsecrets.ReplicateToAnnotation] = replicateTo
 	}
 
-	labels := s.secret.Spec.Template.Metadata.Labels
-	secretType := corev1.SecretType(s.secret.Spec.Template.Type)
-	sv := populate.CreateSecretValue(v1alpha1.BackendType(s.secret.Spec.BackendType), keyProperties.Properties, annotations, labels, secretType)
-	err := s.secretManager.SetSecret(populate.GetExternalSecretLocation(s.secret), populate.GetSecretKey(v1alpha1.BackendType(s.secret.Spec.BackendType), s.secret.Name, key), &sv)
+	sv := populate.CreateSecretValue(backend, keyProperties.Properties, annotations, labels, secretType)
+	err := s.secretManager.SetSecret(s.resolver.Location(s.secret), populate.GetSecretKey(backend, s.secret.Name, key), &sv)
 	if err != nil {
 		return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), s.secret.Name)
 	}

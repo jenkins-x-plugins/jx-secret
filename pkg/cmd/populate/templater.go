@@ -11,7 +11,7 @@ import (
 	"github.com/jenkins-x/jx-helpers/v3/pkg/maps"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
@@ -264,13 +264,13 @@ func (o *Options) getExternalSecretValue(lookupSecretName, lookupKey, namespace 
 	if externalSecret.Namespace == "" {
 		externalSecret.Namespace = namespace
 	}
-	externalSecretKey, externalSecretProperty, err := externalSecret.KeyAndProperty(lookupKey)
+	externalSecretKey, externalSecretProperty, err := extsecrets.KeyAndProperty(externalSecret, lookupKey)
 	if err != nil {
 		log.Logger().Debugf("failed to find secret key and property for External Secret name %s", lookupSecret)
 		return ""
 	}
 
-	storeType := GetSecretStore(v1alpha1.BackendType(externalSecret.Spec.BackendType))
+	storeType := GetSecretStore(o.Resolver.Backend(externalSecret))
 	secretManager, err := o.SecretStoreManagerFactory.NewSecretManager(storeType)
 	if err != nil {
 		// ToDo: Refactor to return error from this function
@@ -285,7 +285,7 @@ func (o *Options) getExternalSecretValue(lookupSecretName, lookupKey, namespace 
 
 	getSecretFunc := func() error {
 		var err error
-		secretLocation := GetExternalSecretLocation(externalSecret)
+		secretLocation := o.Resolver.Location(externalSecret)
 		secret, err = secretManager.GetSecret(secretLocation, key, externalSecretProperty)
 		return err
 	}

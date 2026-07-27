@@ -1,5 +1,5 @@
 # Source: lighthouse/templates/oauthsecret.yaml
-apiVersion: kubernetes-client.io/v1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: lighthouse-oauth-token
@@ -9,17 +9,18 @@ metadata:
     release: "lighthouse"
     heritage: "Helm"
 spec:
-  backendType: vault
-  vaultMountPoint: kubernetes
-  vaultRole: jx-vault
-  template:
-    data:
-      oauth: pinkiepie
-    metadata:
-      labels:
-        app: lighthouse-lighthouse
-        chart: "lighthouse-0.0.633"
-        release: "lighthouse"
-        heritage: "Helm"
-    type: Opaque
+  secretStoreRef:
+    name: jx-secret-store
+    kind: ClusterSecretStore
+  target:
+    template:
+      data:
+        oauth: pinkiepie
+      metadata:
+        labels:
+          app: lighthouse-lighthouse
+          chart: "lighthouse-0.0.633"
+          release: "lighthouse"
+          heritage: "Helm"
+      type: Opaque
   data: []

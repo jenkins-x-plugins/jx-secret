@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
@@ -113,7 +114,7 @@ func (o *Options) WaitCheck() (bool, error) {
 			}
 			o.logMessage(name, termcolor.ColorWarning(buf.String()))
 		} else {
-			o.logMessage(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.KeyAndNames(), ", "))))
+			o.logMessage(name, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(extsecrets.KeyAndNames(&r.ExternalSecret), ", "))))
 		}
 	}
 	if count == 0 {

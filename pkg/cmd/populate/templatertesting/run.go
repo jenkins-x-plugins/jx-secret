@@ -6,19 +6,58 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/testsecrets"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
 	secretstorefake "github.com/jenkins-x-plugins/secretfacade/testing/fake"
+	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/kubernetes/fake"
 )
+
+// resolverFromRequirements synthesizes a BackendResolver from a
+// jxRequirements-style Requirements config so templater tests (which don't
+// ship a SecretMapping on disk) still get non-empty Backend()/Location()
+// answers. The mapping is the same one the real convert/populate pipeline
+// derives on-disk — SecretStorage → BackendType, plus the backend-specific
+// location field.
+func resolverFromRequirements(req *jxcore.RequirementsConfig) *extsecrets.BackendResolver {
+	if req == nil || req.SecretStorage == "" {
+		return &extsecrets.BackendResolver{}
+	}
+	backend, defaults := v1alpha1.BackendType(""), v1alpha1.Defaults{}
+	switch string(req.SecretStorage) {
+	case "vault":
+		backend = v1alpha1.BackendTypeVault
+	case "gsm", "gcpSecretsManager":
+		backend = v1alpha1.BackendTypeGSM
+		defaults.GcpSecretsManager = &v1alpha1.GcpSecretsManager{ProjectID: req.Cluster.ProjectID}
+	case "azureKeyVault", "azurekeyvault":
+		backend = v1alpha1.BackendTypeAzure
+	case "secretsManager":
+		backend = v1alpha1.BackendTypeAWSSecretsManager
+	case "systemManager":
+		backend = v1alpha1.BackendTypeAWSParameterStore
+	case "local":
+		backend = v1alpha1.BackendTypeLocal
+	default:
+		backend = v1alpha1.BackendType(req.SecretStorage)
+	}
+	defaults.BackendType = backend
+	return &extsecrets.BackendResolver{
+		Mapping: &v1alpha1.SecretMapping{
+			Spec: v1alpha1.SecretMappingSpec{Defaults: defaults},
+		},
+	}
+}
 
 // Run runs the test cases
 func (r *Runner) Run(t *testing.T) {
@@ -49,7 +88,7 @@ func (r *Runner) Run(t *testing.T) {
 
 		fakeStore := fakeFactory.GetSecretStore()
 
-		o.ExternalSecrets = []*v1.ExternalSecret{}
+		o.ExternalSecrets = []*esv1.ExternalSecret{}
 		for k := range testcase.ExternalSecrets {
 			p := testcase.ExternalSecrets[k]
 			es := p.ExternalSecret
@@ -71,6 +110,7 @@ func (r *Runner) Run(t *testing.T) {
 			}
 			require.NotEmpty(t, o.Dir, "you must either specify Requirements or a Dir on the Runner or TestCase to be able to detect the Requirements to use the the template generation")
 		}
+		o.Resolver = resolverFromRequirements(o.Requirements)
 		object := schema.Spec.FindObject(objName)
 		require.NotNil(t, object, "could not find schema for object name %s", objName)
 
@@ -134,7 +174,7 @@ func (r *Runner) Populate(t *testing.T) {
 
 		fakeStore := fakeFactory.GetSecretStore()
 
-		o.ExternalSecrets = []*v1.ExternalSecret{}
+		o.ExternalSecrets = []*esv1.ExternalSecret{}
 		for k := range tc.ExternalSecrets {
 			p := tc.ExternalSecrets[k]
 			es := p.ExternalSecret
@@ -156,6 +196,7 @@ func (r *Runner) Populate(t *testing.T) {
 			}
 			require.NotEmpty(t, o.Dir, "you must either specify Requirements or a Dir on the Runner or TestCase to be able to detect the Requirements to use the the template generation")
 		}
+		o.Resolver = resolverFromRequirements(o.Requirements)
 		object := schema.Spec.FindObject(objName)
 		require.NotNil(t, object, "could not find schema for object name %s", objName)
 

@@ -182,31 +182,18 @@ func (o *Options) Run() error {
 	return nil
 }
 
+// addReplicatedToAnnotation stamps a `secret.jenkins-x.io/replicate-to`
+// annotation on the source ExternalSecret so downstream tooling can see which
+// namespaces the resource has been fanned out to. Pre-migration this was
+// gated on `spec.backendType == "local"` — that field is gone in ESO v1, so
+// we now always annotate; the annotation is a bookkeeping marker anyway (the
+// per-namespace replica files are what actually drive gitops).
 func (o *Options) addReplicatedLocalBackendAnnotation(path string) error {
 	node, err := yaml.ReadFile(path)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load %s", path)
 	}
 
-	backend, err := node.Pipe(yaml.Lookup("spec", "backendType"))
-	if err != nil {
-		return errors.Wrapf(err, "failed to find backendType for %s", path)
-	}
-	if backend == nil {
-		return nil
-	}
-
-	backendType, err := backend.String()
-	if err != nil {
-		return errors.Wrapf(err, "failed to get backendType for %s", path)
-	}
-	backendType = strings.TrimSpace(backendType)
-	if backendType != "local" {
-		log.Logger().Debugf("ignoring backend type %s", backendType)
-		return nil
-	}
-
-	// lets add an annotation
 	err = node.PipeE(yaml.SetAnnotation(extsecrets.ReplicateToAnnotation, strings.Join(o.To, ",")))
 	if err != nil {
 		return errors.Wrapf(err, "failed to add replicate annotation for path %s", path)

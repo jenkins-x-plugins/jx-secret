@@ -19,8 +19,14 @@ import (
 )
 
 var (
-	// ExternalSecretsResource the schema group version resource
-	ExternalSecretsResource = schema.GroupVersionResource{Group: "kubernetes-client.io", Version: "v1", Resource: "externalsecrets"}
+	// ExternalSecretsResource is the ESO ExternalSecret GVR.
+	ExternalSecretsResource = schema.GroupVersionResource{Group: "external-secrets.io", Version: "v1", Resource: "externalsecrets"}
+
+	// SecretStoresResource is the namespaced SecretStore GVR.
+	SecretStoresResource = schema.GroupVersionResource{Group: "external-secrets.io", Version: "v1", Resource: "secretstores"}
+
+	// ClusterSecretStoresResource is the cluster-scoped ClusterSecretStore GVR.
+	ClusterSecretStoresResource = schema.GroupVersionResource{Group: "external-secrets.io", Version: "v1", Resource: "clustersecretstores"}
 
 	info = termcolor.ColorInfo
 )

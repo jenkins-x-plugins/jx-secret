@@ -1,9 +1,9 @@
 package extsecrets
 
 import (
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 )
 
 type Interface interface {
-	List(ns string) ([]*v1.ExternalSecret, error)
+	List(ns string) ([]*esv1.ExternalSecret, error)
 }

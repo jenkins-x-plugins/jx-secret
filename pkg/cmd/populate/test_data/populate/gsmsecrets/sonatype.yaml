@@ -1,17 +1,21 @@
-apiVersion: kubernetes-client.io/v1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: sonatype
   namespace: jx
 spec:
-  backendType: gcpSecretsManager
-  projectId: "123456"
   data:
-  - name: password
-    key: sonatype
-    property: password
-  - name: username
-    key: sonatype
-    property: username
-  template:
-    type: Opaque
+  - secretKey: password
+    remoteRef:
+      key: sonatype
+      property: password
+  - secretKey: username
+    remoteRef:
+      key: sonatype
+      property: username
+  secretStoreRef:
+    name: jx-secret-store
+    kind: ClusterSecretStore
+  target:
+    template:
+      type: Opaque

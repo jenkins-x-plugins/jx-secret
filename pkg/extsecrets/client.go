@@ -5,7 +5,7 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/knative_pkg/duck"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +19,7 @@ type client struct {
 }
 
 //nolint:gocritic
-func (c *client) List(ns string) ([]*v1.ExternalSecret, error) {
+func (c *client) List(ns string) ([]*esv1.ExternalSecret, error) {
 	var client dynamic.ResourceInterface
 	if ns != "" {
 		client = c.dynamicClient.Resource(ExternalSecretsResource).Namespace(ns)
@@ -34,11 +34,11 @@ func (c *client) List(ns string) ([]*v1.ExternalSecret, error) {
 		return nil, errors.Wrap(err, "failed to find external secrets")
 	}
 
-	var answer []*v1.ExternalSecret
+	var answer []*esv1.ExternalSecret
 	if resources != nil {
 		for k := range resources.Items {
 			u := resources.Items[k]
-			extSecret := &v1.ExternalSecret{}
+			extSecret := &esv1.ExternalSecret{}
 			err = FromUnstructured(&u, extSecret)
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to convert to ExternalSecret %s", u.GetName())

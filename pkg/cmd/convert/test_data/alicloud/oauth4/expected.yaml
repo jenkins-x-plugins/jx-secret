@@ -1,5 +1,5 @@
 # Source: lighthouse/templates/oauthsecret.yaml
-apiVersion: kubernetes-client.io/v1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: unspecified-simple-type
@@ -9,17 +9,19 @@ metadata:
     release: "lighthouse"
     heritage: "Helm"
 spec:
-  backendType: alicloudSecretsManager
-  roleArn: acs:ram::{UID}:role/demo
+  secretStoreRef:
+    name: jx-secret-store
+    kind: ClusterSecretStore
   data:
-  - name: password
-    key: unspecified-simple-type
-    versionStage: ACSCurrent
-  template:
-    metadata:
-      labels:
-        app: lighthouse-lighthouse
-        chart: "lighthouse-0.0.633"
-        release: "lighthouse"
-        heritage: "Helm"
-    type: Opaque
+  - secretKey: password
+    remoteRef:
+      key: unspecified-simple-type
+  target:
+    template:
+      metadata:
+        labels:
+          app: lighthouse-lighthouse
+          chart: "lighthouse-0.0.633"
+          release: "lighthouse"
+          heritage: "Helm"
+      type: Opaque

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/replicate"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
@@ -61,7 +61,7 @@ func AssertReplicate(t *testing.T, callback func(o *replicate.Options)) {
 				t.Logf("generated expected file %s", file)
 			}
 
-			es := &v1.ExternalSecret{}
+			es := &esv1.ExternalSecret{}
 			err = yamls.LoadFile(file, es)
 			require.NoError(t, err, "failed to load file %s", file)
 
@@ -73,7 +73,7 @@ func AssertReplicate(t *testing.T, callback func(o *replicate.Options)) {
 	}
 
 	// lets verify we add a replication annotation to the source ExternalSecret to enable replication
-	es := &v1.ExternalSecret{}
+	es := &esv1.ExternalSecret{}
 	tektonSourceFile := filepath.Join(o.NamespacesDir, "jx", "tekton", "knative-docker-user-pass.yaml")
 	err = yamls.LoadFile(tektonSourceFile, es)
 	require.NoError(t, err, "failed to load file %s", tektonSourceFile)

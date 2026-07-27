@@ -1,14 +1,15 @@
 package extsecrets
 
 import (
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kyamls"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/yaml"
 )
 
 var externalSecretFilter = kyamls.Filter{
-	Kinds: []string{"kubernetes-client.io/v1/ExternalSecret"},
+	Kinds: []string{"external-secrets.io/v1/ExternalSecret"},
 }
 
 func NewFileClient(dir string) Interface {
@@ -19,18 +20,22 @@ type fileClient struct {
 	dir string
 }
 
-func (c *fileClient) List(ns string) ([]*v1.ExternalSecret, error) {
+func (c *fileClient) List(ns string) ([]*esv1.ExternalSecret, error) {
 	rNodes, err := kyamls.Collect(c.dir, externalSecretFilter)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error retrieving external secrets from dir %s", c.dir)
 	}
-	var externalSecrets []*v1.ExternalSecret
-	for _, esNode := range rNodes {
-		es := &v1.ExternalSecret{}
-		doc := esNode.Document()
-		err = doc.Decode(es)
+	var externalSecrets []*esv1.ExternalSecret
+	for i := range rNodes {
+		esNode := rNodes[i]
+		raw, err := esNode.String()
 		if err != nil {
-			log.Logger().Debugf("ignored file we could not decode it as a kubernetes resource: %s", err.Error())
+			log.Logger().Debugf("ignored file we could not stringify as a kubernetes resource: %s", err.Error())
+			continue
+		}
+		es := &esv1.ExternalSecret{}
+		if err := yaml.Unmarshal([]byte(raw), es); err != nil {
+			log.Logger().Debugf("ignored file we could not decode as an ExternalSecret: %s", err.Error())
 			continue
 		}
 		if ns == "" || es.Namespace == ns {

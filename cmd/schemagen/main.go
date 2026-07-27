@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 	schemav1alpha1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x/jx-api/v4/pkg/schemagen"
@@ -12,9 +12,9 @@ import (
 
 var resourceKinds = []schemagen.ResourceKind{
 	{
-		APIVersion: "kubernetes-client.io/v1",
+		APIVersion: "external-secrets.io/v1",
 		Name:       "externalsecret",
-		Resource:   &v1.ExternalSecret{},
+		Resource:   &esv1.ExternalSecret{},
 	},
 	{
 		APIVersion: "secret.jenkins-x.io/v1alpha1",

@@ -1,5 +1,5 @@
 # Source: lighthouse/templates/oauthsecret.yaml
-apiVersion: kubernetes-client.io/v1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: simple-secret-property
@@ -9,17 +9,20 @@ metadata:
     release: "lighthouse"
     heritage: "Helm"
 spec:
-  backendType: azureKeyVault
-  keyVaultName: mangroveSwamp
+  secretStoreRef:
+    name: jx-secret-store
+    kind: ClusterSecretStore
   data:
-  - name: azure.json
-    key: azure-secret-name
-    property: customProperty
-  template:
-    metadata:
-      labels:
-        app: lighthouse-lighthouse
-        chart: "lighthouse-0.0.633"
-        release: "lighthouse"
-        heritage: "Helm"
-    type: Opaque
+  - secretKey: azure.json
+    remoteRef:
+      key: azure-secret-name
+      property: customProperty
+  target:
+    template:
+      metadata:
+        labels:
+          app: lighthouse-lighthouse
+          chart: "lighthouse-0.0.633"
+          release: "lighthouse"
+          heritage: "Helm"
+      type: Opaque

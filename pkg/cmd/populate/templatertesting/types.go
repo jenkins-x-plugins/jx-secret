@@ -5,7 +5,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,7 +33,7 @@ type ExternalSecret struct {
 	Location       string
 	Name           string
 	Value          secretstore.SecretValue
-	ExternalSecret v1.ExternalSecret
+	ExternalSecret esv1.ExternalSecret
 }
 
 // TestCase represents a test case
