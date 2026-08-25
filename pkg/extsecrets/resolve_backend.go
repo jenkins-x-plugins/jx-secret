@@ -38,16 +38,16 @@ type BackendResolver struct {
 	// holding nil means the store was looked up and yielded nothing usable.
 	// Only store results are cached: mapping resolution varies per
 	// ExternalSecret name and is local anyway.
-	storeCache map[string]*Backend
+	storeCache map[string]*backend
 
 	// warned tracks store refs we have already reported as unreadable, to keep
 	// the fallback from logging once per ExternalSecret.
 	warned map[string]bool
 }
 
-// A Backend describes a resolved secret backend. The zero value means
-// unresolved, which callers should treat as "cannot reach this backend".
-type Backend struct {
+// A backend describes a resolved secret backend. The zero value means
+// unresolved, which the resolver methods surface as empty values.
+type backend struct {
 	// Type is the jx backend type, mapped from the store's provider.
 	Type v1alpha1.BackendType
 
@@ -65,11 +65,6 @@ type Backend struct {
 	VaultKVv2 bool
 }
 
-// IsEmpty reports whether nothing could be resolved.
-func (b *Backend) IsEmpty() bool {
-	return b == nil || b.Type == ""
-}
-
 // RemoteKeyPath converts an ExternalSecret remoteRef.key into the path the
 // backend's API expects.
 //
@@ -77,7 +72,7 @@ func (b *Backend) IsEmpty() bool {
 // the KV v2 "data" segment itself, but secretfacade drives the Vault HTTP API
 // directly and needs the full path. So "jx/pipelineUser" against a KV v2 mount
 // named "secret" becomes "secret/data/jx/pipelineUser".
-func (b *Backend) RemoteKeyPath(key string) string {
+func (b *backend) remoteKeyPath(key string) string {
 	if b == nil || b.Type != v1alpha1.BackendTypeVault || key == "" {
 		return key
 	}
@@ -99,11 +94,11 @@ func (b *Backend) RemoteKeyPath(key string) string {
 // DefaultVaultMount is the KV mount assumed when a store does not name one.
 const DefaultVaultMount = "secret"
 
-// Resolve returns the backend for the given ExternalSecret. It never returns
+// resolve returns the backend for the given ExternalSecret. It never returns
 // nil, so callers can chain field access safely.
-func (r *BackendResolver) Resolve(es *esv1.ExternalSecret) *Backend {
+func (r *BackendResolver) resolve(es *esv1.ExternalSecret) *backend {
 	if r == nil || es == nil {
-		return &Backend{}
+		return &backend{}
 	}
 
 	if b := r.backendFromStoreRef(es); b != nil {
@@ -115,7 +110,7 @@ func (r *BackendResolver) Resolve(es *esv1.ExternalSecret) *Backend {
 // backendFromStoreRef resolves via the referenced store, returning nil when
 // there is no readable store to resolve from so the caller falls back to the
 // mapping.
-func (r *BackendResolver) backendFromStoreRef(es *esv1.ExternalSecret) *Backend {
+func (r *BackendResolver) backendFromStoreRef(es *esv1.ExternalSecret) *backend {
 	ref := es.Spec.SecretStoreRef
 	if r.Stores == nil || ref.Name == "" {
 		return nil
@@ -126,13 +121,13 @@ func (r *BackendResolver) backendFromStoreRef(es *esv1.ExternalSecret) *Backend 
 		return b
 	}
 
-	var resolved *Backend
+	var resolved *backend
 	store, err := r.Stores.GetStore(ref.Kind, ref.Name, es.Namespace)
 	switch {
 	case err != nil:
 		r.warnOncef(cacheKey, "could not read %s %s (%s); falling back to the SecretMapping", ref.Kind, ref.Name, err.Error())
 	default:
-		if b := backendFromStore(store); !b.IsEmpty() {
+		if b := backendFromStore(store); b.Type != "" {
 			resolved = b
 		} else {
 			r.warnOncef(cacheKey, "store %s %s has no provider jx-secret can write to; falling back to the SecretMapping", ref.Kind, ref.Name)
@@ -140,17 +135,17 @@ func (r *BackendResolver) backendFromStoreRef(es *esv1.ExternalSecret) *Backend 
 	}
 
 	if r.storeCache == nil {
-		r.storeCache = map[string]*Backend{}
+		r.storeCache = map[string]*backend{}
 	}
 	r.storeCache[cacheKey] = resolved
 	return resolved
 }
 
-// fillDynamic supplies the parts of a Backend that must not be cached: the
+// fillDynamic supplies the parts of a backend that must not be cached: the
 // namespace of a local secret varies per ExternalSecret, and VAULT_ADDR is set
 // partway through a populate run by the vault port-forward, so reading it at
 // resolve time would freeze in whatever was set beforehand.
-func (r *BackendResolver) fillDynamic(b *Backend, es *esv1.ExternalSecret) *Backend {
+func (r *BackendResolver) fillDynamic(b *backend, es *esv1.ExternalSecret) *backend {
 	if b.Location != "" {
 		return b
 	}
@@ -181,19 +176,19 @@ func (r *BackendResolver) warnOncef(key, format string, args ...interface{}) {
 // backendFromStore maps an ESO store provider onto a jx backend. Only the
 // providers jx-secret can write to via secretfacade are mapped; anything else
 // resolves empty so the caller can skip rather than write to the wrong place.
-func backendFromStore(store esv1.GenericStore) *Backend {
+func backendFromStore(store esv1.GenericStore) *backend {
 	spec := store.GetSpec()
 	if spec == nil {
-		return &Backend{}
+		return &backend{}
 	}
 	p := spec.Provider
 	if p == nil {
-		return &Backend{}
+		return &backend{}
 	}
 
 	switch {
 	case p.Vault != nil:
-		b := &Backend{
+		b := &backend{
 			Type:       v1alpha1.BackendTypeVault,
 			Location:   p.Vault.Server,
 			VaultMount: DefaultVaultMount,
@@ -207,25 +202,25 @@ func backendFromStore(store esv1.GenericStore) *Backend {
 		return b
 
 	case p.GCPSM != nil:
-		return &Backend{Type: v1alpha1.BackendTypeGSM, Location: p.GCPSM.ProjectID}
+		return &backend{Type: v1alpha1.BackendTypeGSM, Location: p.GCPSM.ProjectID}
 
 	case p.AzureKV != nil:
-		return &Backend{Type: v1alpha1.BackendTypeAzure, Location: azureVaultName(p.AzureKV.VaultURL)}
+		return &backend{Type: v1alpha1.BackendTypeAzure, Location: azureVaultName(p.AzureKV.VaultURL)}
 
 	case p.AWS != nil:
-		backend := v1alpha1.BackendTypeAWSSecretsManager
+		backendType := v1alpha1.BackendTypeAWSSecretsManager
 		if p.AWS.Service == esv1.AWSServiceParameterStore {
-			backend = v1alpha1.BackendTypeAWSParameterStore
+			backendType = v1alpha1.BackendTypeAWSParameterStore
 		}
-		return &Backend{Type: backend, Location: p.AWS.Region}
+		return &backend{Type: backendType, Location: p.AWS.Region}
 
 	case p.Kubernetes != nil:
-		return &Backend{Type: v1alpha1.BackendTypeLocal, Location: p.Kubernetes.RemoteNamespace}
+		return &backend{Type: v1alpha1.BackendTypeLocal, Location: p.Kubernetes.RemoteNamespace}
 
 	case p.IBM != nil:
-		return &Backend{Type: v1alpha1.BackendTypeIBMSecretsManager}
+		return &backend{Type: v1alpha1.BackendTypeIBMSecretsManager}
 	}
-	return &Backend{}
+	return &backend{}
 }
 
 // azureVaultName reduces a key-vault URL to the bare vault name, which is what
@@ -248,20 +243,20 @@ func azureVaultName(vaultURL *string) string {
 
 // backendFromMapping resolves from the SecretMapping. A rule-level value takes
 // precedence over the mapping-wide default.
-func (r *BackendResolver) backendFromMapping(es *esv1.ExternalSecret) *Backend {
+func (r *BackendResolver) backendFromMapping(es *esv1.ExternalSecret) *backend {
 	if r.Mapping == nil {
-		return &Backend{}
+		return &backend{}
 	}
 	rule := r.Mapping.FindRule(es.Namespace, es.Name)
 	defaults := r.Mapping.Spec.Defaults
 
-	backend := defaults.BackendType
+	backendType := defaults.BackendType
 	if rule != nil && rule.BackendType != "" {
-		backend = rule.BackendType
+		backendType = rule.BackendType
 	}
 
-	b := &Backend{Type: backend}
-	switch backend {
+	b := &backend{Type: backendType}
+	switch backendType {
 	case v1alpha1.BackendTypeGSM:
 		if rule != nil && rule.GcpSecretsManager != nil && rule.GcpSecretsManager.ProjectID != "" {
 			b.Location = rule.GcpSecretsManager.ProjectID
@@ -305,18 +300,18 @@ func awsRegionFromMapping(rule *v1alpha1.SecretRule, defaults *v1alpha1.Defaults
 
 // Backend returns the backend type for the given ExternalSecret.
 func (r *BackendResolver) Backend(es *esv1.ExternalSecret) v1alpha1.BackendType {
-	return r.Resolve(es).Type
+	return r.resolve(es).Type
 }
 
 // Location returns where the secrets live for the given ExternalSecret.
 func (r *BackendResolver) Location(es *esv1.ExternalSecret) string {
-	return r.Resolve(es).Location
+	return r.resolve(es).Location
 }
 
 // ProjectID returns the GCP project ID for the given ExternalSecret, or empty
 // if the resolved backend is not GSM.
 func (r *BackendResolver) ProjectID(es *esv1.ExternalSecret) string {
-	b := r.Resolve(es)
+	b := r.resolve(es)
 	if b.Type != v1alpha1.BackendTypeGSM {
 		return ""
 	}
@@ -326,5 +321,5 @@ func (r *BackendResolver) ProjectID(es *esv1.ExternalSecret) string {
 // RemoteKeyPath returns the backend-native path for one of the
 // ExternalSecret's remote-ref keys.
 func (r *BackendResolver) RemoteKeyPath(es *esv1.ExternalSecret, key string) string {
-	return r.Resolve(es).RemoteKeyPath(key)
+	return r.resolve(es).remoteKeyPath(key)
 }

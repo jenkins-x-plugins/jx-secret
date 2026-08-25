@@ -252,7 +252,7 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		}
 	}
 
-	_, err = o.convertData(node, path, secret.BackendType)
+	err = o.convertData(node, path, secret.BackendType)
 	if err != nil {
 		return results, err
 	}
@@ -333,7 +333,7 @@ func hasSecretData(node *yaml.RNode, path string) (bool, error) {
 	return false, nil
 }
 
-func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha1.BackendType) (bool, error) {
+func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha1.BackendType) error {
 	secretName := kyamls.GetStringField(node, path, "metadata", "name")
 
 	var contents []*yaml.Node
@@ -350,14 +350,14 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	for _, dataPath := range []string{"data", "stringData"} {
 		data, err := node.Pipe(yaml.Lookup(dataPath))
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to get data for path %s", path)
+			return errors.Wrapf(err, "failed to get data for path %s", path)
 		}
 
 		var fields []string
 		if data != nil {
 			fields, err = data.Fields()
 			if err != nil {
-				return false, errors.Wrapf(err, "failed to find data fields for path %s", path)
+				return errors.Wrapf(err, "failed to find data fields for path %s", path)
 			}
 			complexSecretType := len(fields) > 1
 
@@ -368,7 +368,7 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 
 					err = kyamls.SetStringValue(rTemplateData, path, secretValue, field)
 					if err != nil {
-						return false, errors.Wrapf(err, "failed to set string value for secret %s and key %s", secretName, field)
+						return errors.Wrapf(err, "failed to set string value for secret %s and key %s", secretName, field)
 					}
 					continue
 				}
@@ -398,21 +398,21 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 				}
 
 				if err != nil {
-					return false, errors.Wrapf(err, "failed to modify ExternalSecret with configuration")
+					return errors.Wrapf(err, "failed to modify ExternalSecret with configuration")
 				}
 				contents = append(contents, newNode)
 			}
 		}
 		err = node.PipeE(yaml.Clear(dataPath))
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to remove %s", dataPath)
+			return errors.Wrapf(err, "failed to remove %s", dataPath)
 		}
 	}
 
 	if len(templateData.Content) != 0 {
 		templateDataNode, err := node.Pipe(yaml.LookupCreate(yaml.MappingNode, "spec", "target", "template", "data"))
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to lookup/create template data for path %s", path)
+			return errors.Wrapf(err, "failed to lookup/create template data for path %s", path)
 		}
 		templateDataNode.SetYNode(&yaml.Node{
 			Kind:    yaml.MappingNode,
@@ -425,13 +425,13 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 		// via spec.data would be dropped.
 		err = kyamls.SetStringValue(node, path, string(esv1.MergePolicyMerge), "spec", "target", "template", "mergePolicy")
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to set template mergePolicy for path %s", path)
+			return errors.Wrapf(err, "failed to set template mergePolicy for path %s", path)
 		}
 	}
 
 	data, err := node.Pipe(yaml.LookupCreate(yaml.SequenceNode, "spec", "data"))
 	if err != nil {
-		return false, errors.Wrapf(err, "failed to replace data for path %s", path)
+		return errors.Wrapf(err, "failed to replace data for path %s", path)
 	}
 	data.SetYNode(&yaml.Node{
 		Kind:    yaml.SequenceNode,
@@ -439,7 +439,7 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 		Style:   style,
 	})
 
-	return true, nil
+	return nil
 }
 
 // setRemoteRef writes a spec.data entry: secretKey plus a nested remoteRef of

@@ -36,10 +36,6 @@ type Options struct {
 	// loaded from Dir. Populated by Validate(); nil-safe.
 	Resolver *extsecrets.BackendResolver
 
-	// StoreClient reads the (Cluster)SecretStore resources. Populated by
-	// Validate() when the source is kubernetes.
-	StoreClient extsecrets.StoreInterface
-
 	// ExternalSecrets the loaded secrets
 	ExternalSecrets []*esv1.ExternalSecret
 }
@@ -75,13 +71,14 @@ func (o *Options) Validate() error {
 	if o.SecretStoreManagerFactory == nil {
 		o.SecretStoreManagerFactory = &factory.SecretManagerFactory{}
 	}
-	if o.StoreClient == nil && (o.Source == Kubernetes || o.Source == "") {
-		o.StoreClient, err = extsecrets.NewStoreClient(nil)
-		if err != nil {
-			return errors.Wrap(err, "error initialising external secrets store client")
-		}
-	}
 	if o.Resolver == nil {
+		var stores extsecrets.StoreInterface
+		if o.Source == Kubernetes || o.Source == "" {
+			stores, err = extsecrets.NewStoreClient(nil)
+			if err != nil {
+				return errors.Wrap(err, "error initialising external secrets store client")
+			}
+		}
 		// the mapping is only a fallback for stores we cannot read, so a missing
 		// one is not fatal here; commands that cannot work without a backend
 		// fail when resolution comes back empty
@@ -89,10 +86,10 @@ func (o *Options) Validate() error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to load SecretMapping from %s", o.Dir)
 		}
-		if mapping == nil && o.StoreClient == nil {
+		if mapping == nil && stores == nil {
 			log.Logger().Warnf("no SecretMapping found under %s and no cluster access to read SecretStores: the secret backend cannot be resolved", o.Dir)
 		}
-		o.Resolver = &extsecrets.BackendResolver{Stores: o.StoreClient, Mapping: mapping}
+		o.Resolver = &extsecrets.BackendResolver{Stores: stores, Mapping: mapping}
 	}
 	return nil
 }
