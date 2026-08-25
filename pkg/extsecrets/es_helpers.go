@@ -18,15 +18,6 @@ const DefaultSecretStoreKind = "ClusterSecretStore"
 // APIVersion is stamped onto every emitted ExternalSecret.
 var APIVersion = esv1.SchemeGroupVersion.String()
 
-// Keys returns the remote-ref key of each data entry.
-func Keys(es *esv1.ExternalSecret) []string {
-	var keys []string
-	for _, d := range es.Spec.Data {
-		keys = append(keys, d.RemoteRef.Key)
-	}
-	return keys
-}
-
 // KeyAndNames returns "<remoteRef.key>/<secretKey>" for each data entry.
 func KeyAndNames(es *esv1.ExternalSecret) []string {
 	var keys []string

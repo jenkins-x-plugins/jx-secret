@@ -16,6 +16,7 @@ spec:
     template:
       data:
         oauth: pinkiepie
+      mergePolicy: Merge
       metadata:
         labels:
           app: lighthouse-lighthouse

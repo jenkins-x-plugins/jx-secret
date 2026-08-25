@@ -113,7 +113,7 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.Type, folder, secr
 			if useSecretNameForKey {
 				secretValue, _ = fakeStore.GetSecret(secretLocation, es.Name, d.RemoteRef.Property)
 			} else {
-				secretValue, _ = fakeStore.GetSecret(secretLocation, d.RemoteRef.Key, d.RemoteRef.Property)
+				secretValue, _ = fakeStore.GetSecret(secretLocation, o.Resolver.RemoteKeyPath(es, d.RemoteRef.Key), d.RemoteRef.Property)
 			}
 			if secretValue != "" {
 				t.Logf("found value for ExternalSecret %s %s of %s", es.Name, d.SecretKey, secretValue)
@@ -184,16 +184,16 @@ func TestPopulate(t *testing.T) {
 		{
 			"vaultsecrets",
 			vaultLocation,
-			"jx/mavenSettings",
-			"nexus",
+			"secret/data/jx/mavenSettings",
+			"secret/data/nexus",
 			map[string]*secretstore.SecretValue{
-				"sonatype": {
+				"secret/data/sonatype": {
 					PropertyValues: map[string]string{
 						"username": "my-sonatype-username",
 						"password": "my-sonatype-password",
 					},
 				},
-				"gpg": {
+				"secret/data/gpg": {
 					PropertyValues: map[string]string{
 						"passphrase": "my-secret-gpg-passphrase",
 					},
@@ -201,12 +201,12 @@ func TestPopulate(t *testing.T) {
 			},
 			false,
 			func(t *testing.T, fakeStore *secretstorefake.SecretStore, mavenSettings string) {
-				fakeStore.AssertValueEquals(t, vaultLocation, "jx/adminUser", "username", "admin")
-				fakeStore.AssertHasValue(t, vaultLocation, "jx/adminUser", "password")
-				fakeStore.AssertHasValue(t, vaultLocation, "lighthouse/hmac", "hmac")
-				fakeStore.AssertValueEquals(t, vaultLocation, "jx/pipelineUser", "token", "gitoperatorpassword")
-				fakeStore.AssertHasValue(t, vaultLocation, "knative/docker/user/pass", "password")
-				fakeStore.AssertValueEquals(t, vaultLocation, "jx/mavenSettings", "settingsXml", mavenSettings)
+				fakeStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/adminUser", "username", "admin")
+				fakeStore.AssertHasValue(t, vaultLocation, "secret/data/jx/adminUser", "password")
+				fakeStore.AssertHasValue(t, vaultLocation, "secret/data/lighthouse/hmac", "hmac")
+				fakeStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
+				fakeStore.AssertHasValue(t, vaultLocation, "secret/data/knative/docker/user/pass", "password")
+				fakeStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/mavenSettings", "settingsXml", mavenSettings)
 			},
 		},
 		{
@@ -328,10 +328,10 @@ func TestPopulateFromFileSystem(t *testing.T) {
 	require.NoError(t, err, "failed to invoke Run()")
 
 	secretStore := fakeFactory.GetSecretStore()
-	secret, err := secretStore.GetSecret(vaultLocation, "jx/pipelineUser", "token")
+	secret, err := secretStore.GetSecret(vaultLocation, "secret/data/jx/pipelineUser", "token")
 	assert.NoError(t, err)
-	secretStore.AssertHasValue(t, vaultLocation, "jx/pipelineUser", "token")
-	secretStore.AssertValueEquals(t, vaultLocation, "jx/pipelineUser", "token", "gitoperatorpassword")
+	secretStore.AssertHasValue(t, vaultLocation, "secret/data/jx/pipelineUser", "token")
+	secretStore.AssertValueEquals(t, vaultLocation, "secret/data/jx/pipelineUser", "token", "gitoperatorpassword")
 	assert.Equal(t, "gitoperatorpassword", secret)
 }
 

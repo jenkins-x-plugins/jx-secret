@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert/edit"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
@@ -54,6 +56,8 @@ type Options struct {
 	SecretMapping    *v1alpha1.SecretMapping
 
 	Prefix string
+
+	warnedAlicloud bool
 }
 
 // NewCmdSecretConvert creates a command object for the command
@@ -170,6 +174,18 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		return results, nil
 	}
 
+	// An ExternalSecret must have at least one data or dataFrom entry — ESO's
+	// webhook rejects it otherwise — so a Secret whose every key is unsecured
+	// has nothing to fetch and stays a plain Secret.
+	allUnsecured, err := o.allSecretDataUnsecured(node, path, name)
+	if err != nil {
+		return results, errors.Wrapf(err, "failed to check unsecured keys for %s", path)
+	}
+	if allUnsecured {
+		log.Logger().Debugf("not converting Secret %s in namespace %s to an ExternalSecret as all of its keys are unsecured", info(name), info(namespace))
+		return results, nil
+	}
+
 	secret := o.SecretMapping.FindRule(namespace, name)
 	err = kyamls.SetStringValue(node, path, extsecrets.APIVersion, "apiVersion")
 	if err != nil {
@@ -186,7 +202,8 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 
 	// The referenced store holds the backend-specific config (backendType,
 	// roleArn, region, projectId, keyVaultName, vaultMountPoint, vaultRole), so
-	// none of it is written onto the ExternalSecret.
+	// none of it is written onto the ExternalSecret. jx-secret reads the store
+	// back at populate/edit time to recover it.
 	err = kyamls.SetStringValue(node, path, extsecrets.DefaultSecretStoreName, "spec", "secretStoreRef", "name")
 	if err != nil {
 		return results, err
@@ -199,6 +216,9 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 	// Validates the mapping and sets o.Prefix for GSM key naming; no spec fields
 	// are written here.
 	switch secret.BackendType {
+	case v1alpha1.BackendTypeAlicloud:
+		o.warnAlicloudUnsupported()
+
 	case v1alpha1.BackendTypeGSM:
 		if secret.GcpSecretsManager == nil {
 			secret.GcpSecretsManager = &v1alpha1.GcpSecretsManager{}
@@ -226,7 +246,8 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		if secret.AwsSecretsManager == nil {
 			secret.AwsSecretsManager = &v1alpha1.AwsSecretsManager{}
 		}
-		if secret.AwsSecretsManager.Region == "" && o.SecretMapping.Spec.AwsSecretsManager.Region == "" {
+		if secret.AwsSecretsManager.Region == "" && secret.Region == "" &&
+			o.SecretMapping.Spec.AwsSecretsManager.Region == "" && o.SecretMapping.Spec.Region == "" {
 			return results, errors.New("missing secret mapping secret.AwsSecretsManager.Region")
 		}
 	}
@@ -250,6 +271,44 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 	results.Name = name
 	results.Modified = flag
 	return results, nil
+}
+
+// warnAlicloudUnsupported reports the backend as unusable once per run rather
+// than once per Secret, so a repo full of them stays readable.
+func (o *Options) warnAlicloudUnsupported() {
+	if o.warnedAlicloud {
+		return
+	}
+	o.warnedAlicloud = true
+	log.Logger().Warnf("backendType %s is no longer supported: the External Secrets Operator has no alibaba provider in %s, so the generated ExternalSecrets cannot be resolved. Migrate these secrets to another backend.",
+		v1alpha1.BackendTypeAlicloud, extsecrets.APIVersion)
+}
+
+// allSecretDataUnsecured reports whether every data and stringData key of the
+// Secret is listed as unsecured in the mapping.
+func (o *Options) allSecretDataUnsecured(node *yaml.RNode, path, secretName string) (bool, error) {
+	if o.SecretMapping == nil {
+		return false, nil
+	}
+	for _, dataPath := range []string{"data", "stringData"} {
+		data, err := node.Pipe(yaml.Lookup(dataPath))
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to get data for path %s", path)
+		}
+		if data == nil {
+			continue
+		}
+		fields, err := data.Fields()
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to find data fields for path %s", path)
+		}
+		for _, field := range fields {
+			if !o.SecretMapping.IsSecretKeyUnsecured(secretName, field) {
+				return false, nil
+			}
+		}
+	}
+	return true, nil
 }
 
 // hasSecretData returns true if the node has secret data fields
@@ -335,7 +394,7 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 					err = o.modifyASM(rNode, field, secretName, path)
 
 				default:
-					err = o.modifyDefault(rNode, field, secretName, path, complexSecretType)
+					err = o.modifyDefault(rNode, field, secretName, path, complexSecretType, false)
 				}
 
 				if err != nil {
@@ -360,6 +419,14 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 			Content: templateData.Content,
 			Style:   style,
 		})
+
+		// Without this the template's mergePolicy defaults to Replace, and the
+		// Secret would contain only these unsecured literals — every key fetched
+		// via spec.data would be dropped.
+		err = kyamls.SetStringValue(node, path, string(esv1.MergePolicyMerge), "spec", "target", "template", "mergePolicy")
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to set template mergePolicy for path %s", path)
+		}
 	}
 
 	data, err := node.Pipe(yaml.LookupCreate(yaml.SequenceNode, "spec", "data"))
@@ -389,15 +456,52 @@ func setRemoteRef(rNode *yaml.RNode, path, secretKey, key, property string, extr
 			return err
 		}
 	}
-	for field, value := range extra {
-		if value == "" {
-			continue
+	// sorted so the generated YAML is stable across runs
+	fields := make([]string, 0, len(extra))
+	for field := range extra {
+		if extra[field] != "" {
+			fields = append(fields, field)
 		}
-		if err := kyamls.SetStringValue(rNode, path, value, "remoteRef", field); err != nil {
+	}
+	sort.Strings(fields)
+	for _, field := range fields {
+		if err := setQuotedStringValue(rNode, path, extra[field], "remoteRef", field); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// setQuotedStringValue sets a string field, quoting it when the plain form would
+// be read back as a number or boolean. remoteRef.version is typed as a string in
+// the ESO schema, so a bare `version: 1` is rejected by the CRD.
+func setQuotedStringValue(rNode *yaml.RNode, path, value string, fields ...string) error {
+	if err := kyamls.SetStringValue(rNode, path, value, fields...); err != nil {
+		return err
+	}
+	if !needsQuoting(value) {
+		return nil
+	}
+	field, err := rNode.Pipe(yaml.Lookup(fields...))
+	if err != nil {
+		return errors.Wrapf(err, "failed to look up %s at path %s", kyamls.JSONPath(fields...), path)
+	}
+	if field != nil {
+		field.YNode().Style = yaml.SingleQuotedStyle
+	}
+	return nil
+}
+
+func needsQuoting(value string) bool {
+	if value == "" {
+		return false
+	}
+	var probe interface{}
+	if err := yaml.Unmarshal([]byte(value), &probe); err != nil {
+		return true
+	}
+	_, isString := probe.(string)
+	return !isString
 }
 
 func (o *Options) modifyVault(node, rNode *yaml.RNode, field, secretName, path string) error {
@@ -431,7 +535,7 @@ func (o *Options) modifyVault(node, rNode *yaml.RNode, field, secretName, path s
 	return setRemoteRef(rNode, path, field, key, property, nil)
 }
 
-func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path string, complexType bool) error {
+func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path string, complexType, supportsVersionStage bool) error {
 	var key string
 	property := ""
 	if complexType {
@@ -445,6 +549,7 @@ func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path strin
 	}
 
 	isBinary := false
+	versionStage := ""
 
 	if o.SecretMapping != nil {
 		mapping := o.SecretMapping.Find(secretName, field)
@@ -455,7 +560,13 @@ func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path strin
 			if mapping.Property != "" {
 				property = mapping.Property
 			}
+			if mapping.VersionStage != "" {
+				versionStage = mapping.VersionStage
+			}
 			isBinary = mapping.IsBinary
+		}
+		if versionStage == "" {
+			versionStage = o.SecretMapping.Spec.VersionStage
 		}
 	}
 
@@ -463,10 +574,18 @@ func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path strin
 		return fmt.Errorf("no key found when mapping secret %s", secretName)
 	}
 
-	// The mapping's VersionStage has no remoteRef equivalent, so it is dropped.
+	// ESO has no separate versionStage field. AWS Secrets Manager reads
+	// remoteRef.version as a version stage, so the mapping's value carries over
+	// there. Other back ends treat it as a concrete version id, where a stage
+	// name would not resolve, so it is dropped rather than mistranslated.
 	extra := map[string]string{}
+	if supportsVersionStage {
+		extra["version"] = versionStage
+	} else if versionStage != "" {
+		log.Logger().Debugf("ignoring versionStage %s for secret %s: only AWS Secrets Manager supports version stages", versionStage, secretName)
+	}
 	if isBinary {
-		extra["decodingStrategy"] = "Base64"
+		extra["decodingStrategy"] = string(esv1.ExternalSecretDecodeBase64)
 	}
 	return setRemoteRef(rNode, path, field, key, property, extra)
 }
@@ -535,7 +654,7 @@ func (o *Options) modifyGSM(rNode *yaml.RNode, field, secretName, path string) e
 }
 
 func (o *Options) modifyASM(rNode *yaml.RNode, field, secretName, path string) error {
-	return o.modifyDefault(rNode, field, secretName, path, true)
+	return o.modifyDefault(rNode, field, secretName, path, true, true)
 }
 
 func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, error) {

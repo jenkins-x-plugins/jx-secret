@@ -101,7 +101,11 @@ type SecretRule struct {
 type BackendType string
 
 const (
-	// BackendTypeAlicloud Alicloud KMS Secret Manager as the Backed service
+	// BackendTypeAlicloud Alicloud KMS Secret Manager as the Backed service.
+	// Unsupported since the move to the External Secrets Operator, which has no
+	// alibaba provider in external-secrets.io/v1 — only in the deprecated
+	// v1beta1 — so generated ExternalSecrets cannot be resolved. convert warns
+	// and the backend should be migrated away from.
 	BackendTypeAlicloud BackendType = "alicloudSecretsManager"
 	// BackendTypeAWSSecretsManager AWS Secrets Manager as the Backed service
 	BackendTypeAWSSecretsManager BackendType = "secretsManager"

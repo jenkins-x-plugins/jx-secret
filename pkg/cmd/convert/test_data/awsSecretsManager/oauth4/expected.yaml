@@ -17,6 +17,7 @@ spec:
     remoteRef:
       key: unspecified-simple-type
       property: password
+      version: AWSPREVIOUS
   target:
     template:
       metadata:

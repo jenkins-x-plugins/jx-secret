@@ -1,6 +1,6 @@
 # Source: lighthouse/templates/oauthsecret.yaml
-apiVersion: external-secrets.io/v1
-kind: ExternalSecret
+apiVersion: v1
+kind: Secret
 metadata:
   name: lighthouse-oauth-token
   labels:
@@ -8,19 +8,6 @@ metadata:
     chart: "lighthouse-0.0.633"
     release: "lighthouse"
     heritage: "Helm"
-spec:
-  secretStoreRef:
-    name: jx-secret-store
-    kind: ClusterSecretStore
-  target:
-    template:
-      data:
-        oauth: pinkiepie
-      metadata:
-        labels:
-          app: lighthouse-lighthouse
-          chart: "lighthouse-0.0.633"
-          release: "lighthouse"
-          heritage: "Helm"
-      type: Opaque
-  data: []
+type: Opaque
+data:
+  oauth: pinkiepie

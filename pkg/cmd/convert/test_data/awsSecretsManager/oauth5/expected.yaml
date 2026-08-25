@@ -17,6 +17,7 @@ spec:
     remoteRef:
       key: azure-secret-name
       property: customProperty
+      version: AWSPREVIOUS
   target:
     template:
       metadata:

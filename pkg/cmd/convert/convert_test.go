@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
+	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"

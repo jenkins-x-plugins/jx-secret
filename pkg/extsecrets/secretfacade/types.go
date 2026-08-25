@@ -10,9 +10,9 @@ import (
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/secretmapping"
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore/factory"
+	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -31,9 +31,14 @@ type Options struct {
 	Source                    string
 	SecretStoreManagerFactory secretstore.FactoryInterface
 
-	// Resolver derives backend info for an ExternalSecret from the loaded
-	// SecretMapping. Populated by Validate() from Dir; nil-safe.
+	// Resolver derives backend info for an ExternalSecret from the
+	// (Cluster)SecretStore it references, falling back to the SecretMapping
+	// loaded from Dir. Populated by Validate(); nil-safe.
 	Resolver *extsecrets.BackendResolver
+
+	// StoreClient reads the (Cluster)SecretStore resources. Populated by
+	// Validate() when the source is kubernetes.
+	StoreClient extsecrets.StoreInterface
 
 	// ExternalSecrets the loaded secrets
 	ExternalSecrets []*esv1.ExternalSecret
@@ -70,15 +75,24 @@ func (o *Options) Validate() error {
 	if o.SecretStoreManagerFactory == nil {
 		o.SecretStoreManagerFactory = &factory.SecretManagerFactory{}
 	}
+	if o.StoreClient == nil && (o.Source == Kubernetes || o.Source == "") {
+		o.StoreClient, err = extsecrets.NewStoreClient(nil)
+		if err != nil {
+			return errors.Wrap(err, "error initialising external secrets store client")
+		}
+	}
 	if o.Resolver == nil {
+		// the mapping is only a fallback for stores we cannot read, so a missing
+		// one is not fatal here; commands that cannot work without a backend
+		// fail when resolution comes back empty
 		mapping, _, err := secretmapping.LoadSecretMapping(o.Dir, false)
 		if err != nil {
 			return errors.Wrapf(err, "failed to load SecretMapping from %s", o.Dir)
 		}
-		if mapping == nil {
-			log.Logger().Warnf("no SecretMapping found under %s — backend-dependent operations will no-op", o.Dir)
+		if mapping == nil && o.StoreClient == nil {
+			log.Logger().Warnf("no SecretMapping found under %s and no cluster access to read SecretStores: the secret backend cannot be resolved", o.Dir)
 		}
-		o.Resolver = &extsecrets.BackendResolver{Mapping: mapping}
+		o.Resolver = &extsecrets.BackendResolver{Stores: o.StoreClient, Mapping: mapping}
 	}
 	return nil
 }

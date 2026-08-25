@@ -6,7 +6,7 @@
 [![LICENSE](https://img.shields.io/github/license/jenkins-x-plugins/jx-secret.svg)](https://github.com/jenkins-x-plugins/jx-secret/blob/master/LICENSE)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.k8s.io/)
 
-`jx-secret` is a small command line tool working with [Kubernetes External Secrets](https://github.com/godaddy/kubernetes-external-secrets).
+`jx-secret` is a small command line tool working with the [External Secrets Operator](https://external-secrets.io/).
 
 You can find more about how we use the [jx-secret binary](https://github.com/jenkins-x-plugins/jx-secret/releases) binary inside JayeX in the [guide on working with Secrets](https://jayex.io/v3/admin/guides/secrets/)
 
@@ -36,14 +36,13 @@ Though we would welcome [contributions to the version stream](https://github.com
 
 ### Mappings
 
-When using the [jx-secret convert](docs/cmd/jx-secret_convert.md) command to generate [ExternalSecret](https://github.com/godaddy/kubernetes-external-secrets) CRDs you may wish to use a custom mapping of `Secret` names and data keys to key/properties in Vault.
+When using the [jx-secret convert](docs/cmd/jx-secret_convert.md) command to generate [ExternalSecret](https://external-secrets.io/latest/api/externalsecret/) resources you may wish to use a custom mapping of `Secret` names and data keys to key/properties in Vault.
 
 To do this just create a [.jx/secret/mapping/secret-mapping.yaml](https://github.com/jenkins-x/jx3-gitops-template/blob/master/.jx/secret/vault/mapping/secret-mappings.yaml) file in your directory tree when running the command. 
 
-You can then customise the `key` and/or `property` values that are used in the generated [ExternalSecret](https://github.com/godaddy/kubernetes-external-secrets) CRDs
+You can then customise the `key` and/or `property` values that are used in the generated [ExternalSecret](https://external-secrets.io/latest/api/externalsecret/) resources
 
 For more details see the [Mapping Configuration Reference](docs/mapping.md#secret.jenkins-x.io/v1alpha1.SecretMapping)
-
 
 # Reference Guides
 
@@ -56,6 +55,6 @@ See the [jx-secret command reference](https://github.com/jenkins-x-plugins/jx-se
 
 The configuration file formats and schema references are here:
 
-* [ExternalSecret](docs/external.md#kubernetes-client.io/v1.ExternalSecret)
+* [ExternalSecret](https://external-secrets.io/latest/api/externalsecret/) (owned by the External Secrets Operator)
 * [SecretMapping](docs/mapping.md#secret.jenkins-x.io/v1alpha1.SecretMapping)
 * [Schema](docs/schema.md#secret.jenkins-x.io/v1alpha1.Schema)

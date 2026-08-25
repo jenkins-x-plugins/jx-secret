@@ -278,7 +278,7 @@ func (o *Options) getExternalSecretValue(lookupSecretName, lookupKey, namespace 
 		return ""
 	}
 
-	key := externalSecretKey
+	key := o.Resolver.RemoteKeyPath(externalSecret, externalSecretKey)
 	if storeType == secretstore.SecretStoreTypeKubernetes {
 		key = externalSecret.Name
 	}

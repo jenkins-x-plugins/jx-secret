@@ -17,10 +17,12 @@ spec:
     remoteRef:
       key: unspecified-complex-type
       property: hmac
+      version: AWSPREVIOUS
   - secretKey: git_token
     remoteRef:
       key: unspecified-complex-type
       property: git_token
+      version: AWSPREVIOUS
   target:
     template:
       metadata:

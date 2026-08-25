@@ -134,7 +134,7 @@ func (o *Options) Run() error {
 			m := map[string]*editor.KeyProperties{}
 			for i := range data {
 				d := &data[i]
-				key := populate.GetSecretKey(o.Resolver.Backend(&r.ExternalSecret), name, d.RemoteRef.Key)
+				key := populate.GetSecretKey(o.Resolver.Backend(&r.ExternalSecret), name, o.Resolver.RemoteKeyPath(&r.ExternalSecret, d.RemoteRef.Key))
 				property := d.RemoteRef.Property
 
 				var value string

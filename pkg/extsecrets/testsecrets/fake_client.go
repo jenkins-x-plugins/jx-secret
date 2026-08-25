@@ -11,7 +11,9 @@ import (
 // NewFakeDynClient creates a new dynamic client with the external secrets
 func NewFakeDynClient(scheme *runtime.Scheme, dynObjects ...runtime.Object) *dynfake.FakeDynamicClient {
 	gvrToListKind := map[schema.GroupVersionResource]string{
-		extsecrets.ExternalSecretsResource: esv1.ExtSecretKind + "List",
+		extsecrets.ExternalSecretsResource:     esv1.ExtSecretKind + "List",
+		extsecrets.SecretStoresResource:        esv1.SecretStoreKind + "List",
+		extsecrets.ClusterSecretStoresResource: esv1.ClusterSecretStoreKind + "List",
 	}
 	return dynfake.NewSimpleDynamicClientWithCustomListKinds(scheme, gvrToListKind, dynObjects...)
 }

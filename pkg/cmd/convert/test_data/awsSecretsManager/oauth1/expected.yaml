@@ -17,10 +17,12 @@ spec:
     remoteRef:
       key: secretSquirrel
       property: username
+      version: AWSPREVIOUS
   - secretKey: password
     remoteRef:
       key: secretSquirrel
       property: password
+      version: CustomVersion
   target:
     template:
       metadata:

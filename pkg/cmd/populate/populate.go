@@ -200,7 +200,7 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 		newValueMap := map[string]bool{}
 		for i := range data {
 			d := &data[i]
-			key := GetSecretKey(backend, r.ExternalSecret.Name, d.RemoteRef.Key)
+			key := GetSecretKey(backend, r.ExternalSecret.Name, o.Resolver.RemoteKeyPath(&r.ExternalSecret, d.RemoteRef.Key))
 			property := d.RemoteRef.Property
 			entryName := d.SecretKey
 			keyProperties := m[key]
