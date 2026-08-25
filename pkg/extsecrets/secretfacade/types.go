@@ -32,7 +32,7 @@ type Options struct {
 	SecretStoreManagerFactory secretstore.FactoryInterface
 
 	// Resolver derives backend info for an ExternalSecret from the loaded
-	// SecretMapping. Populated by Validate() from `--dir`; nil-safe.
+	// SecretMapping. Populated by Validate() from Dir; nil-safe.
 	Resolver *extsecrets.BackendResolver
 
 	// ExternalSecrets the loaded secrets

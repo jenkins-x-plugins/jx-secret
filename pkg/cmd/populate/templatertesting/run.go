@@ -23,12 +23,10 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-// resolverFromRequirements synthesizes a BackendResolver from a
-// jxRequirements-style Requirements config so templater tests (which don't
-// ship a SecretMapping on disk) still get non-empty Backend()/Location()
-// answers. The mapping is the same one the real convert/populate pipeline
-// derives on-disk — SecretStorage → BackendType, plus the backend-specific
-// location field.
+// resolverFromRequirements builds a BackendResolver from a Requirements config
+// so templater tests, which ship no SecretMapping on disk, still resolve a
+// backend and location. It derives the same mapping the convert and populate
+// commands would.
 func resolverFromRequirements(req *jxcore.RequirementsConfig) *extsecrets.BackendResolver {
 	if req == nil || req.SecretStorage == "" {
 		return &extsecrets.BackendResolver{}

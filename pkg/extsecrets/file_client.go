@@ -9,7 +9,7 @@ import (
 )
 
 var externalSecretFilter = kyamls.Filter{
-	Kinds: []string{"external-secrets.io/v1/ExternalSecret"},
+	Kinds: []string{APIVersion + "/" + esv1.ExtSecretKind},
 }
 
 func NewFileClient(dir string) Interface {

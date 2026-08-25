@@ -28,19 +28,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// DefaultSecretStoreName is the name of the (Cluster)SecretStore that every
-// ExternalSecret emitted by `jx-secret convert` references. This is the
-// contract the jx3-versions ESO chart ships: a single ClusterSecretStore per
-// cluster with a stable name that carries the backend-specific config.
-const DefaultSecretStoreName = "jx-secret-store"
-
-// DefaultSecretStoreKind is the kind of the (Cluster)SecretStore that every
-// emitted ExternalSecret references.
-const DefaultSecretStoreKind = "ClusterSecretStore"
-
-// APIVersion is the ESO v1 API version stamped onto every emitted ExternalSecret.
-const APIVersion = "external-secrets.io/v1"
-
 var (
 	info = termcolor.ColorInfo
 
@@ -184,7 +171,7 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 	}
 
 	secret := o.SecretMapping.FindRule(namespace, name)
-	err = kyamls.SetStringValue(node, path, APIVersion, "apiVersion")
+	err = kyamls.SetStringValue(node, path, extsecrets.APIVersion, "apiVersion")
 	if err != nil {
 		return results, err
 	}
@@ -197,21 +184,20 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		secret.BackendType = o.SecretMapping.Spec.BackendType
 	}
 
-	// Emit the (Cluster)SecretStore reference. The referenced store carries
-	// the backend-specific config (backendType/roleArn/region/projectId/
-	// keyVaultName/vaultMountPoint/vaultRole) — the ExternalSecret itself
-	// no longer needs any of those.
-	err = kyamls.SetStringValue(node, path, DefaultSecretStoreName, "spec", "secretStoreRef", "name")
+	// The referenced store holds the backend-specific config (backendType,
+	// roleArn, region, projectId, keyVaultName, vaultMountPoint, vaultRole), so
+	// none of it is written onto the ExternalSecret.
+	err = kyamls.SetStringValue(node, path, extsecrets.DefaultSecretStoreName, "spec", "secretStoreRef", "name")
 	if err != nil {
 		return results, err
 	}
-	err = kyamls.SetStringValue(node, path, DefaultSecretStoreKind, "spec", "secretStoreRef", "kind")
+	err = kyamls.SetStringValue(node, path, extsecrets.DefaultSecretStoreKind, "spec", "secretStoreRef", "kind")
 	if err != nil {
 		return results, err
 	}
 
-	// The switch below is preserved solely to set o.Prefix from the mapping —
-	// GSM's key naming reads it. No spec fields are set here any more.
+	// Validates the mapping and sets o.Prefix for GSM key naming; no spec fields
+	// are written here.
 	switch secret.BackendType {
 	case v1alpha1.BackendTypeGSM:
 		if secret.GcpSecretsManager == nil {
@@ -294,9 +280,8 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	var contents []*yaml.Node
 	style := node.Document().Style
 
-	// Unsecured (literal) fields collect into a single template.data map that
-	// eventually lands at spec.target.template.data — ESO v1 has no
-	// stringData distinction; literals go in the one map.
+	// Both data and stringData literals collect here: the target template has a
+	// single data map, with no stringData equivalent.
 	templateData := &yaml.Node{
 		Kind:  yaml.MappingNode,
 		Style: style,
@@ -365,7 +350,6 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 		}
 	}
 
-	// Stamp any literal / unsecured values into spec.target.template.data.
 	if len(templateData.Content) != 0 {
 		templateDataNode, err := node.Pipe(yaml.LookupCreate(yaml.MappingNode, "spec", "target", "template", "data"))
 		if err != nil {
@@ -391,8 +375,8 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	return true, nil
 }
 
-// setRemoteRef writes secretKey plus a nested remoteRef {key, property, ...}
-// onto a data entry rNode in the ESO v1 shape.
+// setRemoteRef writes a spec.data entry: secretKey plus a nested remoteRef of
+// key, property and any extra fields.
 func setRemoteRef(rNode *yaml.RNode, path, secretKey, key, property string, extra map[string]string) error {
 	if err := kyamls.SetStringValue(rNode, path, secretKey, "secretKey"); err != nil {
 		return err
@@ -428,8 +412,8 @@ func (o *Options) modifyVault(node, rNode *yaml.RNode, field, secretName, path s
 	if len(names) > 1 && names[len(names)-1] == property {
 		secretPath = strings.Join(names[0:len(names)-1], "/")
 	}
-	// ESO's vault provider takes the bare path — the KV mount lives on the
-	// ClusterSecretStore, so we no longer prepend "secret/data/".
+	// The vault provider takes the bare path; the KV mount is configured on the
+	// ClusterSecretStore rather than prefixed here.
 	key := prefix + secretPath
 
 	if o.SecretMapping != nil {
@@ -479,11 +463,9 @@ func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path strin
 		return fmt.Errorf("no key found when mapping secret %s", secretName)
 	}
 
+	// The mapping's VersionStage has no remoteRef equivalent, so it is dropped.
 	extra := map[string]string{}
 	if isBinary {
-		// ESO's equivalent of KES's `isBinary: true` is
-		// `remoteRef.decodingStrategy: Base64`. KES's `versionStage` has no
-		// ESO equivalent — dropped per MIGRATION.md.
 		extra["decodingStrategy"] = "Base64"
 	}
 	return setRemoteRef(rNode, path, field, key, property, extra)
@@ -557,9 +539,8 @@ func (o *Options) modifyASM(rNode *yaml.RNode, field, secretName, path string) e
 }
 
 func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, error) {
-	// Relocate the Secret's own type/annotations/labels onto
-	// spec.target.template so ESO stamps them onto the target Secret it
-	// creates.
+	// Moving type/labels/annotations under the target template is what makes the
+	// operator stamp them onto the Secret it creates.
 	typeValue := kyamls.GetStringField(node, path, "type")
 
 	labels, err := node.Pipe(yaml.Lookup("metadata", "labels"))

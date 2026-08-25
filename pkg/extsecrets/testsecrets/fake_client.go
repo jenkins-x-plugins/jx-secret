@@ -1,6 +1,8 @@
 package testsecrets
 
 import (
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	dynfake "k8s.io/client-go/dynamic/fake"
@@ -9,7 +11,7 @@ import (
 // NewFakeDynClient creates a new dynamic client with the external secrets
 func NewFakeDynClient(scheme *runtime.Scheme, dynObjects ...runtime.Object) *dynfake.FakeDynamicClient {
 	gvrToListKind := map[schema.GroupVersionResource]string{
-		{Group: "external-secrets.io", Version: "v1", Resource: "externalsecrets"}: "ExternalSecretList",
+		extsecrets.ExternalSecretsResource: esv1.ExtSecretKind + "List",
 	}
 	return dynfake.NewSimpleDynamicClientWithCustomListKinds(scheme, gvrToListKind, dynObjects...)
 }

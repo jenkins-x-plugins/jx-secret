@@ -182,12 +182,10 @@ func (o *Options) Run() error {
 	return nil
 }
 
-// addReplicatedToAnnotation stamps a `secret.jenkins-x.io/replicate-to`
-// annotation on the source ExternalSecret so downstream tooling can see which
-// namespaces the resource has been fanned out to. Pre-migration this was
-// gated on `spec.backendType == "local"` — that field is gone in ESO v1, so
-// we now always annotate; the annotation is a bookkeeping marker anyway (the
-// per-namespace replica files are what actually drive gitops).
+// addReplicatedLocalBackendAnnotation records the target namespaces on the
+// source ExternalSecret for downstream tooling. It annotates unconditionally
+// because the ExternalSecret carries no backend to gate on, and the annotation
+// is only a marker: the per-namespace replica files are what drive gitops.
 func (o *Options) addReplicatedLocalBackendAnnotation(path string) error {
 	node, err := yaml.ReadFile(path)
 	if err != nil {

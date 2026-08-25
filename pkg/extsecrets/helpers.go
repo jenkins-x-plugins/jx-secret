@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/kube"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/termcolor"
 	"github.com/jenkins-x/jx-logging/v3/pkg/log"
@@ -13,20 +14,19 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 )
 
 var (
-	// ExternalSecretsResource is the ESO ExternalSecret GVR.
-	ExternalSecretsResource = schema.GroupVersionResource{Group: "external-secrets.io", Version: "v1", Resource: "externalsecrets"}
+	// ExternalSecretsResource is the ExternalSecret GVR.
+	ExternalSecretsResource = esv1.SchemeGroupVersion.WithResource("externalsecrets")
 
 	// SecretStoresResource is the namespaced SecretStore GVR.
-	SecretStoresResource = schema.GroupVersionResource{Group: "external-secrets.io", Version: "v1", Resource: "secretstores"}
+	SecretStoresResource = esv1.SchemeGroupVersion.WithResource("secretstores")
 
 	// ClusterSecretStoresResource is the cluster-scoped ClusterSecretStore GVR.
-	ClusterSecretStoresResource = schema.GroupVersionResource{Group: "external-secrets.io", Version: "v1", Resource: "clustersecretstores"}
+	ClusterSecretStoresResource = esv1.SchemeGroupVersion.WithResource("clustersecretstores")
 
 	info = termcolor.ColorInfo
 )

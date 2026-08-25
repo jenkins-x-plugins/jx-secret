@@ -330,11 +330,6 @@ func CreateSecretValue(backendType v1alpha1.BackendType, values []editor.Propert
 	}
 }
 
-// GetExternalSecretLocation was removed in the KES→ESO migration. Its job is
-// now on extsecrets.BackendResolver.Location(es) — the ExternalSecret no
-// longer carries backend-specific config directly, so the resolver reads it
-// from SecretMapping instead.
-
 func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, property, currentValue string) (string, error) {
 	object, err := s.SchemaObject()
 	if err != nil {

@@ -22,9 +22,8 @@ type secretFacadeEditor struct {
 	resolver      *extsecrets.BackendResolver
 }
 
-// NewEditor create a new editor using the secret store. `resolver` reads
-// backend info from jx-secret's SecretMapping; a nil resolver resolves to
-// empty backend for every ExternalSecret (i.e. no-op behavior).
+// NewEditor create a new editor using the secret store. A nil resolver yields
+// an empty backend for every ExternalSecret.
 func NewEditor(secret *esv1.ExternalSecret, resolver *extsecrets.BackendResolver, secretStoreManagerFactory secretstore.FactoryInterface, kubeClient kubernetes.Interface, externalVault string) (editor.Interface, error) {
 	if secretStoreManagerFactory == nil {
 		secretStoreManagerFactory = &factory.SecretManagerFactory{}

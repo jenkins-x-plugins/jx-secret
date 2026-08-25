@@ -7,21 +7,15 @@ import (
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 )
 
-// BackendResolver derives backend info for an ESO ExternalSecret from the
-// SecretMapping input config that jx-secret loads from `--dir`. After the KES →
-// ESO migration the ExternalSecret no longer carries backend info directly —
-// it lives on the referenced (Cluster)SecretStore — but jx-secret's own
-// SecretMapping already carries the same information (that's what convert.go
-// stamps onto the ClusterSecretStore in jx3-versions). So we resolve backend
-// from SecretMapping at CLI-run time.
+// A BackendResolver derives backend info for an ExternalSecret from the
+// SecretMapping loaded from `--dir`. The ExternalSecret itself carries none —
+// that lives on the referenced (Cluster)SecretStore — but the SecretMapping
+// holds the same information, so we resolve from there at CLI-run time.
 //
-// Rule-level override takes precedence over the mapping-wide default
-// (SecretMapping.Spec.Defaults, embedded as SecretMapping.Spec.*).
-//
-// The resolver returns "" from every method when the mapping is nil so
-// callers can safely default to no-op behavior when jx-secret is invoked
-// outside a mapped dir. Callers who need to fail loudly on missing mapping
-// should check that at Options.Validate() time.
+// A rule-level value takes precedence over the mapping-wide default. Every
+// method returns "" for a nil mapping so callers invoked outside a mapped dir
+// degrade to no-op rather than panic; check for a missing mapping in
+// Options.Validate() if you need to fail loudly.
 type BackendResolver struct {
 	Mapping *v1alpha1.SecretMapping
 }
@@ -38,11 +32,9 @@ func (r *BackendResolver) Backend(es *esv1.ExternalSecret) v1alpha1.BackendType 
 	return r.Mapping.Spec.BackendType
 }
 
-// Location returns the backend-specific "location" string used to identify
-// where secrets live for a given ExternalSecret — GCP project ID for GSM,
-// key-vault name for Azure, VAULT_ADDR for Vault, AWS region for
-// SecretsManager, namespace for local. Mirrors the pre-migration
-// populate.GetExternalSecretLocation.
+// Location returns where the secrets live for the given ExternalSecret: GCP
+// project ID for GSM, key-vault name for Azure, VAULT_ADDR for Vault, region
+// for AWS SecretsManager, namespace for local.
 func (r *BackendResolver) Location(es *esv1.ExternalSecret) string {
 	if r == nil || r.Mapping == nil {
 		return ""
@@ -80,24 +72,14 @@ func (r *BackendResolver) Location(es *esv1.ExternalSecret) string {
 	return ""
 }
 
-// ProjectID returns the GCP project ID for the given ExternalSecret if the
-// resolved backend is GSM, otherwise empty. Callers previously read
-// ExternalSecret.Spec.ProjectID directly.
+// ProjectID returns the GCP project ID for the given ExternalSecret, or empty
+// if the resolved backend is not GSM.
 func (r *BackendResolver) ProjectID(es *esv1.ExternalSecret) string {
+	if r == nil || r.Mapping == nil {
+		return ""
+	}
 	if r.Backend(es) != v1alpha1.BackendTypeGSM {
 		return ""
 	}
 	return r.Location(es)
-}
-
-// ResolveBackend is a thin wrapper preserved so pre-refactor callsites still
-// compile while the sweep is in progress. Callers with access to
-// secretfacade.Options should prefer o.Resolver.Backend(es) — this free
-// function is a bridge, not the target API.
-//
-// TODO(eso-migration): remove once the populate/edit sweep has migrated all
-// callers to use o.Resolver directly.
-func ResolveBackend(es *esv1.ExternalSecret) v1alpha1.BackendType {
-	_ = es
-	return ""
 }
