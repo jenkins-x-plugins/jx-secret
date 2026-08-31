@@ -8,7 +8,7 @@ import (
 )
 
 var externalSecretFilter = kyamls.Filter{
-	Kinds: []string{"kubernetes-client.io/v1/ExternalSecret"},
+	Kinds: []string{"external-secrets.io/v1beta1/ExternalSecret"},
 }
 
 func NewFileClient(dir string) Interface {

@@ -1,5 +1,5 @@
 # Source: lighthouse/templates/oauthsecret.yaml
-apiVersion: kubernetes-client.io/v1
+apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
   name: complex-secret
