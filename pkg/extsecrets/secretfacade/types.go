@@ -51,7 +51,7 @@ func (o *Options) Validate() error {
 		return errors.Wrapf(err, "failed to validate base options")
 	}
 	if o.SecretClient == nil && (o.Source == Kubernetes || o.Source == "") {
-		o.SecretClient, err = extsecrets.NewClient(nil)
+		o.SecretClient, err = extsecrets.NewClient(nil, nil)
 		if err != nil {
 			return errors.Wrap(err, "error initialising kubernetes external secrets client")
 		}

@@ -2,6 +2,7 @@ package extsecrets
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/knative_pkg/duck"
 
@@ -11,20 +12,46 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 )
 
 // Client an implementation of the interface
 type client struct {
 	dynamicClient dynamic.Interface
+	kubeClient    kubernetes.Interface
 }
 
 //nolint:gocritic
 func (c *client) List(ns string) ([]*v1.ExternalSecret, error) {
 	var client dynamic.ResourceInterface
-	if ns != "" {
-		client = c.dynamicClient.Resource(ExternalSecretsResource).Namespace(ns)
+	apiResources, err := c.kubeClient.Discovery().ServerResources()
+	legacykes := true
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list server resources")
+	}
+
+	for k := range apiResources {
+		if strings.Contains(apiResources[k].GroupVersion, "external-secrets.io") {
+			for k1 := range apiResources[k].APIResources {
+				if strings.Contains(apiResources[k].APIResources[k1].Name, "externalsecrets") {
+					legacykes = false
+				}
+			}
+		}
+	}
+
+	if legacykes {
+		if ns != "" {
+			client = c.dynamicClient.Resource(KubernetesExternalSecretsResource).Namespace(ns)
+		} else {
+			client = c.dynamicClient.Resource(KubernetesExternalSecretsResource)
+		}
 	} else {
-		client = c.dynamicClient.Resource(ExternalSecretsResource)
+		if ns != "" {
+			client = c.dynamicClient.Resource(ExternalSecretsResource).Namespace(ns)
+		} else {
+			client = c.dynamicClient.Resource(ExternalSecretsResource)
+		}
 	}
 	resources, err := client.List(context.TODO(), metav1.ListOptions{})
 	if err != nil && apierrors.IsNotFound(err) {

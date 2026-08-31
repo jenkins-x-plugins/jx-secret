@@ -13,7 +13,7 @@ func (o *Options) Verify() ([]*SecretPair, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load ExternalSecret and Secret pairs")
 	}
-	log.Logger().Debugf("found %d ExternalSecret resources", len(pairs))
+	log.Logger().Infof("(After load) found %d ExternalSecret resources", len(pairs))
 
 	for _, p := range pairs {
 		r := p.ExternalSecret

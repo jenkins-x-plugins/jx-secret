@@ -1,6 +1,7 @@
 package secretfacade
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
@@ -21,6 +22,7 @@ func (o *Options) VerifyAndFilter() ([]*SecretPair, error) {
 	if err != nil {
 		return secrets, err
 	}
+	fmt.Println("Verified: ", len(secrets))
 
 	// lets filter out any secrets with similar secret mapping locations...
 	secretMapping, _, err := secretmapping.LoadSecretMapping(o.Dir, false)
@@ -32,9 +34,10 @@ func (o *Options) VerifyAndFilter() ([]*SecretPair, error) {
 
 	if secretMapping != nil {
 		// lets iterate through all objects + keep track of the properties and locations
-
+		fmt.Println("NOT NIL")
 		for _, s := range secrets {
 			es := s.ExternalSecret
+			
 			_, err := s.SchemaObject()
 			if err != nil {
 				return secrets, errors.Wrapf(err, "failed to load the schema object for %s", es.Name)

@@ -20,19 +20,24 @@ import (
 
 var (
 	// ExternalSecretsResource the schema group version resource
-	ExternalSecretsResource = schema.GroupVersionResource{Group: "kubernetes-client.io", Version: "v1", Resource: "externalsecrets"}
+	KubernetesExternalSecretsResource         = schema.GroupVersionResource{Group: "kubernetes-client.io", Version: "v1", Resource: "externalsecrets"}
+	ExternalSecretsResource = schema.GroupVersionResource{Group: "external-secrets.io", Version: "v1beta1", Resource: "externalsecrets"}
 
 	info = termcolor.ColorInfo
 )
 
 // NewClient creates a new client from the given dynamic client
-func NewClient(dynClient dynamic.Interface) (Interface, error) {
+func NewClient(dynClient dynamic.Interface, kubeClient kubernetes.Interface) (Interface, error) {
 	var err error
 	dynClient, err = kube.LazyCreateDynamicClient(dynClient)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a dynamic client")
 	}
-	return &client{dynamicClient: dynClient}, nil
+	kubeClient, err = kube.LazyCreateKubeClient(kubeClient)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create a kubernetes client")
+	}
+	return &client{dynamicClient: dynClient, kubeClient: kubeClient}, nil
 }
 
 // SimplifyKey simplify the key to avoid unnecessary paths
