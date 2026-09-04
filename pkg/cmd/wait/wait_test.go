@@ -39,6 +39,8 @@ func TestWait(t *testing.T) {
 
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
+	o.StoreClient, err = extsecrets.NewStoreClient(fakeDynClient)
+	require.NoError(t, err, "failed to create fake extsecrets StoreClient")
 
 	o.Namespace = ns
 	o.KubeClient = fake.NewSimpleClientset(kubeObjects...)
