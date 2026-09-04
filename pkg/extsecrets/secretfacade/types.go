@@ -30,9 +30,8 @@ type Options struct {
 	Source                    string
 	SecretStoreManagerFactory secretstore.FactoryInterface
 
-	// Resolver derives backend info for an ExternalSecret from the
-	// (Cluster)SecretStore it references, or from the SecretMapping loaded from
-	// Dir when there is no cluster to read stores from. Populated by Validate().
+	// Resolver reads the backend off the (Cluster)SecretStore an ExternalSecret
+	// references. Populated by Validate().
 	Resolver *extsecrets.BackendResolver
 
 	// ExternalSecrets the loaded secrets

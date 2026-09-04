@@ -11,8 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// fakeStores serves stores from a map and counts lookups so we can assert the
-// resolver caches.
+// fakeStores counts lookups so the caching test can assert on them.
 type fakeStores struct {
 	stores map[string]esv1.GenericStore
 	calls  int
@@ -31,8 +30,7 @@ func (f *fakeStores) GetStore(kind, name, _ string) (esv1.GenericStore, error) {
 	return store, nil
 }
 
-// storesWith serves a single ClusterSecretStore named "store", which is what
-// externalSecret points its secretStoreRef at.
+// storesWith serves one store named "store", which is what externalSecret refers to.
 func storesWith(provider *esv1.SecretStoreProvider) *fakeStores {
 	store := &esv1.ClusterSecretStore{
 		ObjectMeta: metav1.ObjectMeta{Name: "store"},
@@ -117,8 +115,6 @@ func TestResolveFromStore(t *testing.T) {
 	}
 }
 
-// A store that cannot be read means we do not know where the secret lives, and
-// guessing would write to a different backend than the operator reads from.
 func TestResolveFailsWhenStoreUnreadable(t *testing.T) {
 	r := &extsecrets.BackendResolver{Stores: &fakeStores{err: assert.AnError}}
 
@@ -148,8 +144,6 @@ func TestResolveFailsWithoutStoreRef(t *testing.T) {
 	assert.Contains(t, err.Error(), "references no SecretStore")
 }
 
-// ESO's vault provider takes a mount-relative key, but secretfacade drives the
-// Vault HTTP API and needs the full path.
 func TestRemoteKeyPath(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -217,8 +211,7 @@ func TestResolveCachesPerStore(t *testing.T) {
 	assert.Equal(t, 1, stores.calls, "the store should be read once and cached")
 }
 
-// A store with no remoteNamespace writes to the ExternalSecret's own namespace,
-// which varies per secret and so must not be cached with the store's details.
+// a store with no remoteNamespace falls back to each ExternalSecret's own namespace
 func TestResolveLocalNamespaceIsNotCached(t *testing.T) {
 	r := &extsecrets.BackendResolver{
 		Stores: storesWith(&esv1.SecretStoreProvider{Kubernetes: &esv1.KubernetesProvider{}}),
@@ -233,8 +226,7 @@ func TestResolveLocalNamespaceIsNotCached(t *testing.T) {
 	assert.Equal(t, "jx-staging", staging.Location)
 }
 
-// VAULT_ADDR is set partway through a populate run by the vault port-forward,
-// so the location must be read on access rather than frozen at resolve time.
+// VAULT_ADDR only appears once the vault port-forward is up, mid-run
 func TestResolveVaultAddressIsReadOnAccess(t *testing.T) {
 	r := &extsecrets.BackendResolver{
 		Stores: storesWith(&esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{}}),

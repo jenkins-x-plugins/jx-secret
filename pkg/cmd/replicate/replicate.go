@@ -182,10 +182,9 @@ func (o *Options) Run() error {
 	return nil
 }
 
-// addReplicatedLocalBackendAnnotation records the target namespaces on the
-// source ExternalSecret for downstream tooling. It annotates unconditionally
-// because the ExternalSecret carries no backend to gate on, and the annotation
-// is only a marker: the per-namespace replica files are what drive gitops.
+// addReplicatedLocalBackendAnnotation marks the target namespaces on the source
+// ExternalSecret. Unconditional because the resource carries no backend to gate on,
+// and it is only a marker: the per-namespace replica files drive gitops.
 func (o *Options) addReplicatedLocalBackendAnnotation(path string) error {
 	node, err := yaml.ReadFile(path)
 	if err != nil {

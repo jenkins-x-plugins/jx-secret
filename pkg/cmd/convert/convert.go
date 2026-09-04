@@ -174,9 +174,8 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		return results, nil
 	}
 
-	// An ExternalSecret must have at least one data or dataFrom entry — ESO's
-	// webhook rejects it otherwise — so a Secret whose every key is unsecured
-	// has nothing to fetch and stays a plain Secret.
+	// ESO's webhook rejects an ExternalSecret with no data or dataFrom entry, so a
+	// Secret whose every key is unsecured stays a plain Secret
 	allUnsecured, err := o.allSecretDataUnsecured(node, path, name)
 	if err != nil {
 		return results, errors.Wrapf(err, "failed to check unsecured keys for %s", path)
@@ -200,10 +199,8 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		secret.BackendType = o.SecretMapping.Spec.BackendType
 	}
 
-	// The referenced store holds the backend-specific config (backendType,
-	// roleArn, region, projectId, keyVaultName, vaultMountPoint, vaultRole), so
-	// none of it is written onto the ExternalSecret. jx-secret reads the store
-	// back at populate/edit time to recover it.
+	// backendType, roleArn, region, projectId, keyVaultName, vaultMountPoint and
+	// vaultRole all live on the referenced store now, so none are written here
 	err = kyamls.SetStringValue(node, path, extsecrets.DefaultSecretStoreName, "spec", "secretStoreRef", "name")
 	if err != nil {
 		return results, err
@@ -213,8 +210,7 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		return results, err
 	}
 
-	// Validates the mapping and sets o.Prefix for GSM key naming; no spec fields
-	// are written here.
+	// validation and o.Prefix only; nothing below writes spec fields
 	switch secret.BackendType {
 	case v1alpha1.BackendTypeAlicloud:
 		o.warnAlicloudUnsupported()
@@ -273,8 +269,8 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 	return results, nil
 }
 
-// warnAlicloudUnsupported reports the backend as unusable once per run rather
-// than once per Secret, so a repo full of them stays readable.
+// warnAlicloudUnsupported warns once per run, not once per Secret, so a repo full
+// of them stays readable.
 func (o *Options) warnAlicloudUnsupported() {
 	if o.warnedAlicloud {
 		return
@@ -284,8 +280,7 @@ func (o *Options) warnAlicloudUnsupported() {
 		v1alpha1.BackendTypeAlicloud, extsecrets.APIVersion)
 }
 
-// allSecretDataUnsecured reports whether every data and stringData key of the
-// Secret is listed as unsecured in the mapping.
+// allSecretDataUnsecured covers stringData keys as well as data.
 func (o *Options) allSecretDataUnsecured(node *yaml.RNode, path, secretName string) (bool, error) {
 	if o.SecretMapping == nil {
 		return false, nil
@@ -339,8 +334,7 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	var contents []*yaml.Node
 	style := node.Document().Style
 
-	// Both data and stringData literals collect here: the target template has a
-	// single data map, with no stringData equivalent.
+	// the target template has one data map and no stringData, so both collect here
 	templateData := &yaml.Node{
 		Kind:  yaml.MappingNode,
 		Style: style,
@@ -420,9 +414,8 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 			Style:   style,
 		})
 
-		// Without this the template's mergePolicy defaults to Replace, and the
-		// Secret would contain only these unsecured literals — every key fetched
-		// via spec.data would be dropped.
+		// mergePolicy defaults to Replace, which would drop every key fetched via
+		// spec.data and leave only these literals
 		err = kyamls.SetStringValue(node, path, string(esv1.MergePolicyMerge), "spec", "target", "template", "mergePolicy")
 		if err != nil {
 			return errors.Wrapf(err, "failed to set template mergePolicy for path %s", path)
@@ -442,8 +435,6 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	return nil
 }
 
-// setRemoteRef writes a spec.data entry: secretKey plus a nested remoteRef of
-// key, property and any extra fields.
 func setRemoteRef(rNode *yaml.RNode, path, secretKey, key, property string, extra map[string]string) error {
 	if err := kyamls.SetStringValue(rNode, path, secretKey, "secretKey"); err != nil {
 		return err
@@ -472,9 +463,9 @@ func setRemoteRef(rNode *yaml.RNode, path, secretKey, key, property string, extr
 	return nil
 }
 
-// setQuotedStringValue sets a string field, quoting it when the plain form would
-// be read back as a number or boolean. remoteRef.version is typed as a string in
-// the ESO schema, so a bare `version: 1` is rejected by the CRD.
+// setQuotedStringValue quotes values that would otherwise be read back as a number
+// or boolean. remoteRef.version is a string in the ESO schema, so the CRD rejects
+// a bare `version: 1`.
 func setQuotedStringValue(rNode *yaml.RNode, path, value string, fields ...string) error {
 	if err := kyamls.SetStringValue(rNode, path, value, fields...); err != nil {
 		return err
@@ -516,8 +507,7 @@ func (o *Options) modifyVault(node, rNode *yaml.RNode, field, secretName, path s
 	if len(names) > 1 && names[len(names)-1] == property {
 		secretPath = strings.Join(names[0:len(names)-1], "/")
 	}
-	// The vault provider takes the bare path; the KV mount is configured on the
-	// ClusterSecretStore rather than prefixed here.
+	// the KV mount is configured on the store, so the provider takes the bare path
 	key := prefix + secretPath
 
 	if o.SecretMapping != nil {
@@ -574,10 +564,9 @@ func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path strin
 		return fmt.Errorf("no key found when mapping secret %s", secretName)
 	}
 
-	// ESO has no separate versionStage field. AWS Secrets Manager reads
-	// remoteRef.version as a version stage, so the mapping's value carries over
-	// there. Other back ends treat it as a concrete version id, where a stage
-	// name would not resolve, so it is dropped rather than mistranslated.
+	// ESO has no versionStage field. AWS Secrets Manager reads remoteRef.version as
+	// a stage, so it carries over there; elsewhere version is a concrete id that a
+	// stage name would not resolve to, so it is dropped rather than mistranslated.
 	extra := map[string]string{}
 	if supportsVersionStage {
 		extra["version"] = versionStage
@@ -658,8 +647,8 @@ func (o *Options) modifyASM(rNode *yaml.RNode, field, secretName, path string) e
 }
 
 func (o *Options) moveMetadataToTemplate(node *yaml.RNode, path string) (bool, error) {
-	// Moving type/labels/annotations under the target template is what makes the
-	// operator stamp them onto the Secret it creates.
+	// the operator only stamps type/labels/annotations onto the Secret it creates
+	// if they sit under the target template
 	typeValue := kyamls.GetStringField(node, path, "type")
 
 	labels, err := node.Pipe(yaml.Lookup("metadata", "labels"))

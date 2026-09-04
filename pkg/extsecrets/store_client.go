@@ -12,9 +12,8 @@ import (
 
 // StoreInterface fetches the (Cluster)SecretStore an ExternalSecret refers to.
 type StoreInterface interface {
-	// GetStore returns the store for the given ref. A namespaced SecretStore is
-	// looked up in esNamespace; kind is the secretStoreRef kind, defaulting to
-	// SecretStore when empty, as ESO itself does.
+	// GetStore looks a namespaced SecretStore up in esNamespace. An empty kind
+	// defaults to SecretStore, as ESO itself does.
 	GetStore(kind, name, esNamespace string) (esv1.GenericStore, error)
 }
 
@@ -22,7 +21,6 @@ type storeClient struct {
 	dynamicClient dynamic.Interface
 }
 
-// NewStoreClient creates a client for reading (Cluster)SecretStore resources.
 func NewStoreClient(dynClient dynamic.Interface) (StoreInterface, error) {
 	dynClient, err := kube.LazyCreateDynamicClient(dynClient)
 	if err != nil {

@@ -23,9 +23,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-// resolverFromRequirements builds a BackendResolver serving the ClusterSecretStore
-// a real cluster would hold for the given Requirements, so templater tests resolve
-// a backend without needing store fixtures of their own.
+// resolverFromRequirements serves the store a real cluster would hold for these
+// Requirements, so templater tests need no store fixtures of their own.
 func resolverFromRequirements(t *testing.T, req *jxcore.RequirementsConfig) *extsecrets.BackendResolver {
 	provider := providerFromRequirements(req)
 	if provider == nil {
@@ -38,8 +37,7 @@ func resolverFromRequirements(t *testing.T, req *jxcore.RequirementsConfig) *ext
 	return &extsecrets.BackendResolver{Stores: stores}
 }
 
-// defaultStoreRef points an ExternalSecret at the store resolverFromRequirements
-// serves, so test cases only spell out a secretStoreRef when they mean a different one.
+// defaultStoreRef lets test cases omit a secretStoreRef unless they mean a different one.
 func defaultStoreRef(es *esv1.ExternalSecret) {
 	if es.Spec.SecretStoreRef.Name == "" {
 		es.Spec.SecretStoreRef = esv1.SecretStoreRef{
@@ -49,8 +47,7 @@ func defaultStoreRef(es *esv1.ExternalSecret) {
 	}
 }
 
-// providerFromRequirements maps requirements.secretStorage onto the ESO provider
-// the cluster's store would use, or nil when it names no backend we can serve.
+// providerFromRequirements returns nil for a secretStorage we cannot serve.
 func providerFromRequirements(req *jxcore.RequirementsConfig) *esv1.SecretStoreProvider {
 	if req == nil {
 		return nil

@@ -10,22 +10,18 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// DefaultStoreName is the ClusterSecretStore the test fixtures reference from
-// their secretStoreRef.
+// DefaultStoreName is the store the test fixtures point their secretStoreRef at.
 const DefaultStoreName = "jx-secret-store"
 
-// ClusterSecretStore builds a ClusterSecretStore for the fake dynamic client.
-// ESO keeps the backend configuration on the store rather than the
-// ExternalSecret, so a test that populates or edits secrets needs the store its
-// fixtures point at to exist.
+// ClusterSecretStore builds a store for the fake dynamic client. Populate and edit
+// resolve the backend from it, so their fixtures need it to exist.
 func ClusterSecretStore(t *testing.T, name string, provider *esv1.SecretStoreProvider) runtime.Object {
 	store := &esv1.ClusterSecretStore{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: esv1.SchemeGroupVersion.String(),
 			Kind:       esv1.ClusterSecretStoreKind,
 		},
-		// cluster-scoped, so deliberately no namespace: storeClient looks it up
-		// without one and the fake client matches on that
+		// cluster-scoped: storeClient looks it up without a namespace
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 		Spec:       esv1.SecretStoreSpec{Provider: provider},
 	}
@@ -44,19 +40,17 @@ func VaultProvider(server string) *esv1.SecretStoreProvider {
 	}}
 }
 
-// GCPSMProvider describes Google Secret Manager in the given project.
 func GCPSMProvider(projectID string) *esv1.SecretStoreProvider {
 	return &esv1.SecretStoreProvider{GCPSM: &esv1.GCPSMProvider{ProjectID: projectID}}
 }
 
-// AzureKVProvider describes the Azure key vault of the given name.
+// AzureKVProvider synthesises the vault URL ESO expects from a bare vault name.
 func AzureKVProvider(vaultName string) *esv1.SecretStoreProvider {
 	return &esv1.SecretStoreProvider{AzureKV: &esv1.AzureKVProvider{
 		VaultURL: new("https://" + vaultName + ".vault.azure.net"),
 	}}
 }
 
-// KubernetesProvider describes local secrets in the given namespace.
 func KubernetesProvider(namespace string) *esv1.SecretStoreProvider {
 	return &esv1.SecretStoreProvider{Kubernetes: &esv1.KubernetesProvider{RemoteNamespace: namespace}}
 }

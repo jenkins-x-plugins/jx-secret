@@ -19,13 +19,10 @@ import (
 )
 
 var (
-	// ExternalSecretsResource is the ExternalSecret GVR.
 	ExternalSecretsResource = esv1.SchemeGroupVersion.WithResource("externalsecrets")
 
-	// SecretStoresResource is the namespaced SecretStore GVR.
 	SecretStoresResource = esv1.SchemeGroupVersion.WithResource("secretstores")
 
-	// ClusterSecretStoresResource is the cluster-scoped ClusterSecretStore GVR.
 	ClusterSecretStoresResource = esv1.SchemeGroupVersion.WithResource("clustersecretstores")
 
 	info = termcolor.ColorInfo
