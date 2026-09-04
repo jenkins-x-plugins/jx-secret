@@ -58,7 +58,7 @@ func NewEditor(secret *esv1.ExternalSecret, backend *extsecrets.Backend, secretS
 func (s *secretFacadeEditor) Write(keyProperties *editor.KeyProperties) error {
 	var annotations map[string]string
 	var labels map[string]string
-	secretType := corev1.SecretType(corev1.SecretTypeOpaque)
+	secretType := corev1.SecretTypeOpaque
 	if s.secret.Spec.Target.Template != nil {
 		annotations = s.secret.Spec.Target.Template.Metadata.Annotations
 		labels = s.secret.Spec.Target.Template.Metadata.Labels

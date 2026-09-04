@@ -8,7 +8,8 @@ import (
 // VerifySecret verifies the secret
 func VerifySecret(es *esv1.ExternalSecret, secret *corev1.Secret) (*SecretError, error) {
 	var answer []*EntryError
-	for _, d := range es.Spec.Data {
+	for i := range es.Spec.Data {
+		d := &es.Spec.Data[i]
 		valid := false
 		if secret != nil && secret.Data != nil {
 			value := secret.Data[d.SecretKey]

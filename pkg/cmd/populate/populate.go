@@ -254,7 +254,7 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 			if newValueMap[key] && len(keyProperties.Properties) > 0 { //nolint:gocritic
 				var annotations map[string]string
 				var labels map[string]string
-				secretType := corev1.SecretType(corev1.SecretTypeOpaque)
+				secretType := corev1.SecretTypeOpaque
 				if r.ExternalSecret.Spec.Target.Template != nil {
 					annotations = r.ExternalSecret.Spec.Target.Template.Metadata.Annotations
 					labels = r.ExternalSecret.Spec.Target.Template.Metadata.Labels

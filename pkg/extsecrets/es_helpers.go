@@ -21,7 +21,8 @@ var APIVersion = esv1.SchemeGroupVersion.String()
 // KeyAndNames returns "<remoteRef.key>/<secretKey>" for each data entry.
 func KeyAndNames(es *esv1.ExternalSecret) []string {
 	var keys []string
-	for _, d := range es.Spec.Data {
+	for i := range es.Spec.Data {
+		d := &es.Spec.Data[i]
 		keys = append(keys, d.RemoteRef.Key+"/"+d.SecretKey)
 	}
 	return keys
@@ -30,7 +31,8 @@ func KeyAndNames(es *esv1.ExternalSecret) []string {
 // KeyAndProperty returns the remote-ref key and property of the data entry
 // producing the given secret key.
 func KeyAndProperty(es *esv1.ExternalSecret, secretKey string) (string, string, error) {
-	for _, d := range es.Spec.Data {
+	for i := range es.Spec.Data {
+		d := &es.Spec.Data[i]
 		if d.SecretKey == secretKey {
 			return d.RemoteRef.Key, d.RemoteRef.Property, nil
 		}
@@ -40,7 +42,7 @@ func KeyAndProperty(es *esv1.ExternalSecret, secretKey string) (string, string, 
 
 // SecretLocation returns a stable identity string for a data entry. The backend
 // is a parameter because the ExternalSecret does not carry it; resolve it with
-// BackendResolver.Backend.
-func SecretLocation(backend string, d esv1.ExternalSecretData) string {
+// BackendResolver.Resolve.
+func SecretLocation(backend string, d *esv1.ExternalSecretData) string {
 	return fmt.Sprintf("%s/%s/%s/%s", backend, d.RemoteRef.Key, d.RemoteRef.Property, d.RemoteRef.Version)
 }

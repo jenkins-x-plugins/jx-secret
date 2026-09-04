@@ -114,7 +114,8 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.Type, folder, secr
 		resolved, err := o.Resolver.Resolve(es)
 		require.NoError(t, err, "failed to resolve the backend for ExternalSecret %s", es.Name)
 
-		for _, d := range es.Spec.Data {
+		for i := range es.Spec.Data {
+			d := &es.Spec.Data[i]
 			// Populate secret key value combination
 
 			var secretValue string

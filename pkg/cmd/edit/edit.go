@@ -332,9 +332,10 @@ func (o *Options) DataToEdit(r *secretfacade.SecretPair) []esv1.ExternalSecretDa
 
 	// otherwise return only missing fields
 	var results []esv1.ExternalSecretData
-	for _, d := range r.ExternalSecret.Spec.Data {
+	for i := range r.ExternalSecret.Spec.Data {
+		d := &r.ExternalSecret.Spec.Data[i]
 		if missingProperties[d.RemoteRef.Property] {
-			results = append(results, d)
+			results = append(results, *d)
 		}
 	}
 	return results
@@ -356,8 +357,8 @@ func (o *Options) VerifyAndFilter() ([]*secretfacade.SecretPair, error) {
 			return secrets, errors.Wrapf(err, "failed to resolve the secret backend for ExternalSecret %s", es.Name)
 		}
 		backend := string(resolved.Type)
-		for _, property := range es.Spec.Data {
-			destination := extsecrets.SecretLocation(backend, property)
+		for i := range es.Spec.Data {
+			destination := extsecrets.SecretLocation(backend, &es.Spec.Data[i])
 			destinations[destination] = append(destinations[destination], s)
 		}
 	}
