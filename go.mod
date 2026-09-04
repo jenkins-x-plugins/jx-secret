@@ -6,7 +6,9 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/cpuguy83/go-md2man v1.0.10
-	github.com/external-secrets/external-secrets/apis v0.0.0-20260713105520-df71ed0b968c
+	// upstream publishes no apis/vX.Y.Z tags, so this is the commit ESO v2.8.0 was
+	// cut from; move it with the external-secrets chart version in jx3-versions
+	github.com/external-secrets/external-secrets/apis v0.0.0-20260717205628-2e0f135f739e
 	github.com/google/go-cmp v0.7.0
 	github.com/jenkins-x-plugins/secretfacade v0.2.14
 	github.com/jenkins-x/go-scm v1.15.31
