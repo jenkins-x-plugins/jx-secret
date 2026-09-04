@@ -9,10 +9,8 @@ import (
 	schema "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/secretmapping"
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore/factory"
-	"github.com/jenkins-x/jx-logging/v3/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -74,23 +72,13 @@ func (o *Options) Validate() error {
 	}
 	if o.Resolver == nil {
 		stores := o.StoreClient
-		if stores == nil && (o.Source == Kubernetes || o.Source == "") {
+		if stores == nil {
 			stores, err = extsecrets.NewStoreClient(nil)
 			if err != nil {
 				return errors.Wrap(err, "error initialising external secrets store client")
 			}
 		}
-		// the mapping only resolves the backend when there is no cluster, so a
-		// missing one is not fatal here; Resolve reports the ExternalSecrets it
-		// cannot resolve
-		mapping, _, err := secretmapping.LoadSecretMapping(o.Dir, false)
-		if err != nil {
-			return errors.Wrapf(err, "failed to load SecretMapping from %s", o.Dir)
-		}
-		if mapping == nil && stores == nil {
-			log.Logger().Warnf("no SecretMapping found under %s and no cluster access to read SecretStores: the secret backend cannot be resolved", o.Dir)
-		}
-		o.Resolver = &extsecrets.BackendResolver{Stores: stores, Mapping: mapping}
+		o.Resolver = &extsecrets.BackendResolver{Stores: stores}
 	}
 	return nil
 }

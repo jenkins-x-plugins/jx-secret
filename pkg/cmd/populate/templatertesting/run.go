@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/testsecrets"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
@@ -23,38 +23,53 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-// resolverFromRequirements builds a BackendResolver from a Requirements config
-// so templater tests, which ship no SecretMapping on disk, still resolve a
-// backend and location. It derives the same mapping the convert and populate
-// commands would.
-func resolverFromRequirements(req *jxcore.RequirementsConfig) *extsecrets.BackendResolver {
-	if req == nil || req.SecretStorage == "" {
+// resolverFromRequirements builds a BackendResolver serving the ClusterSecretStore
+// a real cluster would hold for the given Requirements, so templater tests resolve
+// a backend without needing store fixtures of their own.
+func resolverFromRequirements(t *testing.T, req *jxcore.RequirementsConfig) *extsecrets.BackendResolver {
+	provider := providerFromRequirements(req)
+	if provider == nil {
 		return &extsecrets.BackendResolver{}
 	}
-	backend, defaults := v1alpha1.BackendType(""), v1alpha1.Defaults{}
+	dynClient := testsecrets.NewFakeDynClient(runtime.NewScheme(),
+		testsecrets.ClusterSecretStore(t, testsecrets.DefaultStoreName, provider))
+	stores, err := extsecrets.NewStoreClient(dynClient)
+	require.NoError(t, err, "failed to create a store client")
+	return &extsecrets.BackendResolver{Stores: stores}
+}
+
+// defaultStoreRef points an ExternalSecret at the store resolverFromRequirements
+// serves, so test cases only spell out a secretStoreRef when they mean a different one.
+func defaultStoreRef(es *esv1.ExternalSecret) {
+	if es.Spec.SecretStoreRef.Name == "" {
+		es.Spec.SecretStoreRef = esv1.SecretStoreRef{
+			Name: testsecrets.DefaultStoreName,
+			Kind: esv1.ClusterSecretStoreKind,
+		}
+	}
+}
+
+// providerFromRequirements maps requirements.secretStorage onto the ESO provider
+// the cluster's store would use, or nil when it names no backend we can serve.
+func providerFromRequirements(req *jxcore.RequirementsConfig) *esv1.SecretStoreProvider {
+	if req == nil {
+		return nil
+	}
 	switch string(req.SecretStorage) {
 	case "vault":
-		backend = v1alpha1.BackendTypeVault
+		return &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{}}
 	case "gsm", "gcpSecretsManager":
-		backend = v1alpha1.BackendTypeGSM
-		defaults.GcpSecretsManager = &v1alpha1.GcpSecretsManager{ProjectID: req.Cluster.ProjectID}
+		return &esv1.SecretStoreProvider{GCPSM: &esv1.GCPSMProvider{ProjectID: req.Cluster.ProjectID}}
 	case "azureKeyVault", "azurekeyvault":
-		backend = v1alpha1.BackendTypeAzure
+		return &esv1.SecretStoreProvider{AzureKV: &esv1.AzureKVProvider{}}
 	case "secretsManager":
-		backend = v1alpha1.BackendTypeAWSSecretsManager
+		return &esv1.SecretStoreProvider{AWS: &esv1.AWSProvider{Service: esv1.AWSServiceSecretsManager}}
 	case "systemManager":
-		backend = v1alpha1.BackendTypeAWSParameterStore
+		return &esv1.SecretStoreProvider{AWS: &esv1.AWSProvider{Service: esv1.AWSServiceParameterStore}}
 	case "local":
-		backend = v1alpha1.BackendTypeLocal
-	default:
-		backend = v1alpha1.BackendType(req.SecretStorage)
+		return &esv1.SecretStoreProvider{Kubernetes: &esv1.KubernetesProvider{}}
 	}
-	defaults.BackendType = backend
-	return &extsecrets.BackendResolver{
-		Mapping: &v1alpha1.SecretMapping{
-			Spec: v1alpha1.SecretMappingSpec{Defaults: defaults},
-		},
-	}
+	return nil
 }
 
 // Run runs the test cases
@@ -90,6 +105,7 @@ func (r *Runner) Run(t *testing.T) {
 		for k := range testcase.ExternalSecrets {
 			p := testcase.ExternalSecrets[k]
 			es := p.ExternalSecret
+			defaultStoreRef(&es)
 			o.ExternalSecrets = append(o.ExternalSecrets, &es)
 			err := fakeStore.SetSecret(p.Location, p.Name, &p.Value)
 			assert.NoError(t, err)
@@ -108,7 +124,7 @@ func (r *Runner) Run(t *testing.T) {
 			}
 			require.NotEmpty(t, o.Dir, "you must either specify Requirements or a Dir on the Runner or TestCase to be able to detect the Requirements to use the the template generation")
 		}
-		o.Resolver = resolverFromRequirements(o.Requirements)
+		o.Resolver = resolverFromRequirements(t, o.Requirements)
 		object := schema.Spec.FindObject(objName)
 		require.NotNil(t, object, "could not find schema for object name %s", objName)
 
@@ -176,6 +192,7 @@ func (r *Runner) Populate(t *testing.T) {
 		for k := range tc.ExternalSecrets {
 			p := tc.ExternalSecrets[k]
 			es := p.ExternalSecret
+			defaultStoreRef(&es)
 			o.ExternalSecrets = append(o.ExternalSecrets, &es)
 			err := fakeStore.SetSecret(p.Location, p.Name, &p.Value)
 			assert.NoError(t, err)
@@ -194,7 +211,7 @@ func (r *Runner) Populate(t *testing.T) {
 			}
 			require.NotEmpty(t, o.Dir, "you must either specify Requirements or a Dir on the Runner or TestCase to be able to detect the Requirements to use the the template generation")
 		}
-		o.Resolver = resolverFromRequirements(o.Requirements)
+		o.Resolver = resolverFromRequirements(t, o.Requirements)
 		object := schema.Spec.FindObject(objName)
 		require.NotNil(t, object, "could not find schema for object name %s", objName)
 
@@ -203,9 +220,11 @@ func (r *Runner) Populate(t *testing.T) {
 		require.NotNil(t, secret, "requires a Secret resource for the populate loop test")
 
 		p := tc.ExternalSecrets[0]
+		es := p.ExternalSecret
+		defaultStoreRef(&es)
 
 		secretPair := &secretfacade.SecretPair{
-			ExternalSecret: p.ExternalSecret,
+			ExternalSecret: es,
 			Secret:         secret,
 		}
 		secretPair.SetSchemaObject(object)

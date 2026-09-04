@@ -341,7 +341,15 @@ func TestPopulateFromFileSystem(t *testing.T) {
 	o.SecretStoreManagerFactory = &fakeFactory
 	o.KubeClient = fake.NewSimpleClientset(testsecrets.AddVaultSecrets(kubeObjects...)...)
 
-	err := o.Run()
+	// the ExternalSecrets come off disk but their backend still comes from the
+	// store in the cluster, exactly as in kubernetes mode
+	fakeDynClient := testsecrets.NewFakeDynClient(runtime.NewScheme(),
+		testsecrets.ClusterSecretStore(t, testsecrets.DefaultStoreName, testsecrets.VaultProvider(vaultLocation)))
+	var err error
+	o.StoreClient, err = extsecrets.NewStoreClient(fakeDynClient)
+	require.NoError(t, err, "failed to create fake extsecrets StoreClient")
+
+	err = o.Run()
 	require.NoError(t, err, "failed to invoke Run()")
 
 	secretStore := fakeFactory.GetSecretStore()

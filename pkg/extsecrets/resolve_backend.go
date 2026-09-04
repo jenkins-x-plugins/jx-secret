@@ -13,23 +13,9 @@ import (
 // A BackendResolver derives, for a given ExternalSecret, the information
 // jx-secret needs in order to talk to the secret backend directly: which
 // backend it is, where it lives, and the backend-native path for a remote ref.
-//
-// The ExternalSecret carries none of this itself — it lives on the
-// (Cluster)SecretStore named by spec.secretStoreRef — so Stores is the
-// authoritative source.
-//
-// Mapping is used only when there is no cluster to read stores from, which is
-// the --source filesystem case. KES kept the backend fields on the
-// ExternalSecret so that mode needed nothing else; ESO moved them to the store,
-// leaving the SecretMapping as the only on-disk source. It holds the same
-// values, since convert is what wrote them onto the resource to begin with.
 type BackendResolver struct {
 	// Stores reads the (Cluster)SecretStore referenced by an ExternalSecret.
-	// Nil when there is no cluster access, e.g. --source filesystem.
 	Stores StoreInterface
-
-	// Mapping resolves the backend when Stores is nil.
-	Mapping *v1alpha1.SecretMapping
 
 	// storeCache memoises successful store lookups per ref so a run over many
 	// ExternalSecrets makes one API call per distinct store. Failures are not
@@ -96,18 +82,17 @@ func (r *BackendResolver) Resolve(es *esv1.ExternalSecret) (*Backend, error) {
 		return nil, errors.New("no ExternalSecret given")
 	}
 
+	if r.Stores == nil {
+		return nil, errors.Errorf("cannot determine the secret backend for ExternalSecret %s: no SecretStore client configured", esID(es))
+	}
 	ref := es.Spec.SecretStoreRef
-	if r.Stores != nil && ref.Name != "" {
-		b, err := r.fromStore(es, ref)
-		if err != nil {
-			return nil, err
-		}
-		return r.fillDynamic(b, es), nil
+	if ref.Name == "" {
+		return nil, errors.Errorf("cannot determine the secret backend for ExternalSecret %s: it references no SecretStore", esID(es))
 	}
 
-	b := r.backendFromMapping(es)
-	if b.Type == "" {
-		return nil, errors.Errorf("cannot determine the secret backend for ExternalSecret %s: it references no SecretStore and no SecretMapping supplies a backendType", esID(es))
+	b, err := r.fromStore(es, ref)
+	if err != nil {
+		return nil, err
 	}
 	return r.fillDynamic(b, es), nil
 }
@@ -226,61 +211,4 @@ func azureVaultName(vaultURL *string) string {
 		return ""
 	}
 	return strings.SplitN(u.Hostname(), ".", 2)[0]
-}
-
-// backendFromMapping resolves from the SecretMapping. A rule-level value takes
-// precedence over the mapping-wide default.
-func (r *BackendResolver) backendFromMapping(es *esv1.ExternalSecret) *Backend {
-	if r.Mapping == nil {
-		return &Backend{}
-	}
-	rule := r.Mapping.FindRule(es.Namespace, es.Name)
-	defaults := r.Mapping.Spec.Defaults
-
-	backendType := defaults.BackendType
-	if rule != nil && rule.BackendType != "" {
-		backendType = rule.BackendType
-	}
-
-	b := &Backend{Type: backendType}
-	switch backendType {
-	case v1alpha1.BackendTypeGSM:
-		if rule != nil && rule.GcpSecretsManager != nil && rule.GcpSecretsManager.ProjectID != "" {
-			b.Location = rule.GcpSecretsManager.ProjectID
-		} else if defaults.GcpSecretsManager != nil {
-			b.Location = defaults.GcpSecretsManager.ProjectID
-		}
-	case v1alpha1.BackendTypeAzure:
-		if rule != nil && rule.AzureKeyVaultConfig != nil && rule.AzureKeyVaultConfig.KeyVaultName != "" {
-			b.Location = rule.AzureKeyVaultConfig.KeyVaultName
-		} else if defaults.AzureKeyVaultConfig != nil {
-			b.Location = defaults.AzureKeyVaultConfig.KeyVaultName
-		}
-	case v1alpha1.BackendTypeVault:
-		// location comes from VAULT_ADDR via fillDynamic
-		b.VaultMount = DefaultVaultMount
-		b.VaultKVv2 = true
-	case v1alpha1.BackendTypeAWSSecretsManager, v1alpha1.BackendTypeAWSParameterStore:
-		b.Location = awsRegionFromMapping(rule, &defaults)
-	case v1alpha1.BackendTypeLocal:
-		b.Location = es.Namespace
-	}
-	return b
-}
-
-// awsRegionFromMapping checks both the `secretsManager.region` field that
-// `convert` validates and the older top-level `region`, most specific first.
-func awsRegionFromMapping(rule *v1alpha1.SecretRule, defaults *v1alpha1.Defaults) string {
-	if rule != nil {
-		if rule.AwsSecretsManager != nil && rule.AwsSecretsManager.Region != "" {
-			return rule.AwsSecretsManager.Region
-		}
-		if rule.Region != "" {
-			return rule.Region
-		}
-	}
-	if defaults.AwsSecretsManager != nil && defaults.AwsSecretsManager.Region != "" {
-		return defaults.AwsSecretsManager.Region
-	}
-	return defaults.Region
 }

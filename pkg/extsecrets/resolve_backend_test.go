@@ -31,16 +31,15 @@ func (f *fakeStores) GetStore(kind, name, _ string) (esv1.GenericStore, error) {
 	return store, nil
 }
 
-func clusterStore(name string, provider *esv1.SecretStoreProvider) esv1.GenericStore {
-	return &esv1.ClusterSecretStore{
-		ObjectMeta: metav1.ObjectMeta{Name: name},
+// storesWith serves a single ClusterSecretStore named "store", which is what
+// externalSecret points its secretStoreRef at.
+func storesWith(provider *esv1.SecretStoreProvider) *fakeStores {
+	store := &esv1.ClusterSecretStore{
+		ObjectMeta: metav1.ObjectMeta{Name: "store"},
 		Spec:       esv1.SecretStoreSpec{Provider: provider},
 	}
-}
-
-func storesWith(name string, provider *esv1.SecretStoreProvider) *fakeStores {
 	return &fakeStores{stores: map[string]esv1.GenericStore{
-		esv1.ClusterSecretStoreKind + "/" + name: clusterStore(name, provider),
+		esv1.ClusterSecretStoreKind + "/store": store,
 	}}
 }
 
@@ -108,7 +107,7 @@ func TestResolveFromStore(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := &extsecrets.BackendResolver{Stores: storesWith("store", tc.provider)}
+			r := &extsecrets.BackendResolver{Stores: storesWith(tc.provider)}
 
 			b, err := r.Resolve(externalSecret("my-secret", "jx", "store"))
 			require.NoError(t, err)
@@ -118,48 +117,20 @@ func TestResolveFromStore(t *testing.T) {
 	}
 }
 
-func TestResolveFromStoreBeatsMapping(t *testing.T) {
-	r := &extsecrets.BackendResolver{
-		Stores: storesWith("users-own-store", &esv1.SecretStoreProvider{
-			GCPSM: &esv1.GCPSMProvider{ProjectID: "users-project"},
-		}),
-		Mapping: &v1alpha1.SecretMapping{
-			Spec: v1alpha1.SecretMappingSpec{
-				Defaults: v1alpha1.Defaults{BackendType: v1alpha1.BackendTypeVault},
-			},
-		},
-	}
-
-	b, err := r.Resolve(externalSecret("their-secret", "jx", "users-own-store"))
-	require.NoError(t, err)
-	assert.Equal(t, v1alpha1.BackendTypeGSM, b.Type, "a user's own store must win over the jx mapping default")
-	assert.Equal(t, "users-project", b.Location)
-}
-
-// Falling back to the mapping when the cluster is reachable would mean writing
-// to a different backend than the operator reads from, so it is an error.
+// A store that cannot be read means we do not know where the secret lives, and
+// guessing would write to a different backend than the operator reads from.
 func TestResolveFailsWhenStoreUnreadable(t *testing.T) {
-	r := &extsecrets.BackendResolver{
-		Stores: &fakeStores{err: assert.AnError},
-		Mapping: &v1alpha1.SecretMapping{
-			Spec: v1alpha1.SecretMappingSpec{
-				Defaults: v1alpha1.Defaults{
-					BackendType:       v1alpha1.BackendTypeGSM,
-					GcpSecretsManager: &v1alpha1.GcpSecretsManager{ProjectID: "jx-project"},
-				},
-			},
-		},
-	}
+	r := &extsecrets.BackendResolver{Stores: &fakeStores{err: assert.AnError}}
 
 	_, err := r.Resolve(externalSecret("my-secret", "jx", "jx-secret-store"))
-	require.Error(t, err, "must not silently fall back to the mapping")
+	require.Error(t, err, "must not guess at the backend")
 	assert.Contains(t, err.Error(), "jx-secret-store", "the error should name the store")
 	assert.Contains(t, err.Error(), "jx/my-secret", "the error should name the ExternalSecret")
 }
 
 func TestResolveFailsWhenStoreProviderUnsupported(t *testing.T) {
 	r := &extsecrets.BackendResolver{
-		Stores: storesWith("store", &esv1.SecretStoreProvider{Fake: &esv1.FakeProvider{}}),
+		Stores: storesWith(&esv1.SecretStoreProvider{Fake: &esv1.FakeProvider{}}),
 	}
 
 	_, err := r.Resolve(externalSecret("my-secret", "jx", "store"))
@@ -167,76 +138,14 @@ func TestResolveFailsWhenStoreProviderUnsupported(t *testing.T) {
 	assert.Contains(t, err.Error(), "provider jx-secret cannot write to")
 }
 
-// --source filesystem has no cluster, so the mapping is the only on-disk source
-// of what KES used to write onto the ExternalSecret itself.
-func TestResolveFromMappingWithoutCluster(t *testing.T) {
+func TestResolveFailsWithoutStoreRef(t *testing.T) {
 	r := &extsecrets.BackendResolver{
-		Mapping: &v1alpha1.SecretMapping{
-			Spec: v1alpha1.SecretMappingSpec{
-				Defaults: v1alpha1.Defaults{
-					BackendType:       v1alpha1.BackendTypeGSM,
-					GcpSecretsManager: &v1alpha1.GcpSecretsManager{ProjectID: "jx-project"},
-				},
-			},
-		},
+		Stores: storesWith(&esv1.SecretStoreProvider{GCPSM: &esv1.GCPSMProvider{ProjectID: "p"}}),
 	}
 
-	b, err := r.Resolve(externalSecret("my-secret", "jx", "jx-secret-store"))
-	require.NoError(t, err)
-	assert.Equal(t, v1alpha1.BackendTypeGSM, b.Type)
-	assert.Equal(t, "jx-project", b.Location)
-}
-
-func TestResolveRuleBeatsMappingDefaults(t *testing.T) {
-	r := &extsecrets.BackendResolver{
-		Mapping: &v1alpha1.SecretMapping{
-			Spec: v1alpha1.SecretMappingSpec{
-				Secrets: []v1alpha1.SecretRule{
-					{
-						Name:              "special",
-						BackendType:       v1alpha1.BackendTypeGSM,
-						GcpSecretsManager: &v1alpha1.GcpSecretsManager{ProjectID: "other-project"},
-					},
-				},
-				Defaults: v1alpha1.Defaults{
-					BackendType:       v1alpha1.BackendTypeGSM,
-					GcpSecretsManager: &v1alpha1.GcpSecretsManager{ProjectID: "default-project"},
-				},
-			},
-		},
-	}
-
-	special, err := r.Resolve(externalSecret("special", "jx", ""))
-	require.NoError(t, err)
-	assert.Equal(t, "other-project", special.Location)
-
-	ordinary, err := r.Resolve(externalSecret("ordinary", "jx", ""))
-	require.NoError(t, err)
-	assert.Equal(t, "default-project", ordinary.Location)
-}
-
-// The mapping field convert validates for AWS is secretsManager.region, but
-// older mappings use the top-level region; both must resolve.
-func TestResolveAWSRegionFromEitherMappingField(t *testing.T) {
-	nested := &extsecrets.BackendResolver{
-		Mapping: &v1alpha1.SecretMapping{Spec: v1alpha1.SecretMappingSpec{Defaults: v1alpha1.Defaults{
-			BackendType:       v1alpha1.BackendTypeAWSSecretsManager,
-			AwsSecretsManager: &v1alpha1.AwsSecretsManager{Region: "eu-west-1"},
-		}}},
-	}
-	b, err := nested.Resolve(externalSecret("s", "jx", ""))
-	require.NoError(t, err)
-	assert.Equal(t, "eu-west-1", b.Location)
-
-	topLevel := &extsecrets.BackendResolver{
-		Mapping: &v1alpha1.SecretMapping{Spec: v1alpha1.SecretMappingSpec{Defaults: v1alpha1.Defaults{
-			BackendType: v1alpha1.BackendTypeAWSSecretsManager,
-			Region:      "us-west-2",
-		}}},
-	}
-	b, err = topLevel.Resolve(externalSecret("s", "jx", ""))
-	require.NoError(t, err)
-	assert.Equal(t, "us-west-2", b.Location)
+	_, err := r.Resolve(externalSecret("my-secret", "jx", ""))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "references no SecretStore")
 }
 
 // ESO's vault provider takes a mount-relative key, but secretfacade drives the
@@ -288,7 +197,7 @@ func TestRemoteKeyPath(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := &extsecrets.BackendResolver{Stores: storesWith("store", tc.provider)}
+			r := &extsecrets.BackendResolver{Stores: storesWith(tc.provider)}
 			b, err := r.Resolve(externalSecret("s", "jx", "store"))
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, b.RemoteKeyPath(tc.key))
@@ -297,10 +206,10 @@ func TestRemoteKeyPath(t *testing.T) {
 }
 
 func TestResolveCachesPerStore(t *testing.T) {
-	stores := storesWith("store", &esv1.SecretStoreProvider{GCPSM: &esv1.GCPSMProvider{ProjectID: "p"}})
+	stores := storesWith(&esv1.SecretStoreProvider{GCPSM: &esv1.GCPSMProvider{ProjectID: "p"}})
 	r := &extsecrets.BackendResolver{Stores: stores}
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		b, err := r.Resolve(externalSecret("secret", "jx", "store"))
 		require.NoError(t, err)
 		require.Equal(t, v1alpha1.BackendTypeGSM, b.Type)
@@ -308,20 +217,18 @@ func TestResolveCachesPerStore(t *testing.T) {
 	assert.Equal(t, 1, stores.calls, "the store should be read once and cached")
 }
 
-// A local secret's location is its own namespace, so it must not be cached
-// along with the rest of the store's details.
+// A store with no remoteNamespace writes to the ExternalSecret's own namespace,
+// which varies per secret and so must not be cached with the store's details.
 func TestResolveLocalNamespaceIsNotCached(t *testing.T) {
 	r := &extsecrets.BackendResolver{
-		Mapping: &v1alpha1.SecretMapping{Spec: v1alpha1.SecretMappingSpec{
-			Defaults: v1alpha1.Defaults{BackendType: v1alpha1.BackendTypeLocal},
-		}},
+		Stores: storesWith(&esv1.SecretStoreProvider{Kubernetes: &esv1.KubernetesProvider{}}),
 	}
 
-	jx, err := r.Resolve(externalSecret("s", "jx", ""))
+	jx, err := r.Resolve(externalSecret("s", "jx", "store"))
 	require.NoError(t, err)
 	assert.Equal(t, "jx", jx.Location)
 
-	staging, err := r.Resolve(externalSecret("s", "jx-staging", ""))
+	staging, err := r.Resolve(externalSecret("s", "jx-staging", "store"))
 	require.NoError(t, err)
 	assert.Equal(t, "jx-staging", staging.Location)
 }
@@ -330,11 +237,9 @@ func TestResolveLocalNamespaceIsNotCached(t *testing.T) {
 // so the location must be read on access rather than frozen at resolve time.
 func TestResolveVaultAddressIsReadOnAccess(t *testing.T) {
 	r := &extsecrets.BackendResolver{
-		Mapping: &v1alpha1.SecretMapping{Spec: v1alpha1.SecretMappingSpec{
-			Defaults: v1alpha1.Defaults{BackendType: v1alpha1.BackendTypeVault},
-		}},
+		Stores: storesWith(&esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{}}),
 	}
-	es := externalSecret("s", "jx", "")
+	es := externalSecret("s", "jx", "store")
 
 	before, err := r.Resolve(es)
 	require.NoError(t, err)
@@ -346,7 +251,7 @@ func TestResolveVaultAddressIsReadOnAccess(t *testing.T) {
 	assert.Equal(t, "https://127.0.0.1:8200", after.Location)
 }
 
-func TestResolveFailsWithNoStoreAndNoMapping(t *testing.T) {
+func TestResolveFailsWithNoStoreClient(t *testing.T) {
 	r := &extsecrets.BackendResolver{}
 
 	_, err := r.Resolve(externalSecret("s", "jx", "jx-secret-store"))
