@@ -27,13 +27,14 @@ type Options struct {
 	SecretNamespace           string
 	Filter                    string
 	SecretClient              extsecrets.Interface
+	StoreClient               extsecrets.StoreInterface
 	KubeClient                kubernetes.Interface
 	Source                    string
 	SecretStoreManagerFactory secretstore.FactoryInterface
 
 	// Resolver derives backend info for an ExternalSecret from the
-	// (Cluster)SecretStore it references, falling back to the SecretMapping
-	// loaded from Dir. Populated by Validate(); nil-safe.
+	// (Cluster)SecretStore it references, or from the SecretMapping loaded from
+	// Dir when there is no cluster to read stores from. Populated by Validate().
 	Resolver *extsecrets.BackendResolver
 
 	// ExternalSecrets the loaded secrets
@@ -72,16 +73,16 @@ func (o *Options) Validate() error {
 		o.SecretStoreManagerFactory = &factory.SecretManagerFactory{}
 	}
 	if o.Resolver == nil {
-		var stores extsecrets.StoreInterface
-		if o.Source == Kubernetes || o.Source == "" {
+		stores := o.StoreClient
+		if stores == nil && (o.Source == Kubernetes || o.Source == "") {
 			stores, err = extsecrets.NewStoreClient(nil)
 			if err != nil {
 				return errors.Wrap(err, "error initialising external secrets store client")
 			}
 		}
-		// the mapping is only a fallback for stores we cannot read, so a missing
-		// one is not fatal here; commands that cannot work without a backend
-		// fail when resolution comes back empty
+		// the mapping only resolves the backend when there is no cluster, so a
+		// missing one is not fatal here; Resolve reports the ExternalSecrets it
+		// cannot resolve
 		mapping, _, err := secretmapping.LoadSecretMapping(o.Dir, false)
 		if err != nil {
 			return errors.Wrapf(err, "failed to load SecretMapping from %s", o.Dir)

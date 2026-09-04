@@ -270,7 +270,14 @@ func (o *Options) getExternalSecretValue(lookupSecretName, lookupKey, namespace 
 		return ""
 	}
 
-	storeType := GetSecretStore(o.Resolver.Backend(externalSecret))
+	resolved, err := o.Resolver.Resolve(externalSecret)
+	if err != nil {
+		// ToDo: Refactor to return error from this function
+		log.Logger().Warnf("cannot resolve the secret backend for External Secret %s: %s", lookupSecret, err.Error())
+		return ""
+	}
+
+	storeType := GetSecretStore(resolved.Type)
 	secretManager, err := o.SecretStoreManagerFactory.NewSecretManager(storeType)
 	if err != nil {
 		// ToDo: Refactor to return error from this function
@@ -278,14 +285,14 @@ func (o *Options) getExternalSecretValue(lookupSecretName, lookupKey, namespace 
 		return ""
 	}
 
-	key := o.Resolver.RemoteKeyPath(externalSecret, externalSecretKey)
+	key := resolved.RemoteKeyPath(externalSecretKey)
 	if storeType == secretstore.SecretStoreTypeKubernetes {
 		key = externalSecret.Name
 	}
 
 	getSecretFunc := func() error {
 		var err error
-		secretLocation := o.Resolver.Location(externalSecret)
+		secretLocation := resolved.Location
 		secret, err = secretManager.GetSecret(secretLocation, key, externalSecretProperty)
 		return err
 	}

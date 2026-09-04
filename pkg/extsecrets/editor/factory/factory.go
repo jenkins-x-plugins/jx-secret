@@ -19,16 +19,15 @@ import (
 type secretFacadeEditor struct {
 	secret        *esv1.ExternalSecret
 	secretManager secretstore.Interface
-	resolver      *extsecrets.BackendResolver
+	backend       *extsecrets.Backend
 }
 
-// NewEditor create a new editor using the secret store. A nil resolver yields
-// an empty backend for every ExternalSecret.
-func NewEditor(secret *esv1.ExternalSecret, resolver *extsecrets.BackendResolver, secretStoreManagerFactory secretstore.FactoryInterface, kubeClient kubernetes.Interface, externalVault string) (editor.Interface, error) {
+// NewEditor create a new editor writing to the given resolved backend.
+func NewEditor(secret *esv1.ExternalSecret, backend *extsecrets.Backend, secretStoreManagerFactory secretstore.FactoryInterface, kubeClient kubernetes.Interface, externalVault string) (editor.Interface, error) {
 	if secretStoreManagerFactory == nil {
 		secretStoreManagerFactory = &factory.SecretManagerFactory{}
 	}
-	storeType := populate.GetSecretStore(resolver.Backend(secret))
+	storeType := populate.GetSecretStore(backend.Type)
 	if storeType == secretstore.SecretStoreTypeVault && externalVault != "true" {
 		envMap, err := vaultcli.CreateVaultEnv(kubeClient)
 		if err != nil {
@@ -53,7 +52,7 @@ func NewEditor(secret *esv1.ExternalSecret, resolver *extsecrets.BackendResolver
 			return nil, errors.Wrapf(err, "error creating secret manager")
 		}
 	}
-	return &secretFacadeEditor{secret: secret, secretManager: secretManager, resolver: resolver}, nil
+	return &secretFacadeEditor{secret: secret, secretManager: secretManager, backend: backend}, nil
 }
 
 func (s *secretFacadeEditor) Write(keyProperties *editor.KeyProperties) error {
@@ -67,7 +66,7 @@ func (s *secretFacadeEditor) Write(keyProperties *editor.KeyProperties) error {
 			secretType = s.secret.Spec.Target.Template.Type
 		}
 	}
-	backend := s.resolver.Backend(s.secret)
+	backend := s.backend.Type
 	key := populate.GetSecretKey(backend, s.secret.Name, keyProperties.Key)
 
 	// handle replicate to annotation for local secrets so that we also copy the secret to other namespaces
@@ -83,7 +82,7 @@ func (s *secretFacadeEditor) Write(keyProperties *editor.KeyProperties) error {
 	}
 
 	sv := populate.CreateSecretValue(backend, keyProperties.Properties, annotations, labels, secretType)
-	err := s.secretManager.SetSecret(s.resolver.Location(s.secret), populate.GetSecretKey(backend, s.secret.Name, key), &sv)
+	err := s.secretManager.SetSecret(s.backend.Location, populate.GetSecretKey(backend, s.secret.Name, key), &sv)
 	if err != nil {
 		return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), s.secret.Name)
 	}

@@ -19,7 +19,7 @@ type fakeStores struct {
 	err    error
 }
 
-func (f *fakeStores) GetStore(kind, name, esNamespace string) (esv1.GenericStore, error) {
+func (f *fakeStores) GetStore(kind, name, _ string) (esv1.GenericStore, error) {
 	f.calls++
 	if f.err != nil {
 		return nil, f.err
@@ -36,6 +36,12 @@ func clusterStore(name string, provider *esv1.SecretStoreProvider) esv1.GenericS
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 		Spec:       esv1.SecretStoreSpec{Provider: provider},
 	}
+}
+
+func storesWith(name string, provider *esv1.SecretStoreProvider) *fakeStores {
+	return &fakeStores{stores: map[string]esv1.GenericStore{
+		esv1.ClusterSecretStoreKind + "/" + name: clusterStore(name, provider),
+	}}
 }
 
 func externalSecret(name, namespace, storeName string) *esv1.ExternalSecret {
@@ -102,25 +108,21 @@ func TestResolveFromStore(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := &extsecrets.BackendResolver{
-				Stores: &fakeStores{stores: map[string]esv1.GenericStore{
-					esv1.ClusterSecretStoreKind + "/store": clusterStore("store", tc.provider),
-				}},
-			}
-			es := externalSecret("my-secret", "jx", "store")
+			r := &extsecrets.BackendResolver{Stores: storesWith("store", tc.provider)}
 
-			assert.Equal(t, tc.wantBackend, r.Backend(es), "backend")
-			assert.Equal(t, tc.wantLocation, r.Location(es), "location")
+			b, err := r.Resolve(externalSecret("my-secret", "jx", "store"))
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantBackend, b.Type, "backend type")
+			assert.Equal(t, tc.wantLocation, b.Location, "location")
 		})
 	}
 }
 
 func TestResolveFromStoreBeatsMapping(t *testing.T) {
 	r := &extsecrets.BackendResolver{
-		Stores: &fakeStores{stores: map[string]esv1.GenericStore{
-			esv1.ClusterSecretStoreKind + "/users-own-store": clusterStore("users-own-store",
-				&esv1.SecretStoreProvider{GCPSM: &esv1.GCPSMProvider{ProjectID: "users-project"}}),
-		}},
+		Stores: storesWith("users-own-store", &esv1.SecretStoreProvider{
+			GCPSM: &esv1.GCPSMProvider{ProjectID: "users-project"},
+		}),
 		Mapping: &v1alpha1.SecretMapping{
 			Spec: v1alpha1.SecretMappingSpec{
 				Defaults: v1alpha1.Defaults{BackendType: v1alpha1.BackendTypeVault},
@@ -128,12 +130,15 @@ func TestResolveFromStoreBeatsMapping(t *testing.T) {
 		},
 	}
 
-	es := externalSecret("their-secret", "jx", "users-own-store")
-	assert.Equal(t, v1alpha1.BackendTypeGSM, r.Backend(es), "a user's own store must win over the jx mapping default")
-	assert.Equal(t, "users-project", r.Location(es))
+	b, err := r.Resolve(externalSecret("their-secret", "jx", "users-own-store"))
+	require.NoError(t, err)
+	assert.Equal(t, v1alpha1.BackendTypeGSM, b.Type, "a user's own store must win over the jx mapping default")
+	assert.Equal(t, "users-project", b.Location)
 }
 
-func TestResolveFallsBackToMappingWhenStoreUnreadable(t *testing.T) {
+// Falling back to the mapping when the cluster is reachable would mean writing
+// to a different backend than the operator reads from, so it is an error.
+func TestResolveFailsWhenStoreUnreadable(t *testing.T) {
 	r := &extsecrets.BackendResolver{
 		Stores: &fakeStores{err: assert.AnError},
 		Mapping: &v1alpha1.SecretMapping{
@@ -146,10 +151,40 @@ func TestResolveFallsBackToMappingWhenStoreUnreadable(t *testing.T) {
 		},
 	}
 
-	es := externalSecret("my-secret", "jx", "store")
-	assert.Equal(t, v1alpha1.BackendTypeGSM, r.Backend(es))
-	assert.Equal(t, "jx-project", r.Location(es))
-	assert.Equal(t, "jx-project", r.ProjectID(es))
+	_, err := r.Resolve(externalSecret("my-secret", "jx", "jx-secret-store"))
+	require.Error(t, err, "must not silently fall back to the mapping")
+	assert.Contains(t, err.Error(), "jx-secret-store", "the error should name the store")
+	assert.Contains(t, err.Error(), "jx/my-secret", "the error should name the ExternalSecret")
+}
+
+func TestResolveFailsWhenStoreProviderUnsupported(t *testing.T) {
+	r := &extsecrets.BackendResolver{
+		Stores: storesWith("store", &esv1.SecretStoreProvider{Fake: &esv1.FakeProvider{}}),
+	}
+
+	_, err := r.Resolve(externalSecret("my-secret", "jx", "store"))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "provider jx-secret cannot write to")
+}
+
+// --source filesystem has no cluster, so the mapping is the only on-disk source
+// of what KES used to write onto the ExternalSecret itself.
+func TestResolveFromMappingWithoutCluster(t *testing.T) {
+	r := &extsecrets.BackendResolver{
+		Mapping: &v1alpha1.SecretMapping{
+			Spec: v1alpha1.SecretMappingSpec{
+				Defaults: v1alpha1.Defaults{
+					BackendType:       v1alpha1.BackendTypeGSM,
+					GcpSecretsManager: &v1alpha1.GcpSecretsManager{ProjectID: "jx-project"},
+				},
+			},
+		},
+	}
+
+	b, err := r.Resolve(externalSecret("my-secret", "jx", "jx-secret-store"))
+	require.NoError(t, err)
+	assert.Equal(t, v1alpha1.BackendTypeGSM, b.Type)
+	assert.Equal(t, "jx-project", b.Location)
 }
 
 func TestResolveRuleBeatsMappingDefaults(t *testing.T) {
@@ -171,8 +206,13 @@ func TestResolveRuleBeatsMappingDefaults(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, "other-project", r.Location(externalSecret("special", "jx", "")))
-	assert.Equal(t, "default-project", r.Location(externalSecret("ordinary", "jx", "")))
+	special, err := r.Resolve(externalSecret("special", "jx", ""))
+	require.NoError(t, err)
+	assert.Equal(t, "other-project", special.Location)
+
+	ordinary, err := r.Resolve(externalSecret("ordinary", "jx", ""))
+	require.NoError(t, err)
+	assert.Equal(t, "default-project", ordinary.Location)
 }
 
 // The mapping field convert validates for AWS is secretsManager.region, but
@@ -184,7 +224,9 @@ func TestResolveAWSRegionFromEitherMappingField(t *testing.T) {
 			AwsSecretsManager: &v1alpha1.AwsSecretsManager{Region: "eu-west-1"},
 		}}},
 	}
-	assert.Equal(t, "eu-west-1", nested.Location(externalSecret("s", "jx", "")))
+	b, err := nested.Resolve(externalSecret("s", "jx", ""))
+	require.NoError(t, err)
+	assert.Equal(t, "eu-west-1", b.Location)
 
 	topLevel := &extsecrets.BackendResolver{
 		Mapping: &v1alpha1.SecretMapping{Spec: v1alpha1.SecretMappingSpec{Defaults: v1alpha1.Defaults{
@@ -192,7 +234,9 @@ func TestResolveAWSRegionFromEitherMappingField(t *testing.T) {
 			Region:      "us-west-2",
 		}}},
 	}
-	assert.Equal(t, "us-west-2", topLevel.Location(externalSecret("s", "jx", "")))
+	b, err = topLevel.Resolve(externalSecret("s", "jx", ""))
+	require.NoError(t, err)
+	assert.Equal(t, "us-west-2", b.Location)
 }
 
 // ESO's vault provider takes a mount-relative key, but secretfacade drives the
@@ -244,25 +288,22 @@ func TestRemoteKeyPath(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := &extsecrets.BackendResolver{
-				Stores: &fakeStores{stores: map[string]esv1.GenericStore{
-					esv1.ClusterSecretStoreKind + "/store": clusterStore("store", tc.provider),
-				}},
-			}
-			assert.Equal(t, tc.want, r.RemoteKeyPath(externalSecret("s", "jx", "store"), tc.key))
+			r := &extsecrets.BackendResolver{Stores: storesWith("store", tc.provider)}
+			b, err := r.Resolve(externalSecret("s", "jx", "store"))
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, b.RemoteKeyPath(tc.key))
 		})
 	}
 }
 
 func TestResolveCachesPerStore(t *testing.T) {
-	stores := &fakeStores{stores: map[string]esv1.GenericStore{
-		esv1.ClusterSecretStoreKind + "/store": clusterStore("store",
-			&esv1.SecretStoreProvider{GCPSM: &esv1.GCPSMProvider{ProjectID: "p"}}),
-	}}
+	stores := storesWith("store", &esv1.SecretStoreProvider{GCPSM: &esv1.GCPSMProvider{ProjectID: "p"}})
 	r := &extsecrets.BackendResolver{Stores: stores}
 
 	for i := 0; i < 5; i++ {
-		require.Equal(t, v1alpha1.BackendTypeGSM, r.Backend(externalSecret("secret", "jx", "store")))
+		b, err := r.Resolve(externalSecret("secret", "jx", "store"))
+		require.NoError(t, err)
+		require.Equal(t, v1alpha1.BackendTypeGSM, b.Type)
 	}
 	assert.Equal(t, 1, stores.calls, "the store should be read once and cached")
 }
@@ -276,8 +317,13 @@ func TestResolveLocalNamespaceIsNotCached(t *testing.T) {
 		}},
 	}
 
-	assert.Equal(t, "jx", r.Location(externalSecret("s", "jx", "")))
-	assert.Equal(t, "jx-staging", r.Location(externalSecret("s", "jx-staging", "")))
+	jx, err := r.Resolve(externalSecret("s", "jx", ""))
+	require.NoError(t, err)
+	assert.Equal(t, "jx", jx.Location)
+
+	staging, err := r.Resolve(externalSecret("s", "jx-staging", ""))
+	require.NoError(t, err)
+	assert.Equal(t, "jx-staging", staging.Location)
 }
 
 // VAULT_ADDR is set partway through a populate run by the vault port-forward,
@@ -290,28 +336,27 @@ func TestResolveVaultAddressIsReadOnAccess(t *testing.T) {
 	}
 	es := externalSecret("s", "jx", "")
 
-	require.Empty(t, r.Location(es))
+	before, err := r.Resolve(es)
+	require.NoError(t, err)
+	require.Empty(t, before.Location)
+
 	t.Setenv("VAULT_ADDR", "https://127.0.0.1:8200")
-	assert.Equal(t, "https://127.0.0.1:8200", r.Location(es))
+	after, err := r.Resolve(es)
+	require.NoError(t, err)
+	assert.Equal(t, "https://127.0.0.1:8200", after.Location)
 }
 
-func TestResolveNilSafe(t *testing.T) {
+func TestResolveFailsWithNoStoreAndNoMapping(t *testing.T) {
+	r := &extsecrets.BackendResolver{}
+
+	_, err := r.Resolve(externalSecret("s", "jx", "jx-secret-store"))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot determine the secret backend")
+}
+
+func TestResolveNilReceiverFails(t *testing.T) {
 	var r *extsecrets.BackendResolver
-	es := externalSecret("s", "jx", "store")
 
-	assert.Equal(t, v1alpha1.BackendTypeNone, r.Backend(es))
-	assert.Empty(t, r.Location(es))
-	assert.Empty(t, r.ProjectID(es))
-	assert.Equal(t, "some/key", r.RemoteKeyPath(es, "some/key"))
-}
-
-// A provider jx-secret cannot write to must not be mistaken for the jx backend.
-func TestResolveUnsupportedProviderIsEmpty(t *testing.T) {
-	r := &extsecrets.BackendResolver{
-		Stores: &fakeStores{stores: map[string]esv1.GenericStore{
-			esv1.ClusterSecretStoreKind + "/store": clusterStore("store",
-				&esv1.SecretStoreProvider{Fake: &esv1.FakeProvider{}}),
-		}},
-	}
-	assert.Equal(t, v1alpha1.BackendTypeNone, r.Backend(externalSecret("s", "jx", "store")))
+	_, err := r.Resolve(externalSecret("s", "jx", "store"))
+	require.Error(t, err)
 }

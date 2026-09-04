@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/maps"
 
@@ -27,7 +28,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-func runPopulateTestCases(t *testing.T, storeType secretstore.Type, folder, secretLocation, mavenSecretName, nexusSecretName string, extSecrets map[string]*secretstore.SecretValue, useSecretNameForKey bool, assertionFunc func(t *testing.T, fakeStore *secretstorefake.SecretStore, mavenSettings string)) {
+func runPopulateTestCases(t *testing.T, storeType secretstore.Type, folder, secretLocation, mavenSecretName, nexusSecretName string, provider *esv1.SecretStoreProvider, extSecrets map[string]*secretstore.SecretValue, useSecretNameForKey bool, assertionFunc func(t *testing.T, fakeStore *secretstorefake.SecretStore, mavenSettings string)) {
 	ns := "jx"
 	expectedMavenSettingsFile := filepath.Join("test_data", "populate", "expected", "jenkins-maven-settings", "settings.xml", "nexus.xml")
 	require.FileExists(t, expectedMavenSettingsFile)
@@ -70,12 +71,16 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.Type, folder, secr
 	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "populate", folder))
 	err = templatertesting.AddSchemaAnnotations(t, schema, dynObjects)
 	require.NoError(t, err, "failed to add the schema annotations")
+	dynObjects = append(dynObjects,
+		testsecrets.ClusterSecretStore(t, testsecrets.DefaultStoreName, provider))
 
 	scheme := runtime.NewScheme()
 	fakeDynClient := testsecrets.NewFakeDynClient(scheme, dynObjects...)
 
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
+	o.StoreClient, err = extsecrets.NewStoreClient(fakeDynClient)
+	require.NoError(t, err, "failed to create fake extsecrets StoreClient")
 
 	o.Backoff = &wait.Backoff{
 		Steps:    5,
@@ -106,6 +111,9 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.Type, folder, secr
 			Data: map[string][]byte{},
 		}
 
+		resolved, err := o.Resolver.Resolve(es)
+		require.NoError(t, err, "failed to resolve the backend for ExternalSecret %s", es.Name)
+
 		for _, d := range es.Spec.Data {
 			// Populate secret key value combination
 
@@ -113,7 +121,7 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.Type, folder, secr
 			if useSecretNameForKey {
 				secretValue, _ = fakeStore.GetSecret(secretLocation, es.Name, d.RemoteRef.Property)
 			} else {
-				secretValue, _ = fakeStore.GetSecret(secretLocation, o.Resolver.RemoteKeyPath(es, d.RemoteRef.Key), d.RemoteRef.Property)
+				secretValue, _ = fakeStore.GetSecret(secretLocation, resolved.RemoteKeyPath(d.RemoteRef.Key), d.RemoteRef.Property)
 			}
 			if secretValue != "" {
 				t.Logf("found value for ExternalSecret %s %s of %s", es.Name, d.SecretKey, secretValue)
@@ -139,9 +147,13 @@ func runPopulateTestCases(t *testing.T, storeType secretstore.Type, folder, secr
 	dynObjects = testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "populate", folder))
 	err = templatertesting.AddSchemaAnnotations(t, schema, dynObjects)
 	require.NoError(t, err, "failed to add the schema annotations")
+	dynObjects = append(dynObjects,
+		testsecrets.ClusterSecretStore(t, testsecrets.DefaultStoreName, provider))
 	fakeDynClient = testsecrets.NewFakeDynClient(scheme, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
+	o.StoreClient, err = extsecrets.NewStoreClient(fakeDynClient)
+	require.NoError(t, err, "failed to create fake extsecrets StoreClient")
 
 	o.Backoff = &wait.Backoff{
 		Steps:    5,
@@ -172,6 +184,7 @@ func TestPopulate(t *testing.T) {
 		secretLocation      string
 		mavenSecretName     string
 		nexusSecretName     string
+		provider            *esv1.SecretStoreProvider
 		extSecrets          map[string]*secretstore.SecretValue
 		useSecretNameForKey bool
 		assertionFunc       func(t *testing.T, fakeStore *secretstorefake.SecretStore, mavenSettings string)
@@ -186,6 +199,7 @@ func TestPopulate(t *testing.T) {
 			vaultLocation,
 			"secret/data/jx/mavenSettings",
 			"secret/data/nexus",
+			testsecrets.VaultProvider(vaultLocation),
 			map[string]*secretstore.SecretValue{
 				"secret/data/sonatype": {
 					PropertyValues: map[string]string{
@@ -214,6 +228,7 @@ func TestPopulate(t *testing.T) {
 			gcpLocation,
 			"jx-maven-settings",
 			"nexus",
+			testsecrets.GCPSMProvider(gcpLocation),
 			map[string]*secretstore.SecretValue{
 				"sonatype": {
 					PropertyValues: map[string]string{
@@ -242,6 +257,7 @@ func TestPopulate(t *testing.T) {
 			azureLocation,
 			"jx-maven-settings",
 			"nexus",
+			testsecrets.AzureKVProvider(azureLocation),
 			map[string]*secretstore.SecretValue{
 				"sonatype": {
 					PropertyValues: map[string]string{
@@ -270,6 +286,7 @@ func TestPopulate(t *testing.T) {
 			kubeLocation,
 			"jenkins-maven-settings",
 			"nexus",
+			testsecrets.KubernetesProvider(kubeLocation),
 			map[string]*secretstore.SecretValue{
 				"sonatype": {
 					PropertyValues: map[string]string{
@@ -294,7 +311,7 @@ func TestPopulate(t *testing.T) {
 			},
 		},
 	} {
-		runPopulateTestCases(t, secretstore.SecretStoreTypeVault, folder.backendTypePath, folder.secretLocation, folder.mavenSecretName, folder.nexusSecretName, folder.extSecrets, folder.useSecretNameForKey, folder.assertionFunc)
+		runPopulateTestCases(t, secretstore.SecretStoreTypeVault, folder.backendTypePath, folder.secretLocation, folder.mavenSecretName, folder.nexusSecretName, folder.provider, folder.extSecrets, folder.useSecretNameForKey, folder.assertionFunc)
 	}
 }
 
@@ -354,11 +371,15 @@ func TestPopulateFromHelmSecrets(t *testing.T) {
 
 	o.HelmSecretFolder = filepath.Join(o.Dir, "fake-helm-secrets")
 	require.NotEmpty(t, dynObjects, "failed to load ExternaSecrets from dir %s", extSecretsDir)
+	dynObjects = append(dynObjects,
+		testsecrets.ClusterSecretStore(t, testsecrets.DefaultStoreName, testsecrets.AzureKVProvider(secretLocation)))
 	fakeDynClient := testsecrets.NewFakeDynClient(scheme, dynObjects...)
 
 	var err error
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create secret client")
+	o.StoreClient, err = extsecrets.NewStoreClient(fakeDynClient)
+	require.NoError(t, err, "failed to create store client")
 
 	err = o.Run()
 	require.NoError(t, err, "failed to invoke Run()")

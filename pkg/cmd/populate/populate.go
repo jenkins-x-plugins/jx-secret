@@ -162,7 +162,11 @@ func (o *Options) Run() error {
 func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[string]bool) error {
 	for _, r := range results {
 		name := r.ExternalSecret.Name
-		backend := o.Resolver.Backend(&r.ExternalSecret)
+		resolved, err := o.Resolver.Resolve(&r.ExternalSecret)
+		if err != nil {
+			return errors.Wrapf(err, "failed to resolve the secret backend for ExternalSecret %s", name)
+		}
+		backend := resolved.Type
 		backendType := string(backend)
 
 		// Check if the secret backend is external vault
@@ -183,7 +187,7 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 
 		// lets wait until the backend is available
 		if !waited[backendType] {
-			err := o.waitForBackend(backendType, isExternalVault)
+			err = o.waitForBackend(backendType, isExternalVault)
 			if err != nil {
 				return errors.Wrapf(err, "failed to wait for backend type %s", backendType)
 			}
@@ -200,7 +204,7 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 		newValueMap := map[string]bool{}
 		for i := range data {
 			d := &data[i]
-			key := GetSecretKey(backend, r.ExternalSecret.Name, o.Resolver.RemoteKeyPath(&r.ExternalSecret, d.RemoteRef.Key))
+			key := GetSecretKey(backend, r.ExternalSecret.Name, resolved.RemoteKeyPath(d.RemoteRef.Key))
 			property := d.RemoteRef.Property
 			entryName := d.SecretKey
 			keyProperties := m[key]
@@ -209,8 +213,8 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 					Key: key,
 				}
 				if backend == v1alpha1.BackendTypeGSM {
-					if p := o.Resolver.ProjectID(&r.ExternalSecret); p != "" {
-						keyProperties.GCPProject = p
+					if resolved.Location != "" {
+						keyProperties.GCPProject = resolved.Location
 					} else {
 						log.Logger().Warnf("no GCP project ID found for external secret %s, defaulting to current project", r.ExternalSecret.Name)
 					}
@@ -272,7 +276,7 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 				}
 
 				sv := CreateSecretValue(backend, keyProperties.Properties, annotations, labels, secretType)
-				err = secretManager.SetSecret(o.Resolver.Location(&r.ExternalSecret), GetSecretKey(backend, r.ExternalSecret.Name, key), &sv)
+				err = secretManager.SetSecret(resolved.Location, GetSecretKey(backend, r.ExternalSecret.Name, key), &sv)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
 				}

@@ -42,9 +42,13 @@ func TestEditLocal(t *testing.T) {
 
 	var err error
 	dynObjects := testsecrets.LoadExtSecretDir(t, ns, filepath.Join("test_data", "local"))
+	dynObjects = append(dynObjects,
+		testsecrets.ClusterSecretStore(t, testsecrets.DefaultStoreName, testsecrets.KubernetesProvider(ns)))
 	fakeDynClient := testsecrets.NewFakeDynClient(scheme, dynObjects...)
 	o.SecretClient, err = extsecrets.NewClient(fakeDynClient)
 	require.NoError(t, err, "failed to create fake extsecrets Client")
+	o.StoreClient, err = extsecrets.NewStoreClient(fakeDynClient)
+	require.NoError(t, err, "failed to create fake extsecrets StoreClient")
 
 	runner := &fakerunner.FakeRunner{}
 	o.CommandRunner = runner.Run

@@ -120,7 +120,11 @@ func (o *Options) Run() error {
 	for i := range results {
 		r := results[i]
 		name := r.ExternalSecret.Name
-		secEditor, err := factory.NewEditor(&r.ExternalSecret, o.Resolver, o.SecretStoreManagerFactory, o.KubeClient, o.ExternalVault)
+		resolved, err := o.Resolver.Resolve(&r.ExternalSecret)
+		if err != nil {
+			return errors.Wrapf(err, "failed to resolve the secret backend for ExternalSecret %s", name)
+		}
+		secEditor, err := factory.NewEditor(&r.ExternalSecret, resolved, o.SecretStoreManagerFactory, o.KubeClient, o.ExternalVault)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
 		}
@@ -134,7 +138,7 @@ func (o *Options) Run() error {
 			m := map[string]*editor.KeyProperties{}
 			for i := range data {
 				d := &data[i]
-				key := populate.GetSecretKey(o.Resolver.Backend(&r.ExternalSecret), name, o.Resolver.RemoteKeyPath(&r.ExternalSecret, d.RemoteRef.Key))
+				key := populate.GetSecretKey(resolved.Type, name, resolved.RemoteKeyPath(d.RemoteRef.Key))
 				property := d.RemoteRef.Property
 
 				var value string
@@ -152,9 +156,9 @@ func (o *Options) Run() error {
 					keyProperties = &editor.KeyProperties{
 						Key: key,
 					}
-					if o.Resolver.Backend(&r.ExternalSecret) == v1alpha1.BackendTypeGSM {
-						if p := o.Resolver.ProjectID(&r.ExternalSecret); p != "" {
-							keyProperties.GCPProject = p
+					if resolved.Type == v1alpha1.BackendTypeGSM {
+						if resolved.Location != "" {
+							keyProperties.GCPProject = resolved.Location
 						} else {
 							log.Logger().Warnf("no GCP project ID found for external secret %s, defaulting to current project", r.ExternalSecret.Name)
 						}
@@ -347,7 +351,11 @@ func (o *Options) VerifyAndFilter() ([]*secretfacade.SecretPair, error) {
 
 	for _, s := range secrets {
 		es := s.ExternalSecret
-		backend := string(o.Resolver.Backend(&es))
+		resolved, err := o.Resolver.Resolve(&es)
+		if err != nil {
+			return secrets, errors.Wrapf(err, "failed to resolve the secret backend for ExternalSecret %s", es.Name)
+		}
+		backend := string(resolved.Type)
 		for _, property := range es.Spec.Data {
 			destination := extsecrets.SecretLocation(backend, property)
 			destinations[destination] = append(destinations[destination], s)
