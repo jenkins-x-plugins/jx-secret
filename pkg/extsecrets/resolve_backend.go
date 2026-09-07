@@ -173,7 +173,11 @@ func backendFromStore(store esv1.GenericStore) *Backend {
 		return &Backend{Type: backendType, Location: p.AWS.Region}
 
 	case p.Kubernetes != nil:
-		return &Backend{Type: v1alpha1.BackendTypeLocal, Location: p.Kubernetes.RemoteNamespace}
+		// remoteNamespace is deliberately ignored: it is where ESO would read from,
+		// but jx-secret writes the target Secret itself, next to the ExternalSecret.
+		// The CRD defaults it to "default", so honouring it would misplace every
+		// local secret.
+		return &Backend{Type: v1alpha1.BackendTypeLocal}
 
 	case p.IBM != nil:
 		return &Backend{Type: v1alpha1.BackendTypeIBMSecretsManager}

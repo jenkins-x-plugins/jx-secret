@@ -90,13 +90,15 @@ func TestResolveFromStore(t *testing.T) {
 			wantLocation: "us-east-1",
 		},
 		{
-			name:         "kubernetes uses the remote namespace",
+			// jx-secret writes the Secret itself, so it lands next to the
+			// ExternalSecret whatever remoteNamespace the store carries
+			name:         "kubernetes ignores the remote namespace",
 			provider:     &esv1.SecretStoreProvider{Kubernetes: &esv1.KubernetesProvider{RemoteNamespace: "secret-infra"}},
 			wantBackend:  v1alpha1.BackendTypeLocal,
-			wantLocation: "secret-infra",
+			wantLocation: "jx",
 		},
 		{
-			name:         "kubernetes falls back to the ExternalSecret namespace",
+			name:         "kubernetes uses the ExternalSecret namespace",
 			provider:     &esv1.SecretStoreProvider{Kubernetes: &esv1.KubernetesProvider{}},
 			wantBackend:  v1alpha1.BackendTypeLocal,
 			wantLocation: "jx",
