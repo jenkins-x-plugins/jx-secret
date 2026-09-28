@@ -45,6 +45,10 @@ var (
 	`)
 )
 
+// ESO has no store or controller setting for this, and its 1h default leaves values
+// changed with `jx secret edit` out of the Secret for too long.
+const refreshInterval = "1m"
+
 // LabelOptions the options for the command
 type Options struct {
 	options.BaseOptions
@@ -215,6 +219,10 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		return results, err
 	}
 	err = kyamls.SetStringValue(node, path, extsecrets.DefaultSecretStoreKind, "spec", "secretStoreRef", "kind")
+	if err != nil {
+		return results, err
+	}
+	err = kyamls.SetStringValue(node, path, refreshInterval, "spec", "refreshInterval")
 	if err != nil {
 		return results, err
 	}

@@ -8,6 +8,7 @@ spec:
   secretStoreRef:
     name: jx-secret-store
     kind: ClusterSecretStore
+  refreshInterval: 1m
   data:
   - secretKey: config.yaml
     remoteRef:
