@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: templated-config
+type: Opaque
+stringData:
+  greeting: "hello {{ .Name }}"
+  password: s3cret

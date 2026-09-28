@@ -1,11 +1,13 @@
 package convert
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 
@@ -365,9 +367,13 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 			for _, field := range fields {
 
 				if o.SecretMapping.IsSecretKeyUnsecured(secretName, field) {
-					secretValue := kyamls.GetStringField(data, "", field)
+					var value string
+					value, err = templateLiteral(kyamls.GetStringField(data, "", field), dataPath == "data")
+					if err != nil {
+						return errors.Wrapf(err, "failed to carry unsecured key %s of secret %s into the template", field, secretName)
+					}
 
-					err = kyamls.SetStringValue(rTemplateData, path, secretValue, field)
+					err = kyamls.SetStringValue(rTemplateData, path, value, field)
 					if err != nil {
 						return errors.Wrapf(err, "failed to set string value for secret %s and key %s", secretName, field)
 					}
@@ -440,6 +446,22 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 	})
 
 	return nil
+}
+
+// templateLiteral makes a Secret value safe for target.template.data, which ESO renders
+// as a Go template and stores unencoded.
+func templateLiteral(value string, base64Encoded bool) (string, error) {
+	if base64Encoded {
+		decoded, err := base64.StdEncoding.DecodeString(value)
+		if err != nil {
+			return "", errors.Wrap(err, "the value is not valid base64")
+		}
+		if !utf8.Valid(decoded) {
+			return "", errors.New("the value is binary, which a template cannot hold")
+		}
+		value = string(decoded)
+	}
+	return strings.ReplaceAll(value, "{{", `{{ "{{" }}`), nil
 }
 
 func setRemoteRef(rNode *yaml.RNode, path, secretKey, key, property string, extra map[string]string) error {
