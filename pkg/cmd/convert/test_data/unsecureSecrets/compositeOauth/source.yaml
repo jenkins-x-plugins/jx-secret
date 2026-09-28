@@ -11,5 +11,5 @@ metadata:
     heritage: "Helm"
 type: Opaque
 data:
-  oauth: "pinkiepie"
+  oauth: "cGlua2llcGll"
   anotherkey: "test"

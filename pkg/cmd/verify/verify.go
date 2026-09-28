@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/rootcmd"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cobras/helper"
@@ -76,7 +77,7 @@ func (o *Options) Run() error {
 			fullName = ns + "/" + name
 		}
 		if state == nil {
-			t.AddRow(fullName, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(r.ExternalSecret.KeyAndNames(), ", "))))
+			t.AddRow(fullName, termcolor.ColorInfo(fmt.Sprintf("valid: %s", strings.Join(extsecrets.KeyAndNames(&r.ExternalSecret), ", "))))
 		} else {
 			o.Results = append(o.Results, state)
 			for _, e := range state.EntryErrors {

@@ -5,8 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
-	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate/templatertesting"
 	"github.com/jenkins-x-plugins/secretfacade/pkg/secretstore"
@@ -102,23 +101,25 @@ func TestTemplater(t *testing.T) {
 								"password": "my-basic-auth-password",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "jx-basic-auth-user-password",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "jx-basic-auth-user-password",
-										Property: "username",
-										Name:     "username",
+										SecretKey: "username",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "jx-basic-auth-user-password",
+											Property: "username",
+										},
 									},
 									{
-										Key:      "jx-basic-auth-user-password",
-										Property: "password",
-										Name:     "password",
+										SecretKey: "password",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "jx-basic-auth-user-password",
+											Property: "password",
+										},
 									},
 								},
 							},
@@ -185,33 +186,39 @@ func TestTemplater(t *testing.T) {
 								"email":    "dockeremail",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "docker-hub",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "docker-hub",
-										Property: "url",
-										Name:     "url",
+										SecretKey: "url",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "docker-hub",
+											Property: "url",
+										},
 									},
 									{
-										Key:      "docker-hub",
-										Property: "username",
-										Name:     "username",
+										SecretKey: "username",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "docker-hub",
+											Property: "username",
+										},
 									},
 									{
-										Key:      "docker-hub",
-										Property: "password",
-										Name:     "password",
+										SecretKey: "password",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "docker-hub",
+											Property: "password",
+										},
 									},
 									{
-										Key:      "docker-hub",
-										Property: "email",
-										Name:     "email",
+										SecretKey: "email",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "docker-hub",
+											Property: "email",
+										},
 									},
 								},
 							},
@@ -256,18 +263,18 @@ func TestTemplater(t *testing.T) {
 								"password": "my-nexus-password",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "nexus",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "nexus",
-										Property: "password",
-										Name:     "password",
+										SecretKey: "password",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "nexus",
+											Property: "password",
+										},
 									},
 								},
 							},
@@ -282,23 +289,25 @@ func TestTemplater(t *testing.T) {
 								"password": "my-sonatype-password",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "sonatype",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "sonatype",
-										Property: "username",
-										Name:     "username",
+										SecretKey: "username",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "sonatype",
+											Property: "username",
+										},
 									},
 									{
-										Key:      "sonatype",
-										Property: "password",
-										Name:     "password",
+										SecretKey: "password",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "sonatype",
+											Property: "password",
+										},
 									},
 								},
 							},
@@ -312,18 +321,18 @@ func TestTemplater(t *testing.T) {
 								"passphrase": "my-secret-gpg-passphrase",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "gpg",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "gpg",
-										Property: "passphrase",
-										Name:     "passphrase",
+										SecretKey: "passphrase",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "gpg",
+											Property: "passphrase",
+										},
 									},
 								},
 							},
@@ -369,18 +378,18 @@ func TestTemplater(t *testing.T) {
 								"password": "my-nexus-password",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "nexus",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "nexus",
-										Property: "password",
-										Name:     "password",
+										SecretKey: "password",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "nexus",
+											Property: "password",
+										},
 									},
 								},
 							},
@@ -395,23 +404,25 @@ func TestTemplater(t *testing.T) {
 								"password": "my-sonatype-password",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "sonatype",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "sonatype",
-										Property: "username",
-										Name:     "username",
+										SecretKey: "username",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "sonatype",
+											Property: "username",
+										},
 									},
 									{
-										Key:      "sonatype",
-										Property: "password",
-										Name:     "password",
+										SecretKey: "password",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "sonatype",
+											Property: "password",
+										},
 									},
 								},
 							},
@@ -425,18 +436,18 @@ func TestTemplater(t *testing.T) {
 								"passphrase": "my-secret-gpg-passphrase",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "gpg",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "gpg",
-										Property: "passphrase",
-										Name:     "passphrase",
+										SecretKey: "passphrase",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "gpg",
+											Property: "passphrase",
+										},
 									},
 								},
 							},
@@ -482,18 +493,18 @@ func TestTemplater(t *testing.T) {
 								"password": "my-nexus-password",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "nexus",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "nexus",
-										Property: "password",
-										Name:     "password",
+										SecretKey: "password",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "nexus",
+											Property: "password",
+										},
 									},
 								},
 							},
@@ -508,23 +519,25 @@ func TestTemplater(t *testing.T) {
 								"password": "my-sonatype-password",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "sonatype",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "sonatype",
-										Property: "username",
-										Name:     "username",
+										SecretKey: "username",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "sonatype",
+											Property: "username",
+										},
 									},
 									{
-										Key:      "sonatype",
-										Property: "password",
-										Name:     "password",
+										SecretKey: "password",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "sonatype",
+											Property: "password",
+										},
 									},
 								},
 							},
@@ -538,18 +551,18 @@ func TestTemplater(t *testing.T) {
 								"passphrase": "my-secret-gpg-passphrase",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "gpg",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "gpg",
-										Property: "passphrase",
-										Name:     "passphrase",
+										SecretKey: "passphrase",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "gpg",
+											Property: "passphrase",
+										},
 									},
 								},
 							},
@@ -630,18 +643,18 @@ func TestTemplaterDoesNotRegenerate(t *testing.T) {
 						Value: secretstore.SecretValue{
 							PropertyValues: externalSecretValues,
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "jx-basic-auth-htpasswd-external",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "jx-basic-auth-htpasswd-external",
-										Property: "auth",
-										Name:     "auth",
+										SecretKey: "auth",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "jx-basic-auth-htpasswd-external",
+											Property: "auth",
+										},
 									},
 								},
 							},
@@ -659,23 +672,25 @@ func TestTemplaterDoesNotRegenerate(t *testing.T) {
 								"password": "my-basic-auth-password",
 							},
 						},
-						ExternalSecret: v1.ExternalSecret{
+						ExternalSecret: esv1.ExternalSecret{
 							ObjectMeta: metav1.ObjectMeta{
 								Name: "jx-basic-auth-user-password",
 							},
-							Spec: v1.ExternalSecretSpec{
-								BackendType: string(v1alpha1.BackendTypeGSM),
-								ProjectID:   "myproject",
-								Data: []v1.Data{
+							Spec: esv1.ExternalSecretSpec{
+								Data: []esv1.ExternalSecretData{
 									{
-										Key:      "jx-basic-auth-user-password",
-										Property: "username",
-										Name:     "username",
+										SecretKey: "username",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "jx-basic-auth-user-password",
+											Property: "username",
+										},
 									},
 									{
-										Key:      "jx-basic-auth-user-password",
-										Property: "password",
-										Name:     "password",
+										SecretKey: "password",
+										RemoteRef: esv1.ExternalSecretDataRemoteRef{
+											Key:      "jx-basic-auth-user-password",
+											Property: "password",
+										},
 									},
 								},
 							},

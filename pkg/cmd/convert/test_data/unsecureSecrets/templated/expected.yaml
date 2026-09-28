@@ -1,0 +1,20 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: templated-config
+spec:
+  secretStoreRef:
+    name: jx-secret-store
+    kind: ClusterSecretStore
+  refreshInterval: 1m
+  target:
+    template:
+      data:
+        greeting: hello {{ "{{" }} .Name }}
+      mergePolicy: Merge
+      type: Opaque
+  data:
+  - secretKey: password
+    remoteRef:
+      key: templated/config
+      property: password

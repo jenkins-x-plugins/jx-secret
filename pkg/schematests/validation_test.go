@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x/jx-api/v4/pkg/util"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/yaml"
@@ -18,7 +18,7 @@ func TestValidateExternalSecret(t *testing.T) {
 	data, err := os.ReadFile(path)
 	require.NoError(t, err, "failed to load %s", path)
 
-	deploy := &v1.ExternalSecret{}
+	deploy := &esv1.ExternalSecret{}
 	err = yaml.Unmarshal(data, deploy)
 	require.NoError(t, err, "failed to unmarshal %s", path)
 

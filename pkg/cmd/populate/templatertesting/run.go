@@ -6,19 +6,68 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/testsecrets"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/files"
+	"k8s.io/apimachinery/pkg/runtime"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
 	secretstorefake "github.com/jenkins-x-plugins/secretfacade/testing/fake"
+	jxcore "github.com/jenkins-x/jx-api/v4/pkg/apis/core/v4beta1"
 	"github.com/jenkins-x/jx-helpers/v3/pkg/cmdrunner/fakerunner"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/kubernetes/fake"
 )
+
+// resolverFromRequirements serves the store a real cluster would hold for these
+// Requirements, so templater tests need no store fixtures of their own.
+func resolverFromRequirements(t *testing.T, req *jxcore.RequirementsConfig) *extsecrets.BackendResolver {
+	provider := providerFromRequirements(req)
+	if provider == nil {
+		return &extsecrets.BackendResolver{}
+	}
+	dynClient := testsecrets.NewFakeDynClient(runtime.NewScheme(),
+		testsecrets.ClusterSecretStore(t, testsecrets.DefaultStoreName, provider))
+	stores, err := extsecrets.NewStoreClient(dynClient)
+	require.NoError(t, err, "failed to create a store client")
+	return &extsecrets.BackendResolver{Stores: stores}
+}
+
+// defaultStoreRef lets test cases omit a secretStoreRef unless they mean a different one.
+func defaultStoreRef(es *esv1.ExternalSecret) {
+	if es.Spec.SecretStoreRef.Name == "" {
+		es.Spec.SecretStoreRef = esv1.SecretStoreRef{
+			Name: testsecrets.DefaultStoreName,
+			Kind: esv1.ClusterSecretStoreKind,
+		}
+	}
+}
+
+// providerFromRequirements returns nil for a secretStorage we cannot serve.
+func providerFromRequirements(req *jxcore.RequirementsConfig) *esv1.SecretStoreProvider {
+	if req == nil {
+		return nil
+	}
+	switch string(req.SecretStorage) {
+	case "vault":
+		return &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{}}
+	case "gsm", "gcpSecretsManager":
+		return &esv1.SecretStoreProvider{GCPSM: &esv1.GCPSMProvider{ProjectID: req.Cluster.ProjectID}}
+	case "azureKeyVault", "azurekeyvault":
+		return &esv1.SecretStoreProvider{AzureKV: &esv1.AzureKVProvider{}}
+	case "secretsManager":
+		return &esv1.SecretStoreProvider{AWS: &esv1.AWSProvider{Service: esv1.AWSServiceSecretsManager}}
+	case "systemManager":
+		return &esv1.SecretStoreProvider{AWS: &esv1.AWSProvider{Service: esv1.AWSServiceParameterStore}}
+	case "local":
+		return &esv1.SecretStoreProvider{Kubernetes: &esv1.KubernetesProvider{}}
+	}
+	return nil
+}
 
 // Run runs the test cases
 func (r *Runner) Run(t *testing.T) {
@@ -49,10 +98,11 @@ func (r *Runner) Run(t *testing.T) {
 
 		fakeStore := fakeFactory.GetSecretStore()
 
-		o.ExternalSecrets = []*v1.ExternalSecret{}
+		o.ExternalSecrets = []*esv1.ExternalSecret{}
 		for k := range testcase.ExternalSecrets {
 			p := testcase.ExternalSecrets[k]
 			es := p.ExternalSecret
+			defaultStoreRef(&es)
 			o.ExternalSecrets = append(o.ExternalSecrets, &es)
 			err := fakeStore.SetSecret(p.Location, p.Name, &p.Value)
 			assert.NoError(t, err)
@@ -71,6 +121,7 @@ func (r *Runner) Run(t *testing.T) {
 			}
 			require.NotEmpty(t, o.Dir, "you must either specify Requirements or a Dir on the Runner or TestCase to be able to detect the Requirements to use the the template generation")
 		}
+		o.Resolver = resolverFromRequirements(t, o.Requirements)
 		object := schema.Spec.FindObject(objName)
 		require.NotNil(t, object, "could not find schema for object name %s", objName)
 
@@ -134,10 +185,11 @@ func (r *Runner) Populate(t *testing.T) {
 
 		fakeStore := fakeFactory.GetSecretStore()
 
-		o.ExternalSecrets = []*v1.ExternalSecret{}
+		o.ExternalSecrets = []*esv1.ExternalSecret{}
 		for k := range tc.ExternalSecrets {
 			p := tc.ExternalSecrets[k]
 			es := p.ExternalSecret
+			defaultStoreRef(&es)
 			o.ExternalSecrets = append(o.ExternalSecrets, &es)
 			err := fakeStore.SetSecret(p.Location, p.Name, &p.Value)
 			assert.NoError(t, err)
@@ -156,6 +208,7 @@ func (r *Runner) Populate(t *testing.T) {
 			}
 			require.NotEmpty(t, o.Dir, "you must either specify Requirements or a Dir on the Runner or TestCase to be able to detect the Requirements to use the the template generation")
 		}
+		o.Resolver = resolverFromRequirements(t, o.Requirements)
 		object := schema.Spec.FindObject(objName)
 		require.NotNil(t, object, "could not find schema for object name %s", objName)
 
@@ -164,9 +217,11 @@ func (r *Runner) Populate(t *testing.T) {
 		require.NotNil(t, secret, "requires a Secret resource for the populate loop test")
 
 		p := tc.ExternalSecrets[0]
+		es := p.ExternalSecret
+		defaultStoreRef(&es)
 
 		secretPair := &secretfacade.SecretPair{
-			ExternalSecret: p.ExternalSecret,
+			ExternalSecret: es,
 			Secret:         secret,
 		}
 		secretPair.SetSchemaObject(object)

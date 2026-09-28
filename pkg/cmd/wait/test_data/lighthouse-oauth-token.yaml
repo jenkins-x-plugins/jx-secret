@@ -1,4 +1,4 @@
-apiVersion: kubernetes-client.io/v1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   annotations:
@@ -8,26 +8,28 @@ metadata:
     gitops.jenkins-x.io/pipeline: environment
   name: lighthouse-oauth-token
   namespace: jx
-  resourceVersion: "2928764"
+  resourceVersion: '2928764'
   selfLink: /apis/kubernetes-client.io/v1/namespaces/jx/externalsecrets/lighthouse-oauth-token
   uid: 683d308e-b08c-11ea-9239-42010a84020b
 spec:
-  backendType: vault
   data:
-  - key: secret/data/jx/pipelineUser
-    name: oauth
-    property: token
-  template:
-    metadata:
-      labels:
-        app: lighthouse-lighthouse
-        chart: lighthouse-0.0.633
-        heritage: Helm
-        release: lighthouse
-    type: Opaque
-  vaultMountPoint: kubernetes
-  vaultRole: vault-infra
+  - secretKey: oauth
+    remoteRef:
+      key: jx/pipelineUser
+      property: token
+  secretStoreRef:
+    name: jx-secret-store
+    kind: ClusterSecretStore
+  target:
+    template:
+      metadata:
+        labels:
+          app: lighthouse-lighthouse
+          chart: lighthouse-0.0.633
+          heritage: Helm
+          release: lighthouse
+      type: Opaque
 status:
-  lastSync: "2020-06-22T15:26:30.902Z"
+  lastSync: '2020-06-22T15:26:30.902Z'
   observedGeneration: 1
   status: SUCCESS

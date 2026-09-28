@@ -12,7 +12,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/vault/wait"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
@@ -163,12 +162,17 @@ func (o *Options) Run() error {
 func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[string]bool) error {
 	for _, r := range results {
 		name := r.ExternalSecret.Name
-		backendType := r.ExternalSecret.Spec.BackendType
+		resolved, err := o.Resolver.Resolve(&r.ExternalSecret)
+		if err != nil {
+			return errors.Wrapf(err, "failed to resolve the secret backend for ExternalSecret %s", name)
+		}
+		backend := resolved.Type
+		backendType := string(backend)
 
 		// Check if the secret backend is external vault
 		isExternalVault := os.Getenv("EXTERNAL_VAULT")
 		localReplica := false
-		if backendType == "local" {
+		if backend == v1alpha1.BackendTypeLocal {
 			ann := r.ExternalSecret.Annotations
 			if ann != nil {
 				// ignore local replicas
@@ -183,7 +187,7 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 
 		// lets wait until the backend is available
 		if !waited[backendType] {
-			err := o.waitForBackend(backendType, isExternalVault)
+			err = o.waitForBackend(backendType, isExternalVault)
 			if err != nil {
 				return errors.Wrapf(err, "failed to wait for backend type %s", backendType)
 			}
@@ -200,17 +204,17 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 		newValueMap := map[string]bool{}
 		for i := range data {
 			d := &data[i]
-			key := GetSecretKey(v1alpha1.BackendType(backendType), r.ExternalSecret.Name, d.Key)
-			property := d.Property
-			entryName := d.Name
+			key := GetSecretKey(backend, r.ExternalSecret.Name, resolved.RemoteKeyPath(d.RemoteRef.Key))
+			property := d.RemoteRef.Property
+			entryName := d.SecretKey
 			keyProperties := m[key]
 			if keyProperties == nil {
 				keyProperties = &editor.KeyProperties{
 					Key: key,
 				}
-				if r.ExternalSecret.Spec.BackendType == string(v1alpha1.BackendTypeGSM) {
-					if r.ExternalSecret.Spec.ProjectID != "" {
-						keyProperties.GCPProject = r.ExternalSecret.Spec.ProjectID
+				if backend == v1alpha1.BackendTypeGSM {
+					if resolved.Location() != "" {
+						keyProperties.GCPProject = resolved.Location()
 					} else {
 						log.Logger().Warnf("no GCP project ID found for external secret %s, defaulting to current project", r.ExternalSecret.Name)
 					}
@@ -221,10 +225,10 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 
 			currentValue := ""
 			if r.Secret != nil && r.Secret.Data != nil {
-				currentValue = string(r.Secret.Data[d.Name])
+				currentValue = string(r.Secret.Data[d.SecretKey])
 			}
 			var value string
-			value, err = o.generateSecretValue(r, name, d.Name, currentValue)
+			value, err = o.generateSecretValue(r, name, d.SecretKey, currentValue)
 			if err != nil {
 				return errors.Wrapf(err, "failed to ask user secret value property %s for key %s on ExternalSecret %s", property, key, name)
 			}
@@ -248,7 +252,16 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 		for key, keyProperties := range m {
 			// ToDo: Refactor/Simplify with tests
 			if newValueMap[key] && len(keyProperties.Properties) > 0 { //nolint:gocritic
-				annotations := r.ExternalSecret.Spec.Template.Metadata.Annotations
+				var annotations map[string]string
+				var labels map[string]string
+				secretType := corev1.SecretTypeOpaque
+				if r.ExternalSecret.Spec.Target.Template != nil {
+					annotations = r.ExternalSecret.Spec.Target.Template.Metadata.Annotations
+					labels = r.ExternalSecret.Spec.Target.Template.Metadata.Labels
+					if r.ExternalSecret.Spec.Target.Template.Type != "" {
+						secretType = r.ExternalSecret.Spec.Target.Template.Type
+					}
+				}
 
 				// handle replicate to annotation for local secrets so that we also copy the secret to other namespaces
 				replicateTo := ""
@@ -256,13 +269,14 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 					replicateTo = r.ExternalSecret.Annotations[extsecrets.ReplicateToAnnotation]
 				}
 				if replicateTo != "" {
+					if annotations == nil {
+						annotations = map[string]string{}
+					}
 					annotations[extsecrets.ReplicateToAnnotation] = replicateTo
 				}
 
-				labels := r.ExternalSecret.Spec.Template.Metadata.Labels
-				secretType := corev1.SecretType(r.ExternalSecret.Spec.Template.Type)
-				sv := CreateSecretValue(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), keyProperties.Properties, annotations, labels, secretType)
-				err = secretManager.SetSecret(GetExternalSecretLocation(&r.ExternalSecret), GetSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), r.ExternalSecret.Name, key), &sv)
+				sv := CreateSecretValue(backend, keyProperties.Properties, annotations, labels, secretType)
+				err = secretManager.SetSecret(resolved.Location(), GetSecretKey(backend, r.ExternalSecret.Name, key), &sv)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
 				}
@@ -318,22 +332,6 @@ func CreateSecretValue(backendType v1alpha1.BackendType, values []editor.Propert
 		}
 		return secretstore.SecretValue{PropertyValues: formatValues(values)}
 	}
-}
-
-func GetExternalSecretLocation(extsec *v1.ExternalSecret) string {
-	switch v1alpha1.BackendType(extsec.Spec.BackendType) {
-	case v1alpha1.BackendTypeGSM:
-		return extsec.Spec.ProjectID
-	case v1alpha1.BackendTypeAzure:
-		return extsec.Spec.KeyVaultName
-	case v1alpha1.BackendTypeVault:
-		return os.Getenv("VAULT_ADDR")
-	case v1alpha1.BackendTypeAWSSecretsManager:
-		return extsec.Spec.Region
-	case v1alpha1.BackendTypeLocal:
-		return extsec.Namespace
-	}
-	return ""
 }
 
 func (o *Options) generateSecretValue(s *secretfacade.SecretPair, secretName, property, currentValue string) (string, error) {

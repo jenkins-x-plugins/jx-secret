@@ -67,9 +67,6 @@
           },
           "type": "object"
         },
-        "clusterName": {
-          "type": "string"
-        },
         "creationTimestamp": {
           "type": [
             "string",

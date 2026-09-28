@@ -11,8 +11,9 @@ import (
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/populate"
 	"github.com/jenkins-x/jx-kube-client/v3/pkg/kubeclient"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	schemaapi "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
+	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/editor/factory"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
@@ -119,7 +120,11 @@ func (o *Options) Run() error {
 	for i := range results {
 		r := results[i]
 		name := r.ExternalSecret.Name
-		secEditor, err := factory.NewEditor(&r.ExternalSecret, o.SecretStoreManagerFactory, o.KubeClient, o.ExternalVault)
+		resolved, err := o.Resolver.Resolve(&r.ExternalSecret)
+		if err != nil {
+			return errors.Wrapf(err, "failed to resolve the secret backend for ExternalSecret %s", name)
+		}
+		secEditor, err := factory.NewEditor(&r.ExternalSecret, resolved, o.SecretStoreManagerFactory, o.KubeClient, o.ExternalVault)
 		if err != nil {
 			return errors.Wrapf(err, "failed to create a secret editor for ExternalSecret %s", name)
 		}
@@ -133,8 +138,8 @@ func (o *Options) Run() error {
 			m := map[string]*editor.KeyProperties{}
 			for i := range data {
 				d := &data[i]
-				key := populate.GetSecretKey(v1alpha1.BackendType(r.ExternalSecret.Spec.BackendType), name, d.Key)
-				property := d.Property
+				key := populate.GetSecretKey(resolved.Type, name, resolved.RemoteKeyPath(d.RemoteRef.Key))
+				property := d.RemoteRef.Property
 
 				var value string
 				value, err = o.askForSecretValue(r, d)
@@ -151,9 +156,9 @@ func (o *Options) Run() error {
 					keyProperties = &editor.KeyProperties{
 						Key: key,
 					}
-					if r.ExternalSecret.Spec.BackendType == string(v1alpha1.BackendTypeGSM) {
-						if r.ExternalSecret.Spec.ProjectID != "" {
-							keyProperties.GCPProject = r.ExternalSecret.Spec.ProjectID
+					if resolved.Type == v1alpha1.BackendTypeGSM {
+						if resolved.Location() != "" {
+							keyProperties.GCPProject = resolved.Location()
 						} else {
 							log.Logger().Warnf("no GCP project ID found for external secret %s, defaulting to current project", r.ExternalSecret.Name)
 						}
@@ -222,21 +227,21 @@ func (o *Options) chooseSecrets(results []*secretfacade.SecretPair) ([]*secretfa
 	return answer, nil
 }
 
-func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1.Data) (string, error) {
+func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *esv1.ExternalSecretData) (string, error) {
 	var value string
 	var err error
 	name := s.ExternalSecret.Name
-	property := d.Property
+	property := d.RemoteRef.Property
 	object, err := s.SchemaObject()
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to find object schema for object %s property %s", name, property)
 	}
-	propertySpec := object.FindProperty(d.Name)
+	propertySpec := object.FindProperty(d.SecretKey)
 	if propertySpec == nil {
 		message, help := o.propertyMessage(s, d)
 		value, err = o.Input.PickPassword(message, help) //nolint:govet
 		if err != nil {
-			return "", errors.Wrapf(err, "failed to enter property %s for key %s on ExternalSecret %s", property, d.Key, name)
+			return "", errors.Wrapf(err, "failed to enter property %s for key %s on ExternalSecret %s", property, d.RemoteRef.Key, name)
 		}
 		return value, nil
 	}
@@ -265,11 +270,11 @@ func (o *Options) askForSecretValue(s *secretfacade.SecretPair, d *v1.Data) (str
 	return value, nil
 }
 
-func (o *Options) propertyMessage(s *secretfacade.SecretPair, d *v1.Data) (string, string) {
+func (o *Options) propertyMessage(s *secretfacade.SecretPair, d *esv1.ExternalSecretData) (string, string) {
 	name := s.ExternalSecret.Name
-	property := d.Property
+	property := d.RemoteRef.Property
 	if property == "" {
-		property = d.Name
+		property = d.SecretKey
 	}
 	return name + "." + property, ""
 }
@@ -287,13 +292,13 @@ func (o *Options) Matches(r *secretfacade.SecretPair) bool {
 }
 
 // DataToEdit returns the properties to edit
-func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1.Data {
+func (o *Options) DataToEdit(r *secretfacade.SecretPair) []esv1.ExternalSecretData {
 	if o.Interactive {
 		var names []string
-		m := map[string]*v1.Data{}
+		m := map[string]*esv1.ExternalSecretData{}
 		for i := range r.ExternalSecret.Spec.Data {
 			data := &r.ExternalSecret.Spec.Data[i]
-			name := data.Name
+			name := data.SecretKey
 			names = append(names, name)
 			m[name] = data
 		}
@@ -304,7 +309,7 @@ func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1.Data {
 			log.Logger().Warnf("failed to pick the data entries to edit: %s", err.Error())
 		}
 
-		var answer []v1.Data
+		var answer []esv1.ExternalSecretData
 		for _, name := range names {
 			answer = append(answer, *m[name])
 		}
@@ -326,10 +331,11 @@ func (o *Options) DataToEdit(r *secretfacade.SecretPair) []v1.Data {
 	}
 
 	// otherwise return only missing fields
-	var results []v1.Data
-	for _, d := range r.ExternalSecret.Spec.Data {
-		if missingProperties[d.Property] {
-			results = append(results, d)
+	var results []esv1.ExternalSecretData
+	for i := range r.ExternalSecret.Spec.Data {
+		d := &r.ExternalSecret.Spec.Data[i]
+		if missingProperties[d.RemoteRef.Property] {
+			results = append(results, *d)
 		}
 	}
 	return results
@@ -346,8 +352,13 @@ func (o *Options) VerifyAndFilter() ([]*secretfacade.SecretPair, error) {
 
 	for _, s := range secrets {
 		es := s.ExternalSecret
-		for _, property := range es.Spec.Data {
-			destination := property.SecretLocation(es.Spec.BackendType)
+		resolved, err := o.Resolver.Resolve(&es)
+		if err != nil {
+			return secrets, errors.Wrapf(err, "failed to resolve the secret backend for ExternalSecret %s", es.Name)
+		}
+		backend := string(resolved.Type)
+		for i := range es.Spec.Data {
+			destination := extsecrets.SecretLocation(backend, &es.Spec.Data[i])
 			destinations[destination] = append(destinations[destination], s)
 		}
 	}

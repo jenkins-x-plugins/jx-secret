@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/google/go-cmp/cmp"
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/apis/mapping/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/cmd/convert"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets/secretfacade"
@@ -74,6 +74,18 @@ func TestToExtSecrets(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	for _, tc := range testCases {
+		if generateTestOutput {
+			generatedFile := tc.ResultFile
+			expectedPath := tc.ExpectedFile
+			data, err := os.ReadFile(generatedFile)
+			require.NoError(t, err, "failed to load %s", generatedFile)
+
+			err = os.WriteFile(expectedPath, data, 0o600)
+			require.NoError(t, err, "failed to save file %s", expectedPath)
+
+			t.Logf("saved file %s\n", expectedPath)
+			continue
+		}
 		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
 
@@ -143,6 +155,18 @@ func TestToNamespaceSpecificExtSecrets(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	for _, tc := range testCases {
+		if generateTestOutput {
+			generatedFile := tc.ResultFile
+			expectedPath := tc.ExpectedFile
+			data, err := os.ReadFile(generatedFile)
+			require.NoError(t, err, "failed to load %s", generatedFile)
+
+			err = os.WriteFile(expectedPath, data, 0o600)
+			require.NoError(t, err, "failed to save file %s", expectedPath)
+
+			t.Logf("saved file %s\n", expectedPath)
+			continue
+		}
 		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
 
@@ -216,6 +240,18 @@ func TestToUnsecuredSecrets(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	for _, tc := range testCases {
+		if generateTestOutput {
+			generatedFile := tc.ResultFile
+			expectedPath := tc.ExpectedFile
+			data, err := os.ReadFile(generatedFile)
+			require.NoError(t, err, "failed to load %s", generatedFile)
+
+			err = os.WriteFile(expectedPath, data, 0o600)
+			require.NoError(t, err, "failed to save file %s", expectedPath)
+
+			t.Logf("saved file %s\n", expectedPath)
+			continue
+		}
 
 		require.FileExists(t, tc.ExpectedFile)
 
@@ -288,6 +324,18 @@ func TestMultipleBackendTypes(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	for _, tc := range testCases {
+		if generateTestOutput {
+			generatedFile := tc.ResultFile
+			expectedPath := tc.ExpectedFile
+			data, err := os.ReadFile(generatedFile)
+			require.NoError(t, err, "failed to load %s", generatedFile)
+
+			err = os.WriteFile(expectedPath, data, 0o600)
+			require.NoError(t, err, "failed to save file %s", expectedPath)
+
+			t.Logf("saved file %s\n", expectedPath)
+			continue
+		}
 		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
 		expectData, err := os.ReadFile(tc.ExpectedFile)
@@ -683,6 +731,18 @@ func TestAzureKeyVault(t *testing.T) {
 	require.NoError(t, err, "failed to convert to external secrets in dir %s", tmpDir)
 
 	for _, tc := range testCases {
+		if generateTestOutput {
+			generatedFile := tc.ResultFile
+			expectedPath := tc.ExpectedFile
+			data, err := os.ReadFile(generatedFile)
+			require.NoError(t, err, "failed to load %s", generatedFile)
+
+			err = os.WriteFile(expectedPath, data, 0o600)
+			require.NoError(t, err, "failed to save file %s", expectedPath)
+
+			t.Logf("saved file %s\n", expectedPath)
+			continue
+		}
 		resultData, err := os.ReadFile(tc.ResultFile)
 		require.NoError(t, err, "failed to load results %s", tc.ResultFile)
 		expectData, err := os.ReadFile(tc.ExpectedFile)
@@ -702,6 +762,13 @@ func TestGCPProjectIDValidation(t *testing.T) {
 	require.Error(t, err, "failed to get validation error")
 	log.Logger().Infof("%s", err.Error())
 	assert.True(t, strings.Contains(err.Error(), "Spec.Defaults.BackendType: zero value"), "failed to get correct validation error")
+}
+
+// jx3-versions src/Makefile.mk passes these, so rejecting them fails every boot
+func TestConvertAcceptsVaultFlags(t *testing.T) {
+	cmd, _ := convert.NewCmdSecretConvert()
+	require.NoError(t, cmd.ParseFlags([]string{"-r", "jx-vault", "-m", "kubernetes"}))
+	require.NoError(t, cmd.ParseFlags([]string{"--vault-role", "jx-vault", "--vault-mount-point", "kubernetes"}))
 }
 
 func TestConvertAndSchemaEnrich(t *testing.T) {
@@ -758,7 +825,7 @@ func TestConvertAndSchemaEnrich(t *testing.T) {
 		require.FileExists(t, file)
 
 		// lets load it and assert its got the schema
-		es := v1.ExternalSecret{}
+		es := esv1.ExternalSecret{}
 		err := yamls.LoadFile(file, &es)
 		require.NoError(t, err, "failed to load ExternalSecret %s", file)
 
@@ -812,7 +879,7 @@ func TestConvertAndSchemaEnrichWithLocalSchemas(t *testing.T) {
 		require.FileExists(t, file)
 
 		// lets load it and assert its got the schema
-		es := v1.ExternalSecret{}
+		es := esv1.ExternalSecret{}
 		err := yamls.LoadFile(file, &es)
 		require.NoError(t, err, "failed to load ExternalSecret %s", file)
 

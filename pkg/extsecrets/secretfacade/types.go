@@ -5,7 +5,7 @@ import (
 
 	"github.com/jenkins-x/jx-helpers/v3/pkg/options"
 
-	v1 "github.com/jenkins-x-plugins/jx-secret/pkg/apis/external/v1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	schema "github.com/jenkins-x-plugins/jx-secret/pkg/apis/schema/v1alpha1"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/extsecrets"
 	"github.com/jenkins-x-plugins/jx-secret/pkg/schemas"
@@ -25,12 +25,17 @@ type Options struct {
 	SecretNamespace           string
 	Filter                    string
 	SecretClient              extsecrets.Interface
+	StoreClient               extsecrets.StoreInterface
 	KubeClient                kubernetes.Interface
 	Source                    string
 	SecretStoreManagerFactory secretstore.FactoryInterface
 
+	// Resolver reads the backend off the (Cluster)SecretStore an ExternalSecret
+	// references. Populated by Validate().
+	Resolver *extsecrets.BackendResolver
+
 	// ExternalSecrets the loaded secrets
-	ExternalSecrets []*v1.ExternalSecret
+	ExternalSecrets []*esv1.ExternalSecret
 }
 
 type ExternalSecretLocation string
@@ -64,10 +69,20 @@ func (o *Options) Validate() error {
 	if o.SecretStoreManagerFactory == nil {
 		o.SecretStoreManagerFactory = &factory.SecretManagerFactory{}
 	}
+	if o.Resolver == nil {
+		stores := o.StoreClient
+		if stores == nil {
+			stores, err = extsecrets.NewStoreClient(nil)
+			if err != nil {
+				return errors.Wrap(err, "error initialising external secrets store client")
+			}
+		}
+		o.Resolver = &extsecrets.BackendResolver{Stores: stores}
+	}
 	return nil
 }
 
-func (o *Options) ExternalSecretByName(secretName string) (*v1.ExternalSecret, error) {
+func (o *Options) ExternalSecretByName(secretName string) (*esv1.ExternalSecret, error) {
 	for _, s := range o.ExternalSecrets {
 		if s.Name == secretName {
 			return s, nil
@@ -79,7 +94,7 @@ func (o *Options) ExternalSecretByName(secretName string) (*v1.ExternalSecret, e
 // SecretError returns an error for a secret
 type SecretError struct {
 	// ExternalSecret the external secret which is not valid
-	ExternalSecret v1.ExternalSecret
+	ExternalSecret esv1.ExternalSecret
 
 	// EntryErrors the errors for each secret entry
 	EntryErrors []*EntryError
@@ -97,7 +112,7 @@ type EntryError struct {
 // SecretPair the external secret and the associated Secret an error for a secret
 type SecretPair struct {
 	// ExternalSecret the external secret which is not valid
-	ExternalSecret v1.ExternalSecret
+	ExternalSecret esv1.ExternalSecret
 
 	// Secret the secret if there is one
 	Secret *corev1.Secret
