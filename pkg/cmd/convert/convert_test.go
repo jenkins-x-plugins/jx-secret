@@ -764,6 +764,13 @@ func TestGCPProjectIDValidation(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "Spec.Defaults.BackendType: zero value"), "failed to get correct validation error")
 }
 
+// jx3-versions src/Makefile.mk passes these, so rejecting them fails every boot
+func TestConvertAcceptsVaultFlags(t *testing.T) {
+	cmd, _ := convert.NewCmdSecretConvert()
+	require.NoError(t, cmd.ParseFlags([]string{"-r", "jx-vault", "-m", "kubernetes"}))
+	require.NoError(t, cmd.ParseFlags([]string{"--vault-role", "jx-vault", "--vault-mount-point", "kubernetes"}))
+}
+
 func TestConvertAndSchemaEnrich(t *testing.T) {
 	sourceData := filepath.Join("test_data", "schema")
 	require.DirExists(t, sourceData)

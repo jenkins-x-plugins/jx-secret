@@ -84,6 +84,13 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.HelmSecretFolder, "helm-secrets-dir", "", "", "the directory where the helm secrets live with a folder per namespace and a file with a '.yaml' extension for each secret name. Defaults to $JX_HELM_SECRET_FOLDER")
 	cmd.Flags().StringVarP(&o.DefaultNamespace, "default-namespace", "", "jx", "the default namespace if no namespace is specified in a Secret resource")
 
+	// the vault auth config lives on the ClusterSecretStore now, but boot Makefiles in env repos still pass these
+	// Todo: Remove deprecated flags once fully migrated to ESO
+	cmd.Flags().StringP("vault-mount-point", "m", "", "ignored")
+	cmd.Flags().StringP("vault-role", "r", "", "ignored")
+	_ = cmd.Flags().MarkHidden("vault-mount-point")
+	_ = cmd.Flags().MarkHidden("vault-role")
+
 	cmd.AddCommand(cobras.SplitCommand(edit.NewCmdSecretMappingEdit()))
 	return cmd, o
 }
