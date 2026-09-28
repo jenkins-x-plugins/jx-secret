@@ -53,6 +53,8 @@ func externalSecret(name, namespace, storeName string) *esv1.ExternalSecret {
 func strPtr(s string) *string { return &s }
 
 func TestResolveFromStore(t *testing.T) {
+	t.Setenv("VAULT_ADDR", "https://127.0.0.1:8200")
+
 	testCases := []struct {
 		name         string
 		provider     *esv1.SecretStoreProvider
@@ -60,10 +62,10 @@ func TestResolveFromStore(t *testing.T) {
 		wantLocation string
 	}{
 		{
-			name:         "vault",
-			provider:     &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Server: "https://vault:8200"}},
+			name:         "vault takes VAULT_ADDR over the store's server",
+			provider:     &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Server: "https://vault.jx-vault:8200"}},
 			wantBackend:  v1alpha1.BackendTypeVault,
-			wantLocation: "https://vault:8200",
+			wantLocation: "https://127.0.0.1:8200",
 		},
 		{
 			name:         "gcp secrets manager",
@@ -112,7 +114,7 @@ func TestResolveFromStore(t *testing.T) {
 			b, err := r.Resolve(externalSecret("my-secret", "jx", "store"))
 			require.NoError(t, err)
 			assert.Equal(t, tc.wantBackend, b.Type, "backend type")
-			assert.Equal(t, tc.wantLocation, b.Location, "location")
+			assert.Equal(t, tc.wantLocation, b.Location(), "location")
 		})
 	}
 }
@@ -155,19 +157,19 @@ func TestRemoteKeyPath(t *testing.T) {
 	}{
 		{
 			name:     "kv v2 gains the data segment",
-			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Version: esv1.VaultKVStoreV2}},
+			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Path: strPtr("secret"), Version: esv1.VaultKVStoreV2}},
 			key:      "jx/pipelineUser",
 			want:     "secret/data/jx/pipelineUser",
 		},
 		{
 			name:     "an unset version is treated as kv v2, as ESO does",
-			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{}},
+			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Path: strPtr("secret")}},
 			key:      "jx/pipelineUser",
 			want:     "secret/data/jx/pipelineUser",
 		},
 		{
 			name:     "kv v1 has no data segment",
-			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Version: esv1.VaultKVStoreV1}},
+			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Path: strPtr("secret"), Version: esv1.VaultKVStoreV1}},
 			key:      "jx/pipelineUser",
 			want:     "secret/jx/pipelineUser",
 		},
@@ -178,10 +180,40 @@ func TestRemoteKeyPath(t *testing.T) {
 			want:     "jx-kv/data/jx/pipelineUser",
 		},
 		{
-			name:     "a key that already carries the mount is left alone",
+			name:     "a key spelling out the mount and data segment resolves the same",
+			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Path: strPtr("secret"), Version: esv1.VaultKVStoreV2}},
+			key:      "secret/data/jx/pipelineUser",
+			want:     "secret/data/jx/pipelineUser",
+		},
+		{
+			name:     "a key spelling out only the mount gains the data segment",
+			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Path: strPtr("secret"), Version: esv1.VaultKVStoreV2}},
+			key:      "secret/nexus",
+			want:     "secret/data/nexus",
+		},
+		{
+			name:     "kv v1 keeps a data segment in the key as part of the path",
+			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Path: strPtr("secret"), Version: esv1.VaultKVStoreV1}},
+			key:      "secret/data/jx",
+			want:     "secret/data/jx",
+		},
+		{
+			name:     "with no mount on the store the key's first segment is the mount",
+			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Version: esv1.VaultKVStoreV2}},
+			key:      "jx/pipelineUser",
+			want:     "jx/data/pipelineUser",
+		},
+		{
+			name:     "with no mount on the store a key already carrying the data segment is left alone",
 			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Version: esv1.VaultKVStoreV2}},
 			key:      "secret/data/jx/pipelineUser",
 			want:     "secret/data/jx/pipelineUser",
+		},
+		{
+			name:     "with no mount on the store kv v1 keys pass through",
+			provider: &esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Version: esv1.VaultKVStoreV1}},
+			key:      "jx/pipelineUser",
+			want:     "jx/pipelineUser",
 		},
 		{
 			name:     "non vault backends pass the key through",
@@ -221,28 +253,25 @@ func TestResolveLocalNamespaceIsNotCached(t *testing.T) {
 
 	jx, err := r.Resolve(externalSecret("s", "jx", "store"))
 	require.NoError(t, err)
-	assert.Equal(t, "jx", jx.Location)
+	assert.Equal(t, "jx", jx.Location())
 
 	staging, err := r.Resolve(externalSecret("s", "jx-staging", "store"))
 	require.NoError(t, err)
-	assert.Equal(t, "jx-staging", staging.Location)
+	assert.Equal(t, "jx-staging", staging.Location())
 }
 
-// VAULT_ADDR only appears once the vault port-forward is up, mid-run
+// populate sets VAULT_ADDR after resolving
 func TestResolveVaultAddressIsReadOnAccess(t *testing.T) {
+	t.Setenv("VAULT_ADDR", "")
 	r := &extsecrets.BackendResolver{
-		Stores: storesWith(&esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{}}),
+		Stores: storesWith(&esv1.SecretStoreProvider{Vault: &esv1.VaultProvider{Server: "https://vault.jx-vault:8200"}}),
 	}
-	es := externalSecret("s", "jx", "store")
 
-	before, err := r.Resolve(es)
+	b, err := r.Resolve(externalSecret("s", "jx", "store"))
 	require.NoError(t, err)
-	require.Empty(t, before.Location)
 
 	t.Setenv("VAULT_ADDR", "https://127.0.0.1:8200")
-	after, err := r.Resolve(es)
-	require.NoError(t, err)
-	assert.Equal(t, "https://127.0.0.1:8200", after.Location)
+	assert.Equal(t, "https://127.0.0.1:8200", b.Location())
 }
 
 func TestResolveFailsWithNoStoreClient(t *testing.T) {

@@ -82,7 +82,7 @@ func (s *secretFacadeEditor) Write(keyProperties *editor.KeyProperties) error {
 	}
 
 	sv := populate.CreateSecretValue(backend, keyProperties.Properties, annotations, labels, secretType)
-	err := s.secretManager.SetSecret(s.backend.Location, populate.GetSecretKey(backend, s.secret.Name, key), &sv)
+	err := s.secretManager.SetSecret(s.backend.Location(), populate.GetSecretKey(backend, s.secret.Name, key), &sv)
 	if err != nil {
 		return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), s.secret.Name)
 	}

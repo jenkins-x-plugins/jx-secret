@@ -157,8 +157,8 @@ func (o *Options) Run() error {
 						Key: key,
 					}
 					if resolved.Type == v1alpha1.BackendTypeGSM {
-						if resolved.Location != "" {
-							keyProperties.GCPProject = resolved.Location
+						if resolved.Location() != "" {
+							keyProperties.GCPProject = resolved.Location()
 						} else {
 							log.Logger().Warnf("no GCP project ID found for external secret %s, defaulting to current project", r.ExternalSecret.Name)
 						}

@@ -292,7 +292,7 @@ func (o *Options) getExternalSecretValue(lookupSecretName, lookupKey, namespace 
 
 	getSecretFunc := func() error {
 		var err error
-		secretLocation := resolved.Location
+		secretLocation := resolved.Location()
 		secret, err = secretManager.GetSecret(secretLocation, key, externalSecretProperty)
 		return err
 	}

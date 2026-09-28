@@ -23,37 +23,45 @@ type BackendResolver struct {
 type Backend struct {
 	Type v1alpha1.BackendType
 
-	// what secretfacade takes as its location: GCP project, Azure vault name,
-	// Vault server address, AWS region, or namespace for local secrets
-	Location string
+	// GCP project, Azure vault name, AWS region, or namespace for local secrets
+	location string
 
 	VaultMount string
 	VaultKVv2  bool
 }
 
-// DefaultVaultMount is the KV mount assumed when a store does not name one.
-const DefaultVaultMount = "secret"
+// Location is what secretfacade takes as its location. Vault reads VAULT_ADDR on each call,
+// as the store's server is ESO's in-cluster address and populate sets VAULT_ADDR after resolving.
+func (b *Backend) Location() string {
+	if b.Type == v1alpha1.BackendTypeVault {
+		return os.Getenv("VAULT_ADDR")
+	}
+	return b.location
+}
 
-// RemoteKeyPath converts a remoteRef.key into the path the backend's API expects.
-// Only Vault differs: ESO's provider takes a mount-relative path and injects the
-// KV v2 "data" segment itself, but secretfacade drives the Vault HTTP API and
-// needs the full path.
+// RemoteKeyPath converts a remoteRef.key into the full path secretfacade needs.
+// Mirrors buildPath in ESO's vault provider, or the two silently address different secrets.
 func (b *Backend) RemoteKeyPath(key string) string {
 	if b == nil || b.Type != v1alpha1.BackendTypeVault || key == "" {
 		return key
 	}
-	mount := b.VaultMount
-	if mount == "" {
-		mount = DefaultVaultMount
+	if b.VaultMount == "" {
+		// with no mount on the store, ESO treats the key's first segment as the mount
+		if !b.VaultKVv2 || strings.Contains(key, "/data/") {
+			return key
+		}
+		segments := strings.Split(key, "/")
+		return strings.Join(append([]string{segments[0], "data"}, segments[1:]...), "/")
 	}
-	// tolerate hand-written mappings that already spell out the mount
-	if strings.HasPrefix(key, mount+"/") {
-		return key
+
+	rest, found := strings.CutPrefix(key, b.VaultMount+"/")
+	if found && b.VaultKVv2 {
+		rest = strings.TrimPrefix(rest, "data/")
 	}
 	if b.VaultKVv2 {
-		return mount + "/data/" + key
+		return b.VaultMount + "/data/" + rest
 	}
-	return mount + "/" + key
+	return b.VaultMount + "/" + rest
 }
 
 // Resolve returns the backend for the given ExternalSecret. Call it once per
@@ -108,24 +116,14 @@ func (r *BackendResolver) fromStore(es *esv1.ExternalSecret, ref esv1.SecretStor
 	return b, nil
 }
 
-// fillDynamic supplies the parts of a Backend that must not be cached: a local
-// secret's namespace varies per ExternalSecret, and VAULT_ADDR is only set once
-// the vault port-forward comes up, partway through a populate run.
+// fillDynamic sets a local secret's namespace, which varies per ExternalSecret so cannot be cached.
 func (r *BackendResolver) fillDynamic(b *Backend, es *esv1.ExternalSecret) *Backend {
-	if b.Location != "" {
+	if b.Type != v1alpha1.BackendTypeLocal {
 		return b
 	}
-	switch b.Type {
-	case v1alpha1.BackendTypeLocal:
-		clone := *b
-		clone.Location = es.Namespace
-		return &clone
-	case v1alpha1.BackendTypeVault:
-		clone := *b
-		clone.Location = os.Getenv("VAULT_ADDR")
-		return &clone
-	}
-	return b
+	clone := *b
+	clone.location = es.Namespace
+	return &clone
 }
 
 func esID(es *esv1.ExternalSecret) string {
@@ -148,9 +146,7 @@ func backendFromStore(store esv1.GenericStore) *Backend {
 	switch {
 	case p.Vault != nil:
 		b := &Backend{
-			Type:       v1alpha1.BackendTypeVault,
-			Location:   p.Vault.Server,
-			VaultMount: DefaultVaultMount,
+			Type: v1alpha1.BackendTypeVault,
 			// ESO treats an unset version as v2
 			VaultKVv2: p.Vault.Version != esv1.VaultKVStoreV1,
 		}
@@ -160,17 +156,17 @@ func backendFromStore(store esv1.GenericStore) *Backend {
 		return b
 
 	case p.GCPSM != nil:
-		return &Backend{Type: v1alpha1.BackendTypeGSM, Location: p.GCPSM.ProjectID}
+		return &Backend{Type: v1alpha1.BackendTypeGSM, location: p.GCPSM.ProjectID}
 
 	case p.AzureKV != nil:
-		return &Backend{Type: v1alpha1.BackendTypeAzure, Location: azureVaultName(p.AzureKV.VaultURL)}
+		return &Backend{Type: v1alpha1.BackendTypeAzure, location: azureVaultName(p.AzureKV.VaultURL)}
 
 	case p.AWS != nil:
 		backendType := v1alpha1.BackendTypeAWSSecretsManager
 		if p.AWS.Service == esv1.AWSServiceParameterStore {
 			backendType = v1alpha1.BackendTypeAWSParameterStore
 		}
-		return &Backend{Type: backendType, Location: p.AWS.Region}
+		return &Backend{Type: backendType, location: p.AWS.Region}
 
 	case p.Kubernetes != nil:
 		// remoteNamespace is deliberately ignored: it is where ESO would read from,

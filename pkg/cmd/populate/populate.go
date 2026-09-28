@@ -213,8 +213,8 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 					Key: key,
 				}
 				if backend == v1alpha1.BackendTypeGSM {
-					if resolved.Location != "" {
-						keyProperties.GCPProject = resolved.Location
+					if resolved.Location() != "" {
+						keyProperties.GCPProject = resolved.Location()
 					} else {
 						log.Logger().Warnf("no GCP project ID found for external secret %s, defaulting to current project", r.ExternalSecret.Name)
 					}
@@ -276,7 +276,7 @@ func (o *Options) PopulateLoop(results []*secretfacade.SecretPair, waited map[st
 				}
 
 				sv := CreateSecretValue(backend, keyProperties.Properties, annotations, labels, secretType)
-				err = secretManager.SetSecret(resolved.Location, GetSecretKey(backend, r.ExternalSecret.Name, key), &sv)
+				err = secretManager.SetSecret(resolved.Location(), GetSecretKey(backend, r.ExternalSecret.Name, key), &sv)
 				if err != nil {
 					return errors.Wrapf(err, "failed to save properties %s on ExternalSecret %s", keyProperties.String(), name)
 				}
