@@ -1,6 +1,7 @@
 package convert
 
 import (
+	"cmp"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -63,7 +64,8 @@ type Options struct {
 
 	Prefix string
 
-	warnedAlicloud bool
+	warnedAlicloud   bool
+	ignoredLocations []string
 }
 
 // NewCmdSecretConvert creates a command object for the command
@@ -162,6 +164,10 @@ func (o *Options) Run() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to modify files")
 	}
+	if len(o.ignoredLocations) > 0 {
+		log.Logger().Warnf("ignoring the backend location the secret mapping sets for secrets %s: their ExternalSecrets read from the location on the %s %s, so move these secrets there",
+			strings.Join(o.ignoredLocations, ", "), extsecrets.DefaultSecretStoreKind, extsecrets.DefaultSecretStoreName)
+	}
 	return nil
 }
 
@@ -236,10 +242,14 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		if secret.GcpSecretsManager == nil {
 			secret.GcpSecretsManager = &v1alpha1.GcpSecretsManager{}
 		}
-		if secret.GcpSecretsManager.ProjectID == "" &&
-			o.SecretMapping.Spec.GcpSecretsManager.ProjectID == "" {
+		defaultProject := ""
+		if d := o.SecretMapping.Spec.GcpSecretsManager; d != nil {
+			defaultProject = d.ProjectID
+		}
+		if secret.GcpSecretsManager.ProjectID == "" && defaultProject == "" {
 			return results, errors.New("missing secret mapping secret.GcpSecretsManager.ProjectID")
 		}
+		o.noteIgnoredLocation(name, secret.GcpSecretsManager.ProjectID, defaultProject)
 		if secret.GcpSecretsManager.UniquePrefix != "" {
 			o.Prefix = secret.GcpSecretsManager.UniquePrefix
 		} else if o.SecretMapping.Spec.GcpSecretsManager.UniquePrefix != "" {
@@ -250,19 +260,28 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		if secret.AzureKeyVaultConfig == nil {
 			secret.AzureKeyVaultConfig = &v1alpha1.AzureKeyVaultConfig{}
 		}
-		if secret.AzureKeyVaultConfig.KeyVaultName == "" &&
-			(o.SecretMapping.Spec.AzureKeyVaultConfig == nil || o.SecretMapping.Spec.AzureKeyVaultConfig.KeyVaultName == "") {
+		defaultVault := ""
+		if d := o.SecretMapping.Spec.AzureKeyVaultConfig; d != nil {
+			defaultVault = d.KeyVaultName
+		}
+		if secret.AzureKeyVaultConfig.KeyVaultName == "" && defaultVault == "" {
 			return results, errors.New("missing secret mapping secret.AzureKeyVaultConfig.KeyVaultName")
 		}
+		o.noteIgnoredLocation(name, secret.AzureKeyVaultConfig.KeyVaultName, defaultVault)
 
 	case v1alpha1.BackendTypeAWSSecretsManager:
 		if secret.AwsSecretsManager == nil {
 			secret.AwsSecretsManager = &v1alpha1.AwsSecretsManager{}
 		}
-		if secret.AwsSecretsManager.Region == "" && secret.Region == "" &&
-			o.SecretMapping.Spec.AwsSecretsManager.Region == "" && o.SecretMapping.Spec.Region == "" {
+		region := cmp.Or(secret.AwsSecretsManager.Region, secret.Region)
+		defaultRegion := o.SecretMapping.Spec.Region
+		if d := o.SecretMapping.Spec.AwsSecretsManager; d != nil {
+			defaultRegion = cmp.Or(d.Region, defaultRegion)
+		}
+		if region == "" && defaultRegion == "" {
 			return results, errors.New("missing secret mapping secret.AwsSecretsManager.Region")
 		}
+		o.noteIgnoredLocation(name, region, defaultRegion)
 	}
 
 	err = o.convertData(node, path, secret.BackendType)
@@ -295,6 +314,14 @@ func (o *Options) warnAlicloudUnsupported() {
 	o.warnedAlicloud = true
 	log.Logger().Warnf("backendType %s is no longer supported: the External Secrets Operator has no alibaba provider in %s, so the generated ExternalSecrets cannot be resolved. Migrate these secrets to another backend.",
 		v1alpha1.BackendTypeAlicloud, extsecrets.APIVersion)
+}
+
+// noteIgnoredLocation records a secret the mapping gives its own backend location,
+// which its ExternalSecret cannot carry. Values repeating the default are common and harmless.
+func (o *Options) noteIgnoredLocation(name, value, defaultValue string) {
+	if value != "" && value != defaultValue {
+		o.ignoredLocations = append(o.ignoredLocations, name)
+	}
 }
 
 // allSecretDataUnsecured covers stringData keys as well as data.
