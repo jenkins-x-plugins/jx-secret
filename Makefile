@@ -183,8 +183,7 @@ all: fmt build lint test
 $(GOHOME)/bin/gen-crd-api-reference-docs:
 	$(GO) install github.com/jenkins-x/gen-crd-api-reference-docs@latest
 
-# ExternalSecret is owned by the External Secrets Operator, so its reference
-# docs live upstream rather than being generated here.
+# ExternalSecret's reference docs are published by the External Secrets Operator.
 generate-refdocs: $(GOHOME)/bin/gen-crd-api-reference-docs
 	${GOHOME}/bin/gen-crd-api-reference-docs -config "hack/configdocs/config.json" \
 	-template-dir hack/configdocs/templates \

@@ -92,8 +92,6 @@ func TestResolveFromStore(t *testing.T) {
 			wantLocation: "us-east-1",
 		},
 		{
-			// jx-secret writes the Secret itself, so it lands next to the
-			// ExternalSecret whatever remoteNamespace the store carries
 			name:         "kubernetes ignores the remote namespace",
 			provider:     &esv1.SecretStoreProvider{Kubernetes: &esv1.KubernetesProvider{RemoteNamespace: "secret-infra"}},
 			wantBackend:  v1alpha1.BackendTypeLocal,
@@ -245,7 +243,6 @@ func TestResolveCachesPerStore(t *testing.T) {
 	assert.Equal(t, 1, stores.calls, "the store should be read once and cached")
 }
 
-// a store with no remoteNamespace falls back to each ExternalSecret's own namespace
 func TestResolveLocalNamespaceIsNotCached(t *testing.T) {
 	r := &extsecrets.BackendResolver{
 		Stores: storesWith(&esv1.SecretStoreProvider{Kubernetes: &esv1.KubernetesProvider{}}),

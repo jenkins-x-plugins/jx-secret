@@ -15,7 +15,7 @@ import (
 type BackendResolver struct {
 	Stores StoreInterface
 
-	// one lookup per distinct store per run; failures are not cached as they end the run
+	// failures are not cached as they end the run
 	storeCache map[string]*Backend
 }
 
@@ -169,10 +169,8 @@ func backendFromStore(store esv1.GenericStore) *Backend {
 		return &Backend{Type: backendType, location: p.AWS.Region}
 
 	case p.Kubernetes != nil:
-		// remoteNamespace is deliberately ignored: it is where ESO would read from,
-		// but jx-secret writes the target Secret itself, next to the ExternalSecret.
-		// The CRD defaults it to "default", so honouring it would misplace every
-		// local secret.
+		// remoteNamespace is where ESO would read from and defaults to "default", but
+		// jx-secret writes the Secret itself, next to the ExternalSecret
 		return &Backend{Type: v1alpha1.BackendTypeLocal}
 
 	case p.IBM != nil:

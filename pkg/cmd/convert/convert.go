@@ -92,8 +92,8 @@ func NewCmdSecretConvert() (*cobra.Command, *Options) {
 	cmd.Flags().StringVarP(&o.HelmSecretFolder, "helm-secrets-dir", "", "", "the directory where the helm secrets live with a folder per namespace and a file with a '.yaml' extension for each secret name. Defaults to $JX_HELM_SECRET_FOLDER")
 	cmd.Flags().StringVarP(&o.DefaultNamespace, "default-namespace", "", "jx", "the default namespace if no namespace is specified in a Secret resource")
 
-	// the vault auth config lives on the ClusterSecretStore now, but boot Makefiles in env repos still pass these
-	// Todo: Remove deprecated flags once fully migrated to ESO
+	// ignored, but boot Makefiles in env repos pass them and cobra fails on unknown flags
+	// TODO: remove once env repo Makefiles stop passing them
 	cmd.Flags().StringP("vault-mount-point", "m", "", "ignored")
 	cmd.Flags().StringP("vault-role", "r", "", "ignored")
 	_ = cmd.Flags().MarkHidden("vault-mount-point")
@@ -193,8 +193,7 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		return results, nil
 	}
 
-	// ESO's webhook rejects an ExternalSecret with no data or dataFrom entry, so a
-	// Secret whose every key is unsecured stays a plain Secret
+	// ESO's webhook rejects an ExternalSecret with neither data nor dataFrom
 	allUnsecured, err := o.allSecretDataUnsecured(node, path, name)
 	if err != nil {
 		return results, errors.Wrapf(err, "failed to check unsecured keys for %s", path)
@@ -218,8 +217,7 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		secret.BackendType = o.SecretMapping.Spec.BackendType
 	}
 
-	// backendType, roleArn, region, projectId, keyVaultName, vaultMountPoint and
-	// vaultRole all live on the referenced store now, so none are written here
+	// the backend and its location come from the referenced store, so only the ref is written
 	err = kyamls.SetStringValue(node, path, extsecrets.DefaultSecretStoreName, "spec", "secretStoreRef", "name")
 	if err != nil {
 		return results, err
@@ -233,7 +231,6 @@ func (o *Options) ModifyYAML(node *yaml.RNode, path string) (ModifyResults, erro
 		return results, err
 	}
 
-	// validation and o.Prefix only; nothing below writes spec fields
 	switch secret.BackendType {
 	case v1alpha1.BackendTypeAlicloud:
 		o.warnAlicloudUnsupported()
@@ -324,7 +321,6 @@ func (o *Options) noteIgnoredLocation(name, value, defaultValue string) {
 	}
 }
 
-// allSecretDataUnsecured covers stringData keys as well as data.
 func (o *Options) allSecretDataUnsecured(node *yaml.RNode, path, secretName string) (bool, error) {
 	if o.SecretMapping == nil {
 		return false, nil
@@ -462,8 +458,7 @@ func (o *Options) convertData(node *yaml.RNode, path string, backendType v1alpha
 			Style:   style,
 		})
 
-		// mergePolicy defaults to Replace, which would drop every key fetched via
-		// spec.data and leave only these literals
+		// the default Replace would drop every key fetched via spec.data
 		err = kyamls.SetStringValue(node, path, string(esv1.MergePolicyMerge), "spec", "target", "template", "mergePolicy")
 		if err != nil {
 			return errors.Wrapf(err, "failed to set template mergePolicy for path %s", path)
@@ -527,9 +522,8 @@ func setRemoteRef(rNode *yaml.RNode, path, secretKey, key, property string, extr
 	return nil
 }
 
-// setQuotedStringValue quotes values that would otherwise be read back as a number
-// or boolean. remoteRef.version is a string in the ESO schema, so the CRD rejects
-// a bare `version: 1`.
+// setQuotedStringValue quotes values YAML would read back as a number or boolean, since
+// the CRD types remoteRef.version as a string and rejects a bare `version: 1`.
 func setQuotedStringValue(rNode *yaml.RNode, path, value string, fields ...string) error {
 	if err := kyamls.SetStringValue(rNode, path, value, fields...); err != nil {
 		return err
@@ -628,9 +622,8 @@ func (o *Options) modifyDefault(rNode *yaml.RNode, field, secretName, path strin
 		return fmt.Errorf("no key found when mapping secret %s", secretName)
 	}
 
-	// ESO has no versionStage field. AWS Secrets Manager reads remoteRef.version as
-	// a stage, so it carries over there; elsewhere version is a concrete id that a
-	// stage name would not resolve to, so it is dropped rather than mistranslated.
+	// only AWS Secrets Manager reads remoteRef.version as a stage; elsewhere it is a
+	// version id that a stage name would not match
 	extra := map[string]string{}
 	if supportsVersionStage {
 		extra["version"] = versionStage

@@ -22,7 +22,7 @@ type secretFacadeEditor struct {
 	backend       *extsecrets.Backend
 }
 
-// NewEditor create a new editor writing to the given resolved backend.
+// NewEditor creates an editor that writes to the given resolved backend.
 func NewEditor(secret *esv1.ExternalSecret, backend *extsecrets.Backend, secretStoreManagerFactory secretstore.FactoryInterface, kubeClient kubernetes.Interface, externalVault string) (editor.Interface, error) {
 	if secretStoreManagerFactory == nil {
 		secretStoreManagerFactory = &factory.SecretManagerFactory{}

@@ -6,9 +6,7 @@ import (
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 )
 
-// DefaultSecretStoreName is the store the jx3-versions chart ships in every
-// cluster. Hardcoding it keeps jx-secret decoupled from the BackendType enum,
-// since the store carries the backend config.
+// DefaultSecretStoreName must match the ClusterSecretStore the jx3-versions chart ships in every cluster.
 const DefaultSecretStoreName = "jx-secret-store"
 
 const DefaultSecretStoreKind = "ClusterSecretStore"
